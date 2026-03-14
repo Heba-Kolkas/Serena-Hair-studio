@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Studio Serena — Hair</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ── BOOK NOW BUTTON ── */
+ .btn-book-now {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #ba9f93ac, #52433978);
+            color: #fff !important;
+            padding: 0.55rem 1.2rem;
+            border-radius: 50px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 2px 12px rgba(71, 53, 34, 0.35);
+        }
+
+        .btn-book-now:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(160,120,74,0.5);
+        }
+        .btn-book-now i { font-size: 0.9rem; }
+
+        /* ── NAV BOOK BUTTON ── */
+        .nav-controls .btn-book-now {
+            padding: 0.45rem 1rem;
+            font-size: 0.75rem;
+        }
+
+        /* ── HERO BOOK BUTTON ── */
+        .hero-cta .btn-book-now {
+            padding: 0.85rem 2rem;
+            font-size: 0.85rem;
+        }
+
+        /* ── BACK TO TOP ── */
+        #back-top {
+            position: fixed;
+            bottom: 6rem;
+            right: 1.5rem;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #bcac90ee, #6e4b37cf);
+            color: #fff;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s, transform 0.2s;
+            z-index: 9990;
+            box-shadow: 0 4px 15px rgba(160,120,74,0.4);
+        }
+        #back-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        #back-top:hover { transform: translateY(-3px); }
+
+        /* ── TEAM SOCIAL ICONS ── */
+        .team-social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 1rem;
+            transition: background 0.2s, transform 0.2s;
+            text-decoration: none;
+        }
+        .team-social-link:hover {
+            background: rgba(255,255,255,0.35);
+            transform: scale(1.1);
+        }
+
+        /* ── SOCIAL SECTION — no grid, just buttons ── */
+        #social .social-grid { display: none !important; }
+        #social h2.section-title { display: none !important; }
+        #social {
+            padding: 3rem 1rem;
+            text-align: center;
+        }
+        .social-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .social-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.8rem;
+            border-radius: 50px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .social-link-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+        .social-link-btn i { font-size: 1rem; }
+
+        /* ── RESPONSIVE FIXES ── */
+        @media (max-width: 768px) {
+            .nav-controls .btn-book-now span { display: none; }
+            .nav-controls .btn-book-now { padding: 0.45rem 0.7rem; }
+            .footer-top {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 2rem !important;
+            }
+            .location-inner {
+                flex-direction: column !important;
+                gap: 2rem;
+            }
+            .map-frame { width: 100% !important; height: 280px !important; }
+            #stats {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.5rem !important;
+            }
+            .team-grid {
+                grid-template-columns: 1fr 1fr !important;
+            }
+            .hero-title { font-size: clamp(3rem, 12vw, 6rem) !important; }
+            .reviews-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        @media (max-width: 480px) {
+            .footer-top { grid-template-columns: 1fr !important; }
+            .team-grid { grid-template-columns: 1fr !important; }
+            #stats { grid-template-columns: 1fr 1fr !important; }
+            .hero-cta { flex-direction: column; align-items: center; gap: 0.8rem; }
+            .social-links { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="preloader">
+        <div class="pre-logo">Studio Serena</div>
+        <div class="pre-line"></div>
+        <div class="pre-sub">Hair Studio</div>
+    </div>
+
+    <nav id="navbar">
+        <a href="#hero" class="nav-logo">Studio Serena</a>
+        <ul class="nav-links" id="navLinks">
+            
+            <li><a href="#gallery" data-en="Gallery" data-no="Galleri">Gallery</a></li>
+            <li><a href="#team" data-en="Team" data-no="Team">Team</a></li>
+            <li><a href="#testimonials" data-en="Reviews" data-no="Anmeldelser">Reviews</a></li>
+            <li><a href="#location" data-en="Location" data-no="Lokasjon">Location</a></li>
+        </ul>
+        <div class="nav-controls">
+            <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="btn-book-now" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-instagram"></i><span>Book Now</span>
+            </a>
+            <button class="lang-toggle" id="langToggle">No | En</button>
+            <button class="toggle-btn" id="themeToggle">☾ Dark</button>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="close-menu" id="closeMenu">✕</button>
+    
+        <a href="#gallery" onclick="closeMob()" data-en="Gallery" data-no="Galleri">Gallery</a>
+        <a href="#team" onclick="closeMob()" data-en="Team" data-no="Team">Team</a>
+        <a href="#testimonials" onclick="closeMob()" data-en="Reviews" data-no="Anmeldelser">Reviews</a>
+        <a href="#location" onclick="closeMob()" data-en="Location" data-no="Lokasjon">Location</a>
+    </div>
+
+    <section id="hero">
+        <div
+            style="position:absolute;inset:0;background:linear-gradient(135deg,#2C2420 0%,#4a3a32 30%,#8B7D74 60%,#B5A89A 80%,#FAF8F5 100%);">
+        </div>
+        <div
+            style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(181,168,154,0.3) 0%,transparent 60%);">
+        </div>
+        <div class="hero-overlay"
+            style="background:linear-gradient(to bottom,rgba(44,36,32,0.3) 0%,rgba(44,36,32,0.1) 40%,rgba(44,36,32,0.65) 100%);">
+        </div>
+        <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.08" viewBox="0 0 1440 900"
+            preserveAspectRatio="none">
+            <path d="M0 450 Q360 200 720 450 T1440 450" stroke="#FAF8F5" stroke-width="1" fill="none" />
+            <path d="M0 500 Q360 250 720 500 T1440 500" stroke="#FAF8F5" stroke-width="0.5" fill="none" />
+            <circle cx="720" cy="450" r="200" stroke="#FAF8F5" stroke-width="0.5" fill="none" />
+            <circle cx="720" cy="450" r="300" stroke="#FAF8F5" stroke-width="0.3" fill="none" />
+        </svg>
+        <div class="hero-content">
+            <p class="hero-eyebrow" data-en="Style & Shine" data-no="Stil og Glans">Style & Shine</p>
+            <h1 class="hero-title">Studio<br /><em>Serena</em></h1>
+            <p class="hero-sub" data-en="— Hair —" data-no="— Hår —">— Hair —</p>
+            <div class="hero-cta">
+                <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="btn-book-now" target="_blank" rel="noopener noreferrer" data-en="Book on Instagram" data-no="Bestill på Instagram">
+                    <i class="fa-brands fa-instagram"></i> Book on Instagram
+                </a>
+                <a href="#gallery" class="btn-outline" data-en="View Portfolio" data-no="Se Portefølje">View Portfolio</a>
+            </div>
+        </div>
+        <div class="hero-scroll"><span data-en="Scroll" data-no="Scroll">Scroll</span></div>
+    </section>
+
+    <div id="stats">
+        <div class="reveal">
+            <div class="stat-number"><span class="counter" data-target="25">0</span><span class="stat-suffix">+</span>
+            </div>
+            <div class="stat-label" data-en="Years of Excellence" data-no="År med Ekspertise">Years of Excellence</div>
+        </div>
+        <div class="reveal">
+            <div class="stat-number"><span class="counter" data-target="999">0</span><span class="stat-suffix">+</span>
+            </div>
+            <div class="stat-label" data-en="Happy Clients Yearly" data-no="Fornøyde Kunder per år">Happy Clients Yearly
+            </div>
+        </div>
+        <div class="reveal">
+            <div class="stat-number"><span class="counter" data-target="12">0</span><span class="stat-suffix">+</span>
+            </div>
+            <div class="stat-label" data-en="Premium Services" data-no="Premiumtjenester">Premium Services</div>
+        </div>
+        <div class="reveal">
+            <div class="stat-number"><span class="counter" data-target="5">0</span></div>
+            <div class="stat-label" data-en="Expert Stylists" data-no="Ekspertstylister">Expert Stylists</div>
+        </div>
+    </div>
+
+
+    <section id="services-ribbon">
+        <div class="ribbon-wrapper">
+            <div class="ribbon-track">
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Colour" data-no="farge">Colour</span>
+                    <span class="ribbon-name" data-en="Balayage" data-no="Balayage">Balayage</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Colour" data-no="farge">Colour</span>
+                    <span class="ribbon-name" data-en="Highlights" data-no="Striper">Highlights</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="fixing" data-no="fikse">fixing</span>
+                    <span class="ribbon-name" data-en="Glossing & Toner" data-no="Glans & Toner">Glossing & Toner</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Men & Women" data-no="Dame & Herre">Men & Women</span>
+                    <span class="ribbon-name" data-en="Cut & Styling" data-no="Klipp & Styling">Cut & Styling</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Repair" data-no="Reparere">Repair</span>
+                    <span class="ribbon-name" data-en="Cut & Styling" data-no="Hår Botox">Hair Botox</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Strength" data-no="Styrke">Strength</span>
+                    <span class="ribbon-name" data-en="Protein" data-no="Hår Protein">Protein</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Smooth" data-no="Glatt">Smooth</span>
+                    <span class="ribbon-name" data-en="keratin" data-no="Hår keratin">Keratin</span>
+                </div>
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Colour" data-no="farge">Colour</span>
+                    <span class="ribbon-name" data-en="Balayage" data-no="Balayage">Balayage</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Colour" data-no="farge">Colour</span>
+                    <span class="ribbon-name" data-en="Highlights" data-no="Striper">Highlights</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="fixing" data-no="fikse">fixing</span>
+                    <span class="ribbon-name" data-en="Glossing & Toner" data-no="Glans & Toner">Glossing & Toner</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Men & Women" data-no="Dame & Herre">Men & Women</span>
+                    <span class="ribbon-name" data-en="Cut & Styling" data-no="Klipp & Styling">Cut & Styling</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Repair" data-no="Reparere">Repair</span>
+                    <span class="ribbon-name" data-en="Cut & Styling" data-no="Hår Botox">Hair Botox</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Strength" data-no="Styrke">Strength</span>
+                    <span class="ribbon-name" data-en="Protein" data-no="Hår Protein">Protein</span>
+                </div>
+                <div class="ribbon-sep">✦</div>
+
+                <div class="ribbon-item">
+                    <span class="ribbon-cat" data-en="Smooth" data-no="Glatt">Smooth</span>
+                    <span class="ribbon-name" data-en="keratin" data-no="Hår keratin">Keratin</span>
+                </div>
+
+            </div>
+        </div>
+        <section id="transformation-section">
+            <div class="slider-container" id="sc">
+                <img class="img-after" src="html/Pics/Balayage/After.jpeg" alt="After">
+                <div class="before-wrap" id="bw">
+                    <img src="html/Pics/Balayage/Before.jpeg" alt="Before" id="bimg">
+                </div>
+                <div class="label label-before">Before</div>
+                <div class="label label-after">After</div>
+                <div class="handle" id="handle">
+                    <div class="handle-line"></div>
+                    <div class="handle-circle"><span class="arrows">&#8592; &#8594;</span></div>
+                </div>
+            </div>
+            <p class="ba-title reveal" data-en="Drag to reveal the transformation"
+                data-no="Dra for å se transformasjonen"><em>Drag to reveal the transformation</em></p>
+        </section>
+
+
+        <section id="gallery">
+            <p class="section-eyebrow reveal" data-en="Our Work" data-no="Vårt Arbeid">Our Work</p>
+            <h2 class="section-title reveal">Browse the <em>Gallery</em></h2>
+            <div class="divider reveal"></div>
+
+            <div class="gallery-grid" id="galleryGrid">
+
+                <div class="gallery-cat-card reveal" onclick="openLightbox('Balayage')">
+                    <div class="gallery-cat-img-wrap">
+                        <img src="html/Pics/Balayage/Blayage12.jpeg" alt="Balayage">
+                    </div>
+                    <div class="gallery-cat-label">Balayage</div>
+                </div>
+
+                <div class="gallery-cat-card reveal" onclick="openLightbox('Farge')">
+                    <div class="gallery-cat-img-wrap">
+                        <img src="html/Pics/Farge/Farge1.jpeg" alt="Farge">
+                    </div>
+                    <div class="gallery-cat-label" data-en="Colour" data-no="Farge">Colour</div>
+                </div>
+                <div class="gallery-cat-card reveal" onclick="openLightbox('HairTreatment')">
+                    <div class="gallery-cat-img-wrap">
+                        <img src="html/Pics/Treatment/cover.jpeg" alt="Hair Treatment">
+                    </div>
+                    <div class="gallery-cat-label" data-en="Hair Treatment" data-no="Hårbehandling">Hair Treatmentr
+                    </div>
+                </div>
+
+
+                <div class="gallery-cat-card reveal" onclick="openLightbox('Extensions')">
+                    <div class="gallery-cat-img-wrap">
+                        <img src="html/Pics/Extensions/cover.jpeg" alt="Extensions">
+                    </div>
+                    <div class="gallery-cat-label">Extensions</div>
+                </div>
+
+
+                <div class="gallery-cat-card reveal" onclick="openLightbox('Haircut')">
+                    <div class="gallery-cat-img-wrap">
+                        <img src="html/Pics/Haircut/Haircut5.jpeg" alt="Haircut">
+                    </div>
+                    <div class="gallery-cat-label" data-en="Cut & Style" data-no="Klipp & Style">Cut & Style</div>
+                </div>
+
+
+                <div class="gallery-cat-card reveal" onclick="openLightbox('Styling')">
+                    <div class="gallery-cat-img-wrap">
+                        <img src="html/Pics/Styling/styling4.jpeg" alt="Styling">
+                    </div>
+                    <div class="gallery-cat-label">Styling</div>
+                </div>
+                <div class="gallery-cat-card reveal" onclick="openLightbox('Brides')">
+                    <div class="gallery-cat-img-wrap">
+                        <img src="html/Pics/Brides/Bride5.jpeg" alt="Brides">
+                    </div>
+                    <div class="gallery-cat-label" data-en="Bridal" data-no="Brud">Bridal</div>
+                </div>
+
+
+
+            </div>
+        </section>
+
+        <!-- LIGHTBOX -->
+        <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+            <div class="lightbox-box" onclick="event.stopPropagation()">
+                <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+                <h3 class="lightbox-title" id="lightboxTitle"></h3>
+                <div class="lightbox-grid" id="lightboxGrid"></div>
+            </div>
+        </div>
+
+        <!-- BRANDS -->
+        <div id="brands">
+            <div class="brands-track" id="brandsTrack">
+                <span class="brand-item">Schwarzkopf</span><span class="brand-sep">·</span>
+                <span class="brand-item">Olaplex</span><span class="brand-sep">·</span>
+                <span class="brand-item">L'Anza</span><span class="brand-sep">·</span>
+                <span class="brand-item">Shu Uemura</span><span class="brand-sep">·</span>
+                <span class="brand-item">Schwarzkopf</span><span class="brand-sep">·</span>
+                <span class="brand-item">Olaplex</span><span class="brand-sep">·</span>
+                <span class="brand-item">L'Anza</span><span class="brand-sep">·</span>
+                <span class="brand-item">Shu Uemura</span><span class="brand-sep">·</span>
+            </div>
+        </div>
+
+        <section id="team">
+            <p class="section-eyebrow reveal" data-en="The Artists" data-no="Artistene">The Artists</p>
+            <h2 class="section-title reveal">Meet the <em>Team</em></h2>
+            <div class="divider reveal"></div>
+
+            <div class="team-grid">
+                <div class="team-card reveal">
+                    <div class="team-img-wrap">
+                        <img src="html/Pics/Team/Hasan.jpg" alt="Hassan K.">
+                        <div class="team-overlay"></div>
+                        <div class="team-socials">
+                            <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="team-name">Hassan K.</div>
+                    <div class="team-role" data-en="Founder" data-no="Grunnlegger">Founder</div>
+                    <div class="team-bio"
+                        data-en="25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions, with a masterful touch in every discipline."
+                        data-no="25+ års luksuserfaring fra Oslo og Libanon. En mester innen balayage og extensions, med et mesterlig blikk for alle faglige disipliner.">
+                        25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions,
+                        with a masterful touch in every discipline.
+                    </div>
+                </div>
+
+                <div class="team-card reveal">
+                    <div class="team-img-wrap">
+                        <img src="html/Pics/Team/Kani.jpg" alt="Kani M.">
+                        <div class="team-overlay"></div>
+                        <div class="team-socials">
+                            <a href="https://www.instagram.com/hairgasmofficial?igsh=b3poaWo2dTZwOXo4" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="team-name">Kani M.</div>
+                    <div class="team-role" data-en="Stylist & Makeup Artist" data-no="Stylist & Makeup Artist">Stylist &
+                        Makeup Artist</div>
+                    <div class="team-bio"
+                        data-en="8+ years of experience. Specialist in bridal artistry, makeup, balayage, and styling for all—including hijabis."
+                        data-no="8+ års erfaring. Spesialist på brudestyling, makeup, balayage og styling for alle – inkludert hijabis.">
+                        8+ years of experience. Specialist in bridal artistry, makeup, balayage, and styling for
+                        all—including hijabis.
+                    </div>
+                </div>
+
+                <div class="team-card reveal">
+                    <div class="team-img-wrap">
+                        <img src="html/Pics/Team/Taniya.jpg" alt="Taniya I.">
+                        <div class="team-overlay"></div>
+                        <div class="team-socials">
+                            <a href="https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="team-name">Taniya I.</div>
+                    <div class="team-role" data-en="Treatment Expert" data-no="Behandlingseksper">Treatment Expert</div>
+                    <div class="team-bio"
+                        data-en="Extensive luxury experience. A highly talented specialist in Keratin and restorative hair treatments for all clients—including hijabis"
+                        data-no="Omfattende luksuserfaring. En svært talentfull spesialist på Keratin og gjenoppbyggende hårbehandlinger for alle – inkludert hijabis.">
+                        Extensive luxury experience. A highly talented specialist in Keratin and restorative hair
+                        treatments for all clients—including hijabis.</div>
+                </div>
+
+                <div class="team-card reveal">
+                    <div class="team-img-wrap">
+                        <img src="html/Pics/Team/Heba.jpg" alt="Heba K.">
+                        <div class="team-overlay"></div>
+                        <div class="team-socials">
+                            <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="team-name">Heba K.</div>
+                    <div class="team-role" data-en="Creative Lead & Communications"
+                        data-no="Creative Lead & Kommunikasjon">
+                        Creative Lead & Communications</div>
+                    <div class="team-bio"
+                        data-en="Specializing in digital artistry and high-end client relations. The architect of our online world and the voice behind every appointment."
+                        data-no="Spesialist innen digital kreativitet og førsteklasses kunderelasjoner. Arkitekten bak vår digitale verden og stemmen bak hver timebestilling">
+                        Specializing in digital artistry and high-end client relations. The architect of our online
+                        world and the voice behind every appointment.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SOCIAL -->
+        <section id="social">
+            <p class="section-eyebrow" data-en="Follow Our Journey" data-no="Følg Vår Reise">Follow Our Journey</p>
+            <div class="social-links">
+                <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr"
+                    class="social-link-btn" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-brands fa-instagram"></i> Instagram
+                </a>
+                <a href="https://www.facebook.com/share/18Y3VKWAMN/?mibextid=wwXIfr" class="social-link-btn"
+                    target="_blank" rel="noopener noreferrer">
+                    <i class="fa-brands fa-facebook-f"></i> Facebook
+                </a>
+                <a href="https://www.tiktok.com/@saloncoiff1rst?_r=1&_t=ZS-94gh09nqKj1" class="social-link-btn"
+                    target="_blank" rel="noopener noreferrer">
+                    <i class="fa-brands fa-tiktok"></i> TikTok
+                </a>
+            </div>
+        </section>
+
+        <!-- LOCATION & HOURS -->
+        <section id="location">
+            <div class="location-inner">
+                <div>
+                    <p class="section-eyebrow reveal" data-en="Find Us" data-no="Finn Oss">Find Us</p>
+                    <h2 class="section-title reveal">Visit the <em>Studio</em></h2>
+                    <div class="divider reveal"></div>
+                    <div class="hours-list reveal">
+                        <div class="hours-row"><span class="hours-day" data-en="Monday" data-no="Mandag">Monday</span><span class="hours-time">11:00 – 17:30</span></div>
+                        <div class="hours-row"><span class="hours-day" data-en="Tuesday" data-no="Tirsdag">Tuesday</span><span class="hours-time">11:00 – 17:30</span></div>
+                        <div class="hours-row"><span class="hours-day" data-en="Wednesday" data-no="Onsdag">Wednesday</span><span class="hours-time">11:00 – 17:30</span></div>
+                        <div class="hours-row"><span class="hours-day" data-en="Thursday" data-no="Torsdag">Thursday</span><span class="hours-time">11:00 – 17:30</span></div>
+                        <div class="hours-row"><span class="hours-day" data-en="Friday" data-no="Fredag">Friday</span><span class="hours-time">11:00 – 17:30</span></div>
+                        <div class="hours-row"><span class="hours-day" data-en="Saturday" data-no="Lørdag">Saturday</span><span class="hours-time" data-en="Closed" data-no="Stengt">Closed</span></div>
+                        <div class="hours-row"><span class="hours-day" data-en="Sunday" data-no="Søndag">Sunday</span><span class="hours-time" data-en="Closed" data-no="Stengt">Closed</span></div>
+                    </div>
+                    <div id="statusBadge" class="status-badge reveal"></div>
+                </div>
+                <div class="reveal">
+                    <iframe class="map-frame"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1"
+                        allowfullscreen="" loading="lazy"></iframe>
+                    <p style="margin-top:1rem;font-size:0.8rem;color:var(--greige);">Torshovgata 5, Oslo · <a
+                            href="tel:+4745397631" style="color:var(--taupe);">+47 453 97 631</a></p>
+                </div>
+            </div>
+        <!-- TESTIMONIALS -->
+        <section id="testimonials">
+            <p class="section-eyebrow reveal" data-en="Client Stories" data-no="Kundhistorier">Client Stories</p>
+            <h2 class="section-title reveal">What They <em>Say</em></h2>
+            <div class="divider reveal"></div>
+            <div class="reviews-grid">
+
+                <div class="review-card reveal">
+                    <div class="stars">★★★★★</div>
+                    <p class="review-text"
+                        data-en='"The bridal package was absolutely worth every krone. I felt like a queen. Kani and her team are pure magic."'
+                        data-no='"Brudepakken var verdt hver krone. Jeg følte meg som en dronning,Kani og teamet hennes er ren magi.."'>
+                        "The bridal package was
+                        absolutely worth every krone. I felt like a queen. Kaniand her team are pure magic."</p>
+                    <div class="review-author">Amina B.</div>
+                    <div class="review-date">February 2026</div>
+                </div>
+
+                <div class="review-card reveal">
+                    <div class="stars">★★★★★</div>
+                    <p class="review-text"
+                        data-en='"Hassan transformed my hair completely. The balayage looks so natural — I get compliments every single day."'
+                        data-no='"Hassan forvandlet håret mitt helt. Balayagen ser så naturlig ut."'>"Hassan transformed
+                        my
+                        hair completely. The balayage looks so natural — I get compliments every single day."</p>
+                    <div class="review-author">Sofia L.</div>
+                    <div class="review-date">January 2026</div>
+                </div>
+                <div class="review-card reveal">
+                    <div class="stars">★★★★★</div>
+                    <p class="review-text"
+                        data-en='"Best keratin treatment I have ever had. My hair is silky, smooth, and the results lasted 6 months.Thank you Taniya."'
+                        data-no='"Den beste keratinbehandlingen jeg noensinne har hatt. 6 måneders resultat. Takk Taniya"'>
+                        "Best keratin
+                        treatment I have ever had. My hair is silky, smooth, and the results lasted 6 months.Thank you
+                        Taniya."</p>
+                    <div class="review-author">Marta R.</div>
+                    <div class="review-date">December 2025</div>
+                </div>
+                <div class="review-card reveal">
+                    <div class="stars">★★★★★</div>
+                    <p class="review-text"
+                        data-en='"The hijabi section made me feel so welcomed and comfortable. Finally a studio that truly understands privacy."'
+                        data-no='"Hijabi-seksjonen fikk meg til å føle meg ønsket og komfortabel."'>"The hijabi section
+                        made
+                        me feel so welcomed and comfortable. Finally a studio that truly understands privacy."</p>
+                    <div class="review-author">Nour H.</div>
+                    <div class="review-date">November 2025</div>
+                </div>
+                <div class="review-card reveal">
+                    <div class="stars">★★★★★</div>
+                    <p class="review-text"
+                        data-en='"My extensions look and feel completely natural. Hassan is a genius. I will never go anywhere else."'
+                        data-no='"Mine extensions ser og føles helt naturlige. Hassaner et geni."'>"My extensions look
+                        and
+                        feel completely natural. Hassan is a genius. I will never go anywhere else."</p>
+                    <div class="review-author">Emma T.</div>
+                    <div class="review-date">November 2025</div>
+                </div>
+                <div class="review-card reveal">
+                    <div class="stars">★★★★★</div>
+                    <p class="review-text"
+                        data-en='"Booking was so easy, and Heba is incredibly friendly! She answered all my questions online with such kindness—she truly makes you feel welcome before you even step into the studio."'
+                        data-no='"Booking var så enkelt, og Heba er utrolig vennlig! Hun svarte på alle spørsmålene mine på nettet med stor omtanke – hun får deg virkelig til å føle deg velkommen før du i det hele tatt går inn i studioet."'>
+                        "Booking was so easy, and Heba is incredibly friendly! She answered all my questions online with
+                        such kindness—she
+                        truly makes you feel welcome before you even step into the studio."
+                    </p>
+                    <div class="review-author">Lars P.</div>
+                    <div class="review-date">October 2025</div>
+                </div>
+
+        </section>
+
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq" style="background:var(--linen);">
+            <p class="section-eyebrow reveal" data-en="Questions & Answers" data-no="Spørsmål & Svar">Questions &
+                Answers
+            </p>
+            <h2 class="section-title reveal">Frequently <em>Asked</em></h2>
+            <div class="divider reveal"></div>
+            <div class="faq-list reveal">
+                <div class="faq-item">
+                    <button class="faq-q" data-en="How do I get in touch with the studio?"
+                        data-no="Hvordan tar jeg kontakt med studioet?">How do I get in touch with the studio?<span
+                            class="faq-icon">+</span></button>
+                    <div class="faq-a">
+                        <p data-en="You can call us at +47 453 97 631, email hello@studioserena.no, or message us on Instagram @saloncoiff1rst — we'd love to hear from you."
+                            data-no="Du kan ringe oss, sende e-post eller sende melding på Instagram @saloncoiff1rst.">You
+                            can call us at +47 453 97 631, email <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="771f121b1b1837040302131e18041205121916591918">[email&#160;protected]</a>, or message us on Instagram
+                            @saloncoiff1rst — we'd love to hear from you.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" data-en="Do you offer a consultation before treatment?"
+                        data-no="Tilbyr dere konsultasjon før behandling?">Do you offer a consultation before
+                        treatment?<span class="faq-icon">+</span></button>
+                    <div class="faq-a">
+                        <p data-en="Yes! All new clients receive a complimentary consultation to discuss goals, hair health, and the best treatment plan."
+                            data-no="Ja! Alle nye kunder får en gratis konsultasjon.">Yes! All new clients receive a
+                            complimentary consultation to discuss goals, hair health, and the best treatment plan.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" data-en="What brands do you use?" data-no="Hvilke merker bruker dere?">What
+                        brands
+                        do you use?<span class="faq-icon">+</span></button>
+                    <div class="faq-a">
+                        <p data-en="We work exclusively with Schwarzkopf, Olaplex, L'Anza, and Shu Uemura Art of Hair — the finest professional lines available."
+                            data-no="Vi jobber eksklusivt med Schwarzkopf, Olaplex, L'Anza og Shu Uemura Art of Hair.">
+                            We
+                            work exclusively with Schwarzkopf, Olaplex, L'Anza, and Shu Uemura Art of Hair — the finest
+                            professional lines available.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" data-en="Is the hijabi service available for walk-ins?"
+                        data-no="Er hijabi-tjenesten tilgjengelig for walk-ins?">Is the hijabi service available for
+                        walk-ins?<span class="faq-icon">+</span></button>
+                    <div class="faq-a">
+                        <p data-en="We recommend booking in advance to ensure our private room is available. All services are provided with full privacy and respect."
+                            data-no="Vi anbefaler å bestille på forhånd for å sikre at vårt private rom er tilgjengelig.">
+                            We
+                            recommend booking in advance to ensure our private room is available. All services are
+                            provided
+                            with full privacy and respect.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" data-en="How long does a balayage appointment take?"
+                        data-no="Hvor lang tid tar en balayage-time?">How long does a balayage appointment take?<span
+                            class="faq-icon">+</span></button>
+                    <div class="faq-a">
+                        <p data-en="Depending on hair length and complexity, a balayage appointment typically takes 3–5 hours, including toning and styling."
+                            data-no="Avhengig av hårlengde og kompleksitet tar en balayage-time typisk 3–5 timer.">
+                            Depending
+                            on hair length and complexity, a balayage appointment typically takes 3–5 hours, including
+                            toning and styling.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" data-en="Do you have parking nearby?"
+                        data-no="Er det parkering i nærheten?">Do
+                        you have parking nearby?<span class="faq-icon">+</span></button>
+                    <div class="faq-a">
+                        <p data-en="Street parking is available on Torshovgata. The nearest public car park is a few minutes walk. We are also accessible by public transport — tram and bus stops are nearby."
+                            data-no="Gateparkering er tilgjengelig på Torshovgata. Nærmeste parkeringshus er noen minutters gange. Vi er også tilgjengelig med offentlig transport.">
+                            Street parking is available on Torshovgata. The nearest public car park is a few minutes
+                            walk. We are also accessible by public transport — tram and bus stops are nearby.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer>
+            <div class="footer-top">
+                <div>
+                    <div class="footer-brand">Studio Serena</div>
+                    <p class="footer-tagline"
+                        data-en="Where luxury meets craft.<br/>Oslo's premier destination for exceptional hair artistry."
+                        data-no="Der luksus møter håndverk.<br/>Oslo's fremste destinasjon for eksepsjonell hårstil.">
+                        Where
+                        luxury meets craft.<br />Oslo's premier destination for exceptional hair artistry.</p>
+                    <div style="margin-top:2rem;display:flex;gap:1rem;">
+                        <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" target="_blank" rel="noopener noreferrer" style="color:var(--taupe);font-size:1.4rem;"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.facebook.com/share/18Y3VKWAMN/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" style="color:var(--taupe);font-size:1.4rem;"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://www.tiktok.com/@saloncoiff1rst?_r=1&_t=ZS-94gh09nqKj1" target="_blank" rel="noopener noreferrer" style="color:var(--taupe);font-size:1.4rem;"><i class="fa-brands fa-tiktok"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <p class="footer-col-title" data-en="Services" data-no="Tjenester">Services</p>
+                    <ul class="footer-links">
+                        <li><a href="#services" data-en="Balayage" data-no="Balayage">Balayage</a></li>
+                        <li><a href="#services" data-en="Keratin Treatment" data-no="Keratinbehandling">Keratin
+                                Treatment</a></li>
+                        <li><a href="#services" data-en="Extensions" data-no="Extensions">Extensions</a></li>
+                        <li><a href="#services" data-en="Bridal Hair" data-no="Brudehår">Bridal Hair</a></li>
+                        <li><a href="#services" data-en="Hijabi Section" data-no="Hijabi Seksjon">Hijabi Section</a>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="footer-col-title" data-en="Studio" data-no="Studio">Studio</p>
+                    <ul class="footer-links">
+                        <li><a href="#team" data-en="Our Team" data-no="Vårt Team">Our Team</a></li>
+                        <li><a href="#gallery" data-en="Portfolio" data-no="Portefølje">Portfolio</a></li>
+                        <li><a href="#testimonials" data-en="Reviews" data-no="Anmeldelser">Reviews</a></li>
+                        <li><a href="#faq" data-en="FAQ" data-no="Spørsmål">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="footer-col-title" data-en="Contact" data-no="Kontakt">Contact</p>
+                    <ul class="footer-links">
+                        <li><a href="tel:+4745397631">+47 453 97 631</a></li>
+                        <li><a href="/cdn-cgi/l/email-protection#3d55585151527d4e49485954524e584f58535c135352"><span class="__cf_email__" data-cfemail="9ff7faf3f3f0dfecebeafbf6f0ecfaedfaf1feb1f1f0">[email&#160;protected]</span></a></li>
+                        <li><a href="#location">Torshovgata 5, Oslo</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span data-en="© 2026 Studio Serena Hair. All rights reserved."
+                    data-no="© 2026 Studio Serena Hair. Alle rettigheter forbeholdt.">© 2026 Studio Serena Hair. All
+                    rights
+                    reserved.</span>
+                <span data-en="Crafted with elegance." data-no="Laget med eleganse.">Crafted with elegance.</span>
+            </div>
+        </footer>
+
+        <!-- BACK TO TOP -->
+        <button id="back-top" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+        <!-- CHATBOT -->
+        <!-- Chat bubble trigger -->
+        <div class="chat-bubble" id="chatBubble">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12c0 1.89.52 3.66 1.43 5.16L2 22l4.84-1.43C8.34 21.48 10.11 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.66 0-3.22-.48-4.53-1.3l-.32-.19-3.36.88.88-3.36-.19-.32C3.48 15.22 3 13.66 3 12c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9z" />
+            </svg>
+        </div>
+
+        <!-- Chat window -->
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <div>
+                    <div class="chat-header-title">Studio Serena</div>
+                    <div class="chat-header-sub">Ask us anything</div>
+                </div>
+                <button class="chat-close" id="chatClose">✕</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-suggestions" id="chatSugs">
+                <button class="chat-sug" data-en="Our services">Our services</button>
+                <button class="chat-sug" data-en="Opening hours">Opening hours</button>
+                <button class="chat-sug" data-en="Contact us">Contact us</button>
+            </div>
+            <div class="chat-input-area">
+                <input class="chat-input" id="chatInput" placeholder="Type a message..." type="text" />
+                <button class="chat-send" id="chatSendBtn">➤</button>
+            </div>
+        </div>
+
+        <script src="js/script.js"></script>
+        <script>
+            // Back to top visibility
