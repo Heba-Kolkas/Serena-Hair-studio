@@ -825,8 +825,6 @@ section {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
 }
-
-/* Images in lightbox */
 .lightbox-grid img {
   width: 100%;
   aspect-ratio: 4/5;
@@ -839,14 +837,13 @@ section {
 .lightbox-grid img:hover {
   transform: scale(1.03);
 }
-
-/* Videos in lightbox — match image sizing exactly */
+/* Video items match image sizing exactly */
 .lightbox-grid .video-wrap {
   width: 100%;
   aspect-ratio: 4/5;
   overflow: hidden;
   border-radius: 8px;
-  background: #000;
+  background: #111;
   position: relative;
 }
 .lightbox-grid .video-wrap video {
