@@ -3,13 +3,11 @@
   function closePopup() {
     const popup = document.getElementById('welcome-popup');
     if (!popup) return;
-    // Restore scrolling immediately — never wait for animation
+    // Restore scroll IMMEDIATELY — never inside a timeout
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
     popup.classList.add('closing');
-    setTimeout(() => {
-      popup.style.display = 'none';
-    }, 400);
+    setTimeout(() => { popup.style.display = 'none'; }, 400);
   }
   function initPopup() {
     const btnClose = document.getElementById('popupClose');
@@ -238,6 +236,7 @@ const galleryData = {
     './html/Pics/Brides/Bride1.jpeg',
     './html/Pics/Brides/vid1.mp4',
     './html/Pics/Brides/Bride3.jpeg',
+    './html/Pics/Brides/vid4.mp4',
     './html/Pics/Brides/Bride7.jpeg',
   ],
   Farge: [
@@ -248,6 +247,7 @@ const galleryData = {
     './html/Pics/Farge/Farge3.jpeg',
     './html/Pics/Farge/vid3.mp4',
     './html/Pics/Farge/Farge4.jpeg',
+     './html/Pics/Farge/vid4.mp4',
     './html/Pics/Farge/Farge5.jpeg',
     './html/Pics/Farge/Farge6.jpeg',
   ],
@@ -279,6 +279,7 @@ const galleryData = {
   Styling: [
     './html/Pics/Styling/Styling1.jpeg',
     './html/Pics/Styling/Styling4.jpeg',
+      './html/Pics/Brides/vid4.mp4',
     './html/Pics/Styling/Styling5.jpeg',
     './html/Pics/Styling/Styling10.jpeg',
     './html/Pics/Styling/Styling3.jpeg',
@@ -305,28 +306,40 @@ const galleryData = {
 };
 
 
-// ── PRE-FETCH VIDEOS on hover/touch so they're ready instantly ──
+// ── PRE-FETCH VIDEOS & IMAGES on hover/touch so lightbox opens instantly ──
 (function preloadOnHover() {
   const preloadCache = {};
+
   function prefetchCategory(cat) {
     if (preloadCache[cat]) return;
     preloadCache[cat] = true;
     const items = galleryData[cat] || [];
     items.forEach(src => {
       if (/\.(mp4|mov|webm)$/i.test(src)) {
+        // Video: use <source> element — same as lightbox, ensures browser fetches it
         const v = document.createElement('video');
         v.preload = 'auto';
         v.muted = true;
-        v.src = src;
-        v.load(); // triggers browser fetch
+        v.playsInline = true;
+        const s = document.createElement('source');
+        s.src = src;
+        s.type = 'video/mp4';
+        v.appendChild(s);
+        v.load();
+      } else {
+        // Image: use a hidden Image object to trigger browser cache
+        const img = new Image();
+        img.src = src;
       }
     });
   }
+
   document.querySelectorAll('.gallery-cat-card').forEach(card => {
     const oncard = card.getAttribute('onclick') || '';
     const match = oncard.match(/openLightbox\('([^']+)'\)/);
     if (!match) return;
     const cat = match[1];
+    // Prefetch on hover (desktop) and on first touch (mobile)
     card.addEventListener('mouseenter', () => prefetchCategory(cat));
     card.addEventListener('touchstart',  () => prefetchCategory(cat), { passive: true });
   });

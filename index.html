@@ -344,6 +344,20 @@
             .toggle-btn { font-size: 0.7rem; padding: 0.2rem 0.5rem; }
         }
     </style>
+    <!-- Critical image preloads — above the fold, load immediately -->
+    <link rel="preload" as="image" href="./html/Pics/Team/Hasan.jpg">
+    <link rel="preload" as="image" href="./html/Pics/Balayage/After.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Balayage/Before.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Balayage/Blayage12.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Farge/Farge1.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Treatment/cover.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Extensions/cover.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Haircut/Haircut5.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Styling/styling4.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Brides/Bride5.jpeg">
+    <link rel="preload" as="image" href="./html/Pics/Team/Kani.jpg">
+    <link rel="preload" as="image" href="./html/Pics/Team/Taniya.jpg">
+    <link rel="preload" as="image" href="./html/Pics/Team/Heba.jpg">
 </head>
 
 <body>
@@ -352,11 +366,11 @@
     <div id="welcome-popup" role="dialog" aria-modal="true" aria-label="Welcome to Studio Serena">
         <div class="popup-card">
             <div class="popup-img-wrap">
-                <img src="./html/Pics/Team/Hasan.jpg" alt="Hassan K. — Founder of Studio Serena" loading="eager">
+                <img src="./html/Pics/Team/Hasan.jpg" loading="lazy" alt="Hassan K. — Founder of Studio Serena" loading="eager">
                 <div class="popup-img-overlay"></div>
                 <button class="popup-x" id="popupX" aria-label="Close">✕</button>
                 <div class="popup-badge">
-                    <span data-en="Founder" data-no="Grunnlegger">Founder</span>
+                    <span data-en="Founder &amp; Master Stylist" data-no="Grunnlegger &amp; Mesterstylisten">Founder &amp; Master Stylist</span>
                     Hassan K.
                 </div>
             </div>
@@ -488,9 +502,9 @@
 
         <section id="transformation-section">
             <div class="slider-container" id="sc">
-                <img class="img-after" src="./html/Pics/Balayage/After.jpeg" alt="After">
+                <img class="img-after" src="./html/Pics/Balayage/After.jpeg" alt="After" loading="eager" fetchpriority="high">
                 <div class="before-wrap" id="bw">
-                    <img src="./html/Pics/Balayage/Before.jpeg" alt="Before" id="bimg">
+                    <img src="./html/Pics/Balayage/Before.jpeg" alt="Before" id="bimg" loading="eager">
                 </div>
                 <div class="label label-before">Before</div>
                 <div class="label label-after">After</div>
@@ -499,7 +513,7 @@
                     <div class="handle-circle"><span class="arrows">&#8592; &#8594;</span></div>
                 </div>
             </div>
-            <p class="ba-title reveal" data-en="Drag to reveal the transformation" data-no="Dra for å se transformasjonen"><em>Drag to reveal the transformation</em></p>
+            <p class="ba-title reveal" data-en="Drag to reveal the transformation" data-no="Dra for å se transformasjonen"><br><br><em>Drag to reveal the transformation</em></p>
         </section>
 
         <section id="gallery">
@@ -508,15 +522,15 @@
             <div class="divider reveal"></div>
             <div class="gallery-grid" id="galleryGrid">
                 <div class="gallery-cat-card reveal" onclick="openLightbox('Balayage')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Balayage/Blayage12.jpeg" alt="Balayage"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Balayage/Blayage12.jpeg" alt="Balayage" loading="eager" fetchpriority="high"></div>
                     <div class="gallery-cat-label">Balayage</div>
                 </div>
                 <div class="gallery-cat-card reveal" onclick="openLightbox('Farge')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Farge/Farge1.jpeg" alt="Farge"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Farge/Farge1.jpeg" alt="Farge" loading="eager"></div>
                     <div class="gallery-cat-label" data-en="Colour" data-no="Farge">Colour</div>
                 </div>
                 <div class="gallery-cat-card reveal" onclick="openLightbox('HairTreatment')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Treatment/cover.jpeg" alt="Keratin Treatment"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Treatment/cover.jpeg" alt="Keratin Treatment" loading="eager"></div>
                     <div class="gallery-cat-label" data-en="Keratin Treatment" data-no="Keratinbehandling">
                         Keratin Treatment
                         <a href="https://www.instagram.com/lavellaprofessional?igsh=ZngyNHZkamFwa3J4" target="_blank" rel="noopener noreferrer" class="gallery-ig-link" onclick="event.stopPropagation()">
@@ -525,19 +539,19 @@
                     </div>
                 </div>
                 <div class="gallery-cat-card reveal" onclick="openLightbox('Extensions')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Extensions/cover.jpeg" alt="Extensions"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Extensions/cover.jpeg" alt="Extensions" loading="eager"></div>
                     <div class="gallery-cat-label">Extensions</div>
                 </div>
                 <div class="gallery-cat-card reveal" onclick="openLightbox('Haircut')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Haircut/Haircut5.jpeg" alt="Haircut"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Haircut/Haircut5.jpeg" alt="Haircut" loading="eager"></div>
                     <div class="gallery-cat-label" data-en="Cut & Style" data-no="Klipp & Style">Cut & Style</div>
                 </div>
                 <div class="gallery-cat-card reveal" onclick="openLightbox('Styling')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Styling/styling4.jpeg" alt="Styling"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Styling/styling4.jpeg" alt="Styling" loading="eager"></div>
                     <div class="gallery-cat-label">Styling</div>
                 </div>
                 <div class="gallery-cat-card reveal" onclick="openLightbox('Brides')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Brides/Bride5.jpeg" alt="Brides"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Brides/Bride5.jpeg" alt="Brides" loading="eager"></div>
                     <div class="gallery-cat-label" data-en="Bridal" data-no="Brud">Bridal</div>
                 </div>
             </div>
@@ -574,14 +588,14 @@
             <div class="team-grid">
                 <div class="team-card reveal">
                     <div class="team-img-wrap">
-                        <img src="./html/Pics/Team/Hasan.jpg" alt="Hassan K.">
+                        <img src="./html/Pics/Team/Hasan.jpg" loading="lazy" alt="Hassan K.">
                         <div class="team-overlay"></div>
                         <div class="team-socials">
                             <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
                         </div>
                     </div>
                     <div class="team-name">Hassan K.</div>
-                    <div class="team-role" data-en="Founder" data-no="Grunnlegger">Founder</div>
+                    <div class="team-role" data-en="Founder &amp; Master Stylist" data-no="Grunnlegger &amp; Mesterstylisten">Founder &amp; Master Stylist</div>
                     <div class="team-bio"
                         data-en="25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions, with a masterful touch in every discipline."
                         data-no="25+ års luksuserfaring fra Oslo og Libanon. En mester innen balayage og extensions, med et mesterlig blikk for alle faglige disipliner.">
@@ -590,14 +604,14 @@
                 </div>
                 <div class="team-card reveal">
                     <div class="team-img-wrap">
-                        <img src="./html/Pics/Team/Kani.jpg" alt="Kani M.">
+                        <img src="./html/Pics/Team/Kani.jpg" loading="lazy" alt="Kani M.">
                         <div class="team-overlay"></div>
                         <div class="team-socials">
                             <a href="https://www.instagram.com/hairgasmofficial?igsh=b3poaWo2dTZwOXo4" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
                         </div>
                     </div>
                     <div class="team-name">Kani M.</div>
-                    <div class="team-role" data-en="Stylist & Makeup Artist" data-no="Stylist & Makeup Artist">Stylist & Makeup Artist</div>
+                    <div class="team-role" data-en="Senior Stylist &amp; Makeup Artist" data-no="Senior Stylisten &amp; Makeup Artist">Senior Stylist &amp; Makeup Artist</div>
                     <div class="team-bio"
                         data-en="8+ years of experience. Specialist in bridal artistry, makeup, balayage, and styling for all—including hijabis."
                         data-no="8+ års erfaring. Spesialist på brudestyling, makeup, balayage og styling for alle – inkludert hijabis.">
@@ -606,14 +620,14 @@
                 </div>
                 <div class="team-card reveal">
                     <div class="team-img-wrap">
-                        <img src="./html/Pics/Team/Taniya.jpg" alt="Taniya I.">
+                        <img src="./html/Pics/Team/Taniya.jpg" loading="lazy" alt="Taniya I.">
                         <div class="team-overlay"></div>
                         <div class="team-socials">
                             <a href="https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
                         </div>
                     </div>
                     <div class="team-name">Taniya I.</div>
-                    <div class="team-role" data-en="Treatment Expert" data-no="Behandlingsekspert">Treatment Expert</div>
+                    <div class="team-role" data-en="Keratin &amp; Hair Treatment Specialist" data-no="Keratin &amp; Hårbehandlingsspesialist">Keratin &amp; Hair Treatment Specialist</div>
                     <div class="team-bio"
                         data-en="Extensive luxury experience. A highly talented specialist in Keratin and restorative hair treatments for all clients—including hijabis."
                         data-no="Omfattende luksuserfaring. En svært talentfull spesialist på Keratin og gjenoppbyggende hårbehandlinger for alle – inkludert hijabis.">
@@ -622,7 +636,7 @@
                 </div>
                 <div class="team-card reveal">
                     <div class="team-img-wrap">
-                        <img src="./html/Pics/Team/Heba.jpg" alt="Heba K.">
+                        <img src="./html/Pics/Team/Heba.jpg" loading="lazy" alt="Heba K.">
                         <div class="team-overlay"></div>
                         <div class="team-socials">
                             <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
@@ -1131,7 +1145,7 @@
                     <div class="faq-a">
                         <p data-en="You can call us at +47 453 97 631, email us at Hassan.kolkas@hotmail.com, or message us on Instagram @saloncoiff1rst — we'd love to hear from you."
                            data-no="Du kan ringe oss på +47 453 97 631, sende e-post til Hassan.kolkas@hotmail.com, eller sende melding på Instagram @saloncoiff1rst — vi hører gjerne fra deg.">
-                            You can call us at +47 453 97 631, email us at <a href="/cdn-cgi/l/email-protection#0a426b79796b6424616566616b794a62657e676b636624696567" style="color:var(--taupe);"><span class="__cf_email__" data-cfemail="4800293b3b29266623272423293b0820273c25292124662b2725">[email&#160;protected]</span></a>, or message us on Instagram @saloncoiff1rst — we'd love to hear from you.
+                            You can call us at +47 453 97 631, email us at <a href="/cdn-cgi/l/email-protection#96def7e5e5f7f8b8fdf9fafdf7e5d6fef9e2fbf7fffab8f5f9fb"><span class="__cf_email__" data-cfemail="abe3cad8d8cac585c0c4c7c0cad8ebc3c4dfc6cac2c785c8c4c6">[email&#160;protected]</span></a>, or message us on Instagram @saloncoiff1rst — we'd love to hear from you.
                         </p>
                     </div>
                 </div>
@@ -1232,7 +1246,7 @@
                     <p class="footer-col-title" data-en="Contact" data-no="Kontakt">Contact</p>
                     <ul class="footer-links">
                         <li><a href="tel:+4745397631">+47 453 97 631</a></li>
-                        <li><a href="mailto:Hassan.kolkas@hotmail.com">Hassan.kolkas@hotmail.com</a></li>
+                        <li><a href="/cdn-cgi/l/email-protection#90d8f1e3e3f1febefbfffcfbf1e3d0f8ffe4fdf1f9fcbef3fffd"><span class="__cf_email__" data-cfemail="83cbe2f0f0e2edade8ecefe8e2f0c3ebecf7eee2eaefade0ecee">[email&#160;protected]</span></a></li>
                         <li><a href="#location">Torshovgata 5, Oslo</a></li>
                     </ul>
                 </div>
@@ -1271,11 +1285,13 @@
                 <button class="chat-sug" data-en="Contact us" data-no="Kontakt oss">Contact us</button>
             </div>
             <div class="chat-input-area">
-                <input class="chat-input" id="chatInput" placeholder="Type a message..." type="text" />
-                <button class="chat-send" id="chatSendBtn">s="fa-solid fa-paper-plane"></i></button>
+                <input class="chat-input" id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
+                <button class="chat-send" id="chatSendBtn" aria-label="Send message">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
             </div>
         </div>
 
         <script src="./js/script.js"></script>
-</body>
+    </body>
 </html>
