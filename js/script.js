@@ -277,6 +277,7 @@ const galleryData = {
   ],
   Styling: [
     './html/Pics/Styling/Styling1.jpeg',
+    './html/Pics/Styling/vid1.mp4',
     './html/Pics/Styling/Styling4.jpeg',
     './html/Pics/Styling/Styling5.jpeg',
     './html/Pics/Styling/Styling10.jpeg',
