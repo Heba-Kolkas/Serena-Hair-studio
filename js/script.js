@@ -1,3 +1,22 @@
+// ── WELCOME POPUP ──
+(function() {
+  function closePopup() {
+    const popup = document.getElementById('welcome-popup');
+    if (!popup) return;
+    popup.classList.add('closing');
+    setTimeout(() => { popup.style.display = 'none'; }, 400);
+  }
+  const btnClose = document.getElementById('popupClose');
+  const btnX     = document.getElementById('popupX');
+  if (btnClose) btnClose.addEventListener('click', closePopup);
+  if (btnX)     btnX.addEventListener('click', closePopup);
+  // Close on backdrop click
+  const popup = document.getElementById('welcome-popup');
+  if (popup) popup.addEventListener('click', e => { if (e.target === popup) closePopup(); });
+  // Escape key
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+})();
+
 // ── PRELOADER ──
 window.addEventListener('load', () => {
   setTimeout(() => {
@@ -49,10 +68,33 @@ if (langBtn) {
   langBtn.addEventListener('click', () => {
     lang = lang === 'en' ? 'no' : 'en';
     langBtn.textContent = lang === 'en' ? 'NO | EN' : 'EN | NO';
+
+    // Translate all [data-en] elements
     document.querySelectorAll('[data-en]').forEach(el => {
       const val = el.getAttribute('data-' + lang);
       if (val) el.innerHTML = val;
     });
+
+    // Translate FAQ answer <p> elements (they have data-en too)
+    document.querySelectorAll('.faq-a p[data-en]').forEach(el => {
+      const val = el.getAttribute('data-' + lang);
+      if (val) el.innerHTML = val;
+    });
+
+    // Translate chatbot placeholder
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+      chatInput.placeholder = lang === 'no' ? 'Skriv en melding...' : 'Type a message...';
+    }
+
+    // Translate chat suggestion chips (use data-en/data-no on buttons)
+    document.querySelectorAll('.chat-sug[data-no]').forEach(el => {
+      const val = el.getAttribute('data-' + lang);
+      if (val) el.textContent = val;
+    });
+
+    // Re-render status badge in correct language
+    updateStatusLang(lang);
   });
 }
 
@@ -100,39 +142,62 @@ const galleryData = {
     './html/Pics/Balayage/Balayage1.jpeg',
     './html/Pics/Balayage/vid1.mp4',
     './html/Pics/Balayage/Balayage2.jpeg',
-    './html/Pics/Balayage/vid3.mp4',
-    './html/Pics/Balayage/Balayage3.jpeg',
+    './html/Pics/Balayage/vid10.mp4',
+    './html/Pics/Balayage/Balayage23.jpeg',
     './html/Pics/Balayage/vid2.mp4',
+    './html/Pics/Balayage/Balayage27.jpeg',
+    './html/Pics/Balayage/vid11.mp4',
+    './html/Pics/Balayage/Balayage8.jpeg',
+    './html/Pics/Balayage/vid18.mp4',
+    './html/Pics/Balayage/Balayage3.jpeg',
+    './html/Pics/Balayage/vid14.mp4',
+    './html/Pics/Balayage/Balayage18.jpeg',
+    './html/Pics/Balayage/vid13.mp4',
+    './html/Pics/Balayage/Balayage16.jpeg',
+    './html/Pics/Balayage/vid12.mp4',
     './html/Pics/Balayage/Balayage4.jpeg',
     './html/Pics/Balayage/vid5.mp4',
     './html/Pics/Balayage/Balayage5.jpeg',
     './html/Pics/Balayage/vid4.mp4',
+    './html/Pics/Balayage/Balayage29.jpeg',
+    './html/Pics/Balayage/vid21.mp4',
     './html/Pics/Balayage/Balayage6.jpeg',
     './html/Pics/Balayage/vid6.mp4',
     './html/Pics/Balayage/Balayage7.jpeg',
     './html/Pics/Balayage/vid7.mp4',
-    './html/Pics/Balayage/Balayage8.jpeg',
+    './html/Pics/Balayage/Balayage17.jpeg',
     './html/Pics/Balayage/vid8.mp4',
     './html/Pics/Balayage/Balayage9.jpeg',
     './html/Pics/Balayage/vid9.mp4',
+    './html/Pics/Balayage/Balayage20.jpeg',
+    './html/Pics/Balayage/vid20.mp4',
     './html/Pics/Balayage/Balayage10.jpeg',
-    './html/Pics/Balayage/vid10.mp4',
+    './html/Pics/Balayage/vid3.mp4',
     './html/Pics/Balayage/Balayage11.jpeg',
+    './html/Pics/Balayage/vid15.mp4',
     './html/Pics/Balayage/Balayage13.jpeg',
+    './html/Pics/Balayage/vid16.mp4',
+    './html/Pics/Balayage/Balayage15.jpeg',
+    './html/Pics/Balayage/vid17.mp4',
+    './html/Pics/Balayage/Balayage28.jpeg',
+    './html/Pics/Balayage/vid19.mp4',
     './html/Pics/Balayage/Balayage14.jpeg',
-    './html/Pics/Balayage/After.jpeg',
+    './html/Pics/Balayage/vid22.mp4',
   ],
   Brides: [
-    './html/Pics/Brides/Bride1.jpeg',
-    './html/Pics/Brides/Bride2.jpeg',
-    './html/Pics/Brides/Bride3.jpeg',
     './html/Pics/Brides/Bride4.jpeg',
+    './html/Pics/Brides/vid2.mp4',
     './html/Pics/Brides/Bride5.jpeg',
     './html/Pics/Brides/Bride6.jpeg',
+    './html/Pics/Brides/vid3.mp4',
+    './html/Pics/Brides/Bride2.jpeg',
+    './html/Pics/Brides/Bride1.jpeg',
+    './html/Pics/Brides/vid1.mp4',
+    './html/Pics/Brides/Bride3.jpeg',
   ],
   Farge: [
     './html/Pics/Farge/Farge1.jpeg',
-    './html/Pics/Farge/vid1.mp4',
+    './html/Pics/Farge/vid21.mp4',
     './html/Pics/Farge/Farge2.jpeg',
     './html/Pics/Farge/vid2.mp4',
     './html/Pics/Farge/Farge3.jpeg',
@@ -147,17 +212,22 @@ const galleryData = {
     './html/Pics/Extensions/vid6.mp4',
     './html/Pics/Extensions/vid2.mp4',
     './html/Pics/Extensions/vid3.mp4',
+    './html/Pics/Extensions/vid11.mp4',
     './html/Pics/Extensions/vid1.mp4',
     './html/Pics/Extensions/vid5.mp4',
     './html/Pics/Extensions/vid9.mp4',
     './html/Pics/Extensions/vid8.mp4',
+
+
   ],
   Haircut: [
     './html/Pics/Haircut/Haircut5.jpeg',
     './html/Pics/Haircut/vid1.mp4',
     './html/Pics/Haircut/Haircut3.jpeg',
     './html/Pics/Haircut/vid2.mp4',
-    './html/Pics/Haircut/Haircut1.jpeg',
+    './html/Pics/Haircut/vid4.mp4',
+    './html/Pics/Haircut/vid3.mp4',
+      './html/Pics/Haircut/Haircut1.jpeg',
     './html/Pics/Haircut/Haircut2.jpeg',
     './html/Pics/Haircut/Haircut4.jpeg',
   ],
@@ -165,13 +235,18 @@ const galleryData = {
     './html/Pics/Styling/Styling1.jpeg',
     './html/Pics/Styling/Styling4.jpeg',
     './html/Pics/Styling/Styling5.jpeg',
+    './html/Pics/Styling/Styling10.jpeg',
     './html/Pics/Styling/Styling3.jpeg',
     './html/Pics/Styling/Styling2.jpeg',
+    './html/Pics/Styling/Styling6.jpeg',
+    './html/Pics/Styling/Styling7.jpeg',
+    './html/Pics/Styling/Styling8.jpeg',
+    './html/Pics/Styling/Styling9.jpeg',
   ],
   HairTreatment: [
     './html/Pics/Treatment/Ht1.mp4',
     './html/Pics/Treatment/Ht2.mp4',
-    './html/Pics/Treatment/Ht4.mp4', 
+    './html/Pics/Treatment/Ht4.mp4',
     './html/Pics/Treatment/Ht7.mp4',
     './html/Pics/Treatment/Ht3.mp4',
     './html/Pics/Treatment/Ht8.mp4',
@@ -184,16 +259,63 @@ const galleryData = {
   ]
 };
 
+
+// ── PRE-FETCH VIDEOS on hover/touch so they're ready instantly ──
+(function preloadOnHover() {
+  const preloadCache = {};
+  function prefetchCategory(cat) {
+    if (preloadCache[cat]) return;
+    preloadCache[cat] = true;
+    const items = galleryData[cat] || [];
+    items.forEach(src => {
+      if (/\.(mp4|mov|webm)$/i.test(src)) {
+        const v = document.createElement('video');
+        v.preload = 'auto';
+        v.muted = true;
+        v.src = src;
+        v.load(); // triggers browser fetch
+      }
+    });
+  }
+  document.querySelectorAll('.gallery-cat-card').forEach(card => {
+    const oncard = card.getAttribute('onclick') || '';
+    const match = oncard.match(/openLightbox\('([^']+)'\)/);
+    if (!match) return;
+    const cat = match[1];
+    card.addEventListener('mouseenter', () => prefetchCategory(cat));
+    card.addEventListener('touchstart',  () => prefetchCategory(cat), { passive: true });
+  });
+})();
+
 function openLightbox(category) {
   const overlay = document.getElementById('lightboxOverlay');
   const grid = document.getElementById('lightboxGrid');
   const title = document.getElementById('lightboxTitle');
   if (!overlay || !grid || !title) return;
 
-  title.textContent = category;
+  // Human-readable titles (EN | NO)
+  const categoryTitles = {
+    Balayage:      { en: 'Balayage',           no: 'Balayage' },
+    Farge:         { en: 'Colour',             no: 'Farge' },
+    HairTreatment: { en: 'Keratin Treatment',  no: 'Keratinbehandling' },
+    Extensions:    { en: 'Extensions',         no: 'Extensions' },
+    Haircut:       { en: 'Cut & Style',        no: 'Klipp & Style' },
+    Styling:       { en: 'Styling',            no: 'Styling' },
+    Brides:        { en: 'Bridal',             no: 'Brud' },
+  };
+  const currentLang = (typeof lang !== 'undefined') ? lang : 'en';
+  const titleObj = categoryTitles[category];
+  title.textContent = titleObj ? titleObj[currentLang] || titleObj.en : category;
+
   grid.innerHTML = '';
 
   const items = galleryData[category] || [];
+  if (items.length === 0) {
+    grid.innerHTML = '<p style="color:var(--greige);text-align:center;padding:2rem;">No items found.</p>';
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    return;
+  }
 
   items.forEach(src => {
     const isVideo = /\.(mp4|mov|webm)$/i.test(src);
@@ -206,7 +328,12 @@ function openLightbox(category) {
       video.muted = true;
       video.loop = true;
       video.playsInline = true;
-      video.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+      video.preload = 'auto';
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+      // Start loading immediately
+      video.load();
       wrapper.appendChild(video);
       grid.appendChild(wrapper);
     } else {
@@ -289,12 +416,24 @@ function updateStatus() {
   // All open days: 11:00 (660) – 17:30 (1050). Sat & Sun closed.
   const isOpen = day >= 1 && day <= 5 && mins >= 660 && mins < 1050;
 
+  const openText   = (typeof lang !== 'undefined' && lang === 'no') ? '● Åpen nå'    : '● Open Now';
+  const closedText = (typeof lang !== 'undefined' && lang === 'no') ? '● Stengt nå'  : '● Closed Now';
   if (isOpen) {
-    badge.textContent = '● Open Now';
+    badge.textContent = openText;
     badge.className = 'status-badge status-open';
   } else {
-    badge.textContent = '● Closed Now';
+    badge.textContent = closedText;
     badge.className = 'status-badge status-closed';
+  }
+}
+function updateStatusLang(l) {
+  const badge = document.getElementById('statusBadge');
+  if (!badge) return;
+  const isOpen = badge.classList.contains('status-open');
+  if (isOpen) {
+    badge.textContent = l === 'no' ? '● Åpen nå'   : '● Open Now';
+  } else {
+    badge.textContent = l === 'no' ? '● Stengt nå' : '● Closed Now';
   }
 }
 updateStatus();
