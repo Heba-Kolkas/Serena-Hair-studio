@@ -1613,6 +1613,8 @@ section {
   /* Nav */
   nav {
     padding: 1rem 1.2rem;
+    background: var(--cream) !important;
+    border-bottom: 1px solid var(--warmgrey);
   }
 
   nav.scrolled {
@@ -1623,26 +1625,30 @@ section {
     display: none;
   }
 
-  /* Keep nav-controls — Book Now button stays on mobile */
+  /* Keep nav-controls — Book Now + toggles on mobile */
   .nav-controls {
-    display: flex;
-    gap: 0.5rem;
+    display: flex !important;
+    gap: 0.4rem;
+    align-items: center;
   }
 
-  /* Hide lang/theme toggles on mobile */
+  /* Show lang/theme toggles on mobile */
   .nav-controls .lang-toggle,
   .nav-controls .toggle-btn {
-    display: none;
+    display: flex !important;
+    font-size: 0.65rem;
+    padding: 0.3rem 0.5rem;
   }
 
-  /* Shrink Book Now label on tiny screens */
+  /* Keep Book Now text visible */
   .btn-book-now span {
-    display: none;
+    display: inline !important;
+    font-size: 0.7rem;
   }
 
   .btn-book-now {
     padding: 0.45rem 0.7rem !important;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .hamburger {
