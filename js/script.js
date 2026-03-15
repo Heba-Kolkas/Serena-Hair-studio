@@ -235,8 +235,7 @@ const galleryData = {
     './html/Pics/Brides/Bride2.jpeg',
     './html/Pics/Brides/Bride1.jpeg',
     './html/Pics/Brides/vid1.mp4',
-    './html/Pics/Brides/Bride3.jpeg',
-    './html/Pics/Brides/vid4.mp4',
+    './html/Pics/Brides/Bride3.jpeg' ,
     './html/Pics/Brides/Bride7.jpeg',
   ],
   Farge: [
@@ -279,7 +278,6 @@ const galleryData = {
   Styling: [
     './html/Pics/Styling/Styling1.jpeg',
     './html/Pics/Styling/Styling4.jpeg',
-      './html/Pics/Brides/vid4.mp4',
     './html/Pics/Styling/Styling5.jpeg',
     './html/Pics/Styling/Styling10.jpeg',
     './html/Pics/Styling/Styling3.jpeg',
