@@ -2086,15 +2086,29 @@ section {
   text-transform: uppercase;
   text-decoration: none;
   transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
-  border: 1px solid rgba(255,255,255,0.45);
-  background: transparent;
-  color: #fff !important;
+  /* Light theme: solid espresso pill — fully visible */
+  border: 1px solid transparent;
+  background: var(--espresso);
+  color: var(--cream) !important;
 }
 
 .social-link-btn:hover {
   transform: translateY(-3px);
-  background: rgba(255,255,255,0.12);
+  background: var(--taupe);
   box-shadow: 0 8px 22px rgba(0,0,0,0.2);
+}
+
+/* Dark theme: flip to outlined ghost style */
+[data-theme="dark"] .social-link-btn {
+  background: transparent;
+  border-color: rgba(255,255,255,0.45);
+  color: #fff !important;
+}
+
+[data-theme="dark"] .social-link-btn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.7);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.3);
 }
 
 .social-link-btn i {

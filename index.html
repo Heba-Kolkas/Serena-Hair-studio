@@ -96,9 +96,23 @@
             font-weight: 500;
             letter-spacing: 0.06em;
             text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+            /* Light theme default: visible dark style */
+            background: var(--espresso, #3f3632);
+            color: #fff !important;
+            border: 1px solid transparent;
         }
-        .social-link-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+        /* Dark theme: switch to outlined style */
+        [data-theme="dark"] .social-link-btn {
+            background: transparent;
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,0.45);
+        }
+        [data-theme="dark"] .social-link-btn:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.7);
+        }
+        .social-link-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.2); background: var(--taupe, #B5A89A); }
         .social-link-btn i { font-size: 1rem; }
 
         /* ── RESPONSIVE ── */
