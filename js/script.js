@@ -4,17 +4,28 @@
     const popup = document.getElementById('welcome-popup');
     if (!popup) return;
     popup.classList.add('closing');
-    setTimeout(() => { popup.style.display = 'none'; }, 400);
+    setTimeout(() => {
+      popup.style.display = 'none';
+      document.body.style.overflow = '';
+    }, 400);
   }
-  const btnClose = document.getElementById('popupClose');
-  const btnX     = document.getElementById('popupX');
-  if (btnClose) btnClose.addEventListener('click', closePopup);
-  if (btnX)     btnX.addEventListener('click', closePopup);
-  // Close on backdrop click
-  const popup = document.getElementById('welcome-popup');
-  if (popup) popup.addEventListener('click', e => { if (e.target === popup) closePopup(); });
-  // Escape key
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+  function initPopup() {
+    const btnClose = document.getElementById('popupClose');
+    const btnX     = document.getElementById('popupX');
+    const popup    = document.getElementById('welcome-popup');
+    if (btnClose) btnClose.addEventListener('click', closePopup);
+    if (btnX)     btnX.addEventListener('click', closePopup);
+    if (popup)    popup.addEventListener('click', e => { if (e.target === popup) closePopup(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+    // Prevent body scroll while popup visible
+    if (popup) document.body.style.overflow = 'hidden';
+    // Auto-close popup when preloader hides so both don't stack
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPopup);
+  } else {
+    initPopup();
+  }
 })();
 
 // ── PRELOADER ──
@@ -24,6 +35,11 @@ window.addEventListener('load', () => {
     if (preloader) {
       preloader.classList.add('hidden');
       setTimeout(() => preloader.remove(), 500);
+    }
+    // Restore scroll once preloader gone (popup may still be open)
+    const popup = document.getElementById('welcome-popup');
+    if (!popup || popup.style.display === 'none') {
+      document.body.style.overflow = '';
     }
   }, 1000);
 });
@@ -95,6 +111,28 @@ if (langBtn) {
 
     // Re-render status badge in correct language
     updateStatusLang(lang);
+
+    // Translate popup if still visible
+    const popupTitle = document.querySelector('.popup-title');
+    const popupText  = document.querySelector('.popup-text');
+    const popupBadge = document.querySelector('.popup-badge span');
+    const popupBtn   = document.querySelector('.popup-close span');
+    if (popupTitle) {
+      const v = popupTitle.getAttribute('data-' + lang);
+      if (v) popupTitle.innerHTML = v;
+    }
+    if (popupText) {
+      const v = popupText.getAttribute('data-' + lang);
+      if (v) popupText.innerHTML = v;
+    }
+    if (popupBadge) {
+      const v = popupBadge.getAttribute('data-' + lang);
+      if (v) popupBadge.textContent = v;
+    }
+    if (popupBtn) {
+      const v = popupBtn.getAttribute('data-' + lang);
+      if (v) popupBtn.textContent = v;
+    }
   });
 }
 
@@ -350,7 +388,10 @@ function openLightbox(category) {
 
 function closeLightbox() {
   const overlay = document.getElementById('lightboxOverlay');
-  if (overlay) overlay.classList.remove('active');
+  if (!overlay) return;
+  // Pause all videos before removing to free memory
+  overlay.querySelectorAll('video').forEach(v => { v.pause(); v.src = ''; });
+  overlay.classList.remove('active');
   document.body.style.overflow = '';
 }
 
@@ -367,7 +408,7 @@ function closeLightbox() {
   function setPos(clientX) {
     const rect = sc.getBoundingClientRect();
     let pct = (clientX - rect.left) / rect.width;
-    pct = Math.min(1, Math.max(0, pct));
+    pct = Math.min(0.99, Math.max(0.01, pct)); // clamp away from 0/1 to avoid divide-by-zero
     const p = (pct * 100).toFixed(2) + '%';
     bw.style.width = p;
     bimg.style.width = (1 / pct * 100).toFixed(2) + '%';
