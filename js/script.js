@@ -3,10 +3,12 @@
   function closePopup() {
     const popup = document.getElementById('welcome-popup');
     if (!popup) return;
+    // Restore scrolling immediately — never wait for animation
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
     popup.classList.add('closing');
     setTimeout(() => {
       popup.style.display = 'none';
-      document.body.style.overflow = '';
     }, 400);
   }
   function initPopup() {
@@ -17,9 +19,6 @@
     if (btnX)     btnX.addEventListener('click', closePopup);
     if (popup)    popup.addEventListener('click', e => { if (e.target === popup) closePopup(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
-    // Prevent body scroll while popup visible
-    if (popup) document.body.style.overflow = 'hidden';
-    // Auto-close popup when preloader hides so both don't stack
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPopup);
@@ -36,11 +35,9 @@ window.addEventListener('load', () => {
       preloader.classList.add('hidden');
       setTimeout(() => preloader.remove(), 500);
     }
-    // Restore scroll once preloader gone (popup may still be open)
-    const popup = document.getElementById('welcome-popup');
-    if (!popup || popup.style.display === 'none') {
-      document.body.style.overflow = '';
-    }
+    // Always ensure body can scroll after preloader
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
   }, 1000);
 });
 
