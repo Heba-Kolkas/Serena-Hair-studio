@@ -825,17 +825,35 @@ section {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
 }
+
+/* Images in lightbox */
 .lightbox-grid img {
   width: 100%;
-  aspect-ratio: 4/5;  /* changed from 3/4 */
+  aspect-ratio: 4/5;
   object-fit: cover;
   border-radius: 8px;
   cursor: zoom-in;
   transition: transform 0.3s ease;
+  display: block;
 }
-
 .lightbox-grid img:hover {
   transform: scale(1.03);
+}
+
+/* Videos in lightbox — match image sizing exactly */
+.lightbox-grid .video-wrap {
+  width: 100%;
+  aspect-ratio: 4/5;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+  position: relative;
+}
+.lightbox-grid .video-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Animation States */

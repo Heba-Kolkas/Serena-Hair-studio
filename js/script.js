@@ -222,10 +222,10 @@ const galleryData = {
     './html/Pics/Balayage/vid17.mp4',
     './html/Pics/Balayage/Balayage28.jpeg',
     './html/Pics/Balayage/vid19.mp4',
-    './html/Pics/Balayage/vid22.mp4',
-    './html/Pics/Balayage/vid28.mp4',
-     './html/Pics/Balayage/vid27.mp4',
-    './html/Pics/Balayage/Balayage14.jpeg',
+    './html/Pics/Balayage/vid626.mp4',
+    './html/Pics/Balayage/vid629.mp4',
+     './html/Pics/Balayage/vid627.mp4',
+    
     
   ],
   Brides: [
@@ -315,10 +315,14 @@ const galleryData = {
     items.forEach(src => {
       if (/\.(mp4|mov|webm)$/i.test(src)) {
         const v = document.createElement('video');
-        v.preload = 'auto';
+        v.preload = 'metadata'; // metadata first, not full auto (saves bandwidth)
         v.muted = true;
-        v.src = src;
-        v.load(); // triggers browser fetch
+        v.playsInline = true;
+        const s = document.createElement('source');
+        s.src = src;
+        s.type = 'video/mp4';
+        v.appendChild(s);
+        v.load();
       }
     });
   }
@@ -365,26 +369,37 @@ function openLightbox(category) {
   items.forEach(src => {
     const isVideo = /\.(mp4|mov|webm)$/i.test(src);
     if (isVideo) {
+      // Use CSS class video-wrap for proper sizing (matches image sizing)
       const wrapper = document.createElement('div');
-      wrapper.style.cssText = 'width:100%;aspect-ratio:4/5;overflow:hidden;border-radius:8px;';
+      wrapper.className = 'video-wrap';
+
       const video = document.createElement('video');
-      video.src = src;
-      video.autoplay = true;
       video.muted = true;
       video.loop = true;
       video.playsInline = true;
       video.preload = 'auto';
       video.setAttribute('playsinline', '');
       video.setAttribute('webkit-playsinline', '');
-      video.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
-      // Start loading immediately
-      video.load();
+      video.setAttribute('muted', '');
+
+      const source = document.createElement('source');
+      source.src = src;
+      source.type = 'video/mp4';
+      video.appendChild(source);
+
+      // Play as soon as enough data is loaded
+      video.addEventListener('canplay', () => {
+        video.play().catch(() => {});
+      }, { once: true });
+
       wrapper.appendChild(video);
       grid.appendChild(wrapper);
+      video.load();
     } else {
       const img = document.createElement('img');
       img.src = src;
       img.alt = category;
+      img.loading = 'lazy';
       grid.appendChild(img);
     }
   });
@@ -396,10 +411,20 @@ function openLightbox(category) {
 function closeLightbox() {
   const overlay = document.getElementById('lightboxOverlay');
   if (!overlay) return;
-  // Pause all videos before removing to free memory
-  overlay.querySelectorAll('video').forEach(v => { v.pause(); v.src = ''; });
+  // Pause all videos and clear grid
+  overlay.querySelectorAll('video').forEach(v => {
+    v.pause();
+    v.removeAttribute('src');
+    v.innerHTML = '';
+    v.load();
+  });
   overlay.classList.remove('active');
   document.body.style.overflow = '';
+  // Clear grid after close so memory is freed
+  setTimeout(() => {
+    const grid = document.getElementById('lightboxGrid');
+    if (grid) grid.innerHTML = '';
+  }, 300);
 }
 
 // ── BEFORE & AFTER SLIDER ──
