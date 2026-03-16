@@ -8,9 +8,8 @@
     document.documentElement.style.overflow = '';
     popup.classList.add('closing');
     setTimeout(() => { popup.style.display = 'none'; }, 400);
-    // Trigger tip card after 3s, toast after 6s — staggered so they don't overlap
-    setTimeout(() => { if (typeof window._showTip === 'function') window._showTip(); }, 3000);
-    setTimeout(() => { if (typeof window._showToast === 'function') window._showToast(); }, 6000);
+    // Trigger toast after 3s on popup close
+    setTimeout(() => { if (typeof window._showToast === 'function') window._showToast(); }, 3000);
   }
   function initPopup() {
     const btnClose = document.getElementById('popupClose');
@@ -317,17 +316,17 @@ const galleryData = {
     './html/Pics/Haircut/Haircut4.jpeg',
   ],
   Styling: [
-    './html/Pics/Styling/Styling1.jpeg',
+    './html/Pics/Styling/styling1.jpeg',
     './html/Pics/Styling/vid1.mp4',
-    './html/Pics/Styling/Styling4.jpeg',
-    './html/Pics/Styling/Styling5.jpeg',
-    './html/Pics/Styling/Styling10.jpeg',
-    './html/Pics/Styling/Styling3.jpeg',
-    './html/Pics/Styling/Styling2.jpeg',
-    './html/Pics/Styling/Styling6.jpeg',
-    './html/Pics/Styling/Styling7.jpeg',
-    './html/Pics/Styling/Styling8.jpeg',
-    './html/Pics/Styling/Styling9.jpeg',
+    './html/Pics/Styling/styling4.jpeg',
+    './html/Pics/Styling/styling5.jpeg',
+    './html/Pics/Styling/styling10.jpeg',
+    './html/Pics/Styling/styling3.jpeg',
+    './html/Pics/Styling/styling2.jpeg',
+    './html/Pics/Styling/styling6.jpeg',
+    './html/Pics/Styling/styling7.jpeg',
+    './html/Pics/Styling/styling8.jpeg',
+    './html/Pics/Styling/styling9.jpeg',
   ],
   HairTreatment: [
     './html/Pics/Treatment/Ht1.mp4',
@@ -1098,56 +1097,6 @@ function langBannerPick(l) {
   }
 }
 
-// ── DAILY HAIR TIP CARD ──
-(function() {
-  const el = document.getElementById('tipFloat');
-  const body = document.getElementById('tipFloatBody');
-  if (!el || !body) return;
-
-  const tips = [
-    { en: 'Always apply heat protectant before blow-drying. Even low heat causes cumulative damage — protect those ends every single time.', no: 'Bruk alltid varmebeskyttelse før du føner. Selv lav varme forårsaker kumulativ skade — beskytt endene dine hver eneste gang.' },
-    { en: 'Sleep on a silk pillowcase. Cotton creates friction that breaks hair overnight — silk lets your hair glide freely and stay frizz-free.', no: 'Sov på en silkepute. Bomull skaper friksjon som bryter håret om natten — silke lar håret gli fritt og forbli krøllefritt.' },
-    { en: 'Rinse your hair with cold water at the end of every wash. It seals the cuticle and locks in shine better than any product.', no: 'Skyll håret med kaldt vann på slutten av hver vask. Det forseglar kutikkelen og låser inn glans bedre enn noe produkt.' },
-    { en: "Don't brush wet hair — use a wide-tooth comb instead. Wet hair stretches and breaks up to 3x more easily than dry hair.", no: 'Ikke børst vått hår — bruk en grov kam i stedet. Vått hår strekkes og brekkes opp til 3 ganger lettere enn tørt hår.' },
-    { en: 'Trim your ends every 8–10 weeks even if you are growing your hair. Removing split ends actually helps hair grow longer, faster.', no: 'Klipp endene dine hver 8–10 uke selv om du vokser håret. Å fjerne kløyvde ender hjelper faktisk håret å vokse lengre og raskere.' },
-    { en: 'Massage your scalp for 2 minutes before washing. It stimulates blood flow to the follicles and noticeably improves hair density over time.', no: 'Massér hodebunnen i 2 minutter før vask. Det stimulerer blodstrøm til folliklene og forbedrer hårtetthet merkbart over tid.' },
-    { en: 'Less is more with dry shampoo. Overuse builds up on the scalp and can clog follicles — use it max 2 days between washes.', no: 'Mindre er mer med tørrshampo. Overbruk bygger seg opp på hodebunnen og kan tette follikler — bruk det maks 2 dager mellom vask.' },
-  ];
-
-  const dayIdx = new Date().getDay(); // 0-6, one tip per day of week
-  const tip = tips[dayIdx];
-  body.setAttribute('data-en', tip.en);
-  body.setAttribute('data-no', tip.no);
-  body.textContent = tip.en;
-
-  const today = new Date().toDateString();
-
-  // Exposed so popup close can trigger it
-  window._showTip = function() {
-    if (localStorage.getItem('tipDismissed') === today) return;
-    el.style.display = 'block';
-    el.style.opacity = '1';
-    el.classList.remove('is-showing');
-    void el.offsetWidth; // force reflow so animation restarts cleanly
-    el.classList.add('is-showing');
-    // Auto-hide after 30 seconds
-    setTimeout(() => {
-      el.style.transition = 'opacity 0.5s';
-      el.style.opacity = '0';
-      setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; el.classList.remove('is-showing'); }, 500);
-    }, 30000);
-  };
-
-  // Close button
-  const closeBtn = document.getElementById('tipFloatClose');
-  if (closeBtn) closeBtn.addEventListener('click', () => {
-    localStorage.setItem('tipDismissed', today);
-    el.style.opacity = '0';
-    el.style.transition = 'opacity 0.3s';
-    setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, 300);
-  });
-})();
-
 // ── APPOINTMENT REMINDER TOAST ──
 (function() {
   const toast = document.getElementById('apptToast');
@@ -1177,59 +1126,6 @@ function langBannerPick(l) {
     toast.style.opacity = '0';
     setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = ''; toast.style.transition = ''; }, 300);
   });
-})();
-
-// ── WELCOME BACK VISIT COUNTER ──
-(function() {
-  const counter = document.getElementById('visitCounter');
-  const numEl = document.getElementById('visitNum');
-  const titleEl = document.getElementById('visitTitle');
-  const subEl = document.getElementById('visitSub');
-  if (!counter || !numEl) return;
-
-  // Get and increment visit count
-  let visits = parseInt(localStorage.getItem('ssVisitCount') || '0') + 1;
-  localStorage.setItem('ssVisitCount', visits);
-
-  if (visits < 2) return; // Don't show on first ever visit
-
-  numEl.textContent = visits;
-
-  const msgs = {
-    en: [
-      { title: 'Welcome back!', sub: 'Great to see you again at Studio Serena.' },
-      { title: 'You\'re back ✦', sub: 'You\'ve visited us 3 times — you\'re practically family.' },
-      { title: 'A loyal friend ✦', sub: 'Your Gold Client status is just one visit away.' },
-      { title: 'Gold Client ✦', sub: 'You\'re one of our most valued visitors. Thank you.' },
-      { title: 'VIP ✦', sub: 'You\'ve visited 5+ times. You are Studio Serena.' },
-    ],
-    no: [
-      { title: 'Velkommen tilbake!', sub: 'Så hyggelig å se deg igjen hos Studio Serena.' },
-      { title: 'Du er tilbake ✦', sub: 'Du har besøkt oss 3 ganger — du er nesten familie.' },
-      { title: 'En lojal venn ✦', sub: 'Gull-klientstatus er bare ett besøk unna.' },
-      { title: 'Gullklient ✦', sub: 'Du er en av våre mest verdsatte besøkende. Takk.' },
-      { title: 'VIP ✦', sub: 'Du har besøkt 5+ ganger. Du er Studio Serena.' },
-    ]
-  };
-
-  const idx = Math.min(visits - 2, 4);
-  const m = msgs.en[idx];
-  if (titleEl) { titleEl.textContent = m.title; titleEl.setAttribute('data-en', m.title); titleEl.setAttribute('data-no', msgs.no[idx].title); }
-  if (subEl) { subEl.textContent = m.sub; subEl.setAttribute('data-en', m.sub); subEl.setAttribute('data-no', msgs.no[idx].sub); }
-
-  // Show after 60 seconds (1 minute)
-  setTimeout(() => {
-    counter.style.display = 'flex';
-    counter.classList.remove('is-showing');
-    void counter.offsetWidth;
-    counter.classList.add('is-showing');
-    // Auto-hide after 8 seconds
-    setTimeout(() => {
-      counter.style.opacity = '0';
-      counter.style.transition = 'opacity 0.5s';
-      setTimeout(() => { counter.style.display = 'none'; }, 500);
-    }, 8000);
-  }, 60000);
 })();
 
 // ── BLACK CARD ──

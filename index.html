@@ -218,11 +218,12 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-                text-align: left;
+                align-items: center;
+                text-align: center;
             }
             .popup-title { font-size: 2.1rem; margin-bottom: 1rem; }
             .popup-text  { font-size: 0.9rem; margin-bottom: 1.8rem; }
-            .popup-close { align-self: flex-start; padding: 0.8rem 2.4rem; font-size: 0.8rem; }
+            .popup-close { align-self: center; padding: 0.8rem 2.4rem; font-size: 0.8rem; }
             .popup-x     { top: 1rem; right: 1.1rem; width: 34px; height: 34px; }
         }
 
@@ -331,7 +332,6 @@
         }
         .gallery-ig-link:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.8); transform: scale(1.1); }
 
-        /* ── NAV — always visible ── */
         @media (max-width: 900px) {
             nav { padding: 0.8rem 1.2rem !important; min-height: 56px; }
             .nav-logo { font-size: 1.15rem; }
@@ -574,7 +574,7 @@
         <!-- LIGHTBOX -->
         <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
             <div class="lightbox-box" onclick="event.stopPropagation()">
-                <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+                <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">✕</button>
                 <h3 class="lightbox-title" id="lightboxTitle"></h3>
                 <div class="lightbox-grid" id="lightboxGrid"></div>
             </div>
@@ -1219,10 +1219,7 @@
             <div class="bc-stage reveal">
                 <div class="bc-card" id="bcCard">
                     <div class="bc-shine"></div>
-                    <div class="bc-top-row">
-                        <div class="bc-logo-text">Studio Serena</div>
-                        <div class="bc-chip-el"></div>
-                    </div>
+                    <div class="bc-top-row"><div class="bc-logo-text">Studio Serena</div><div class="bc-chip-el"></div></div>
                     <div class="bc-dots-row" id="bcDots"></div>
                     <div class="bc-mid-num">•••• •••• •••• 2026</div>
                     <div class="bc-bot-row">
@@ -1329,21 +1326,6 @@
             <button class="lang-banner-close" onclick="document.getElementById('langBanner').style.display='none'">✕</button>
         </div>
 
-        <!-- HAIR TIP CARD -->
-        <div class="tip-float" id="tipFloat">
-            <div class="tip-float-inner">
-                <div class="tip-float-top">
-                    <div class="tip-float-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                    <div class="tip-float-info">
-                        <div class="tip-float-title" data-en="Hair tip of the day" data-no="Hårtips for dagen">Hair tip of the day</div>
-                        <div class="tip-float-sub">Studio Serena</div>
-                    </div>
-                    <button class="tip-float-close" id="tipFloatClose">✕</button>
-                </div>
-                <div class="tip-float-body" id="tipFloatBody"></div>
-            </div>
-        </div>
-
         <!-- APPOINTMENT TOAST -->
         <div class="appt-toast" id="apptToast" style="display:none;">
             <div class="appt-toast-icon"><i class="fa-regular fa-calendar-check"></i></div>
@@ -1353,19 +1335,6 @@
             </div>
             <a href="https://www.instagram.com/saloncoiff1rst" target="_blank" rel="noopener" class="appt-toast-btn" data-en="Book" data-no="Bestill">Book</a>
             <button class="appt-toast-x" id="apptToastX">✕</button>
-        </div>
-
-        <!-- VISIT COUNTER -->
-        <div class="visit-counter" id="visitCounter" style="display:none;">
-            <div class="visit-counter-circle">
-                <span class="visit-counter-num" id="visitNum">1</span>
-                <span class="visit-counter-word" data-en="visits" data-no="besøk">visits</span>
-            </div>
-            <div class="visit-counter-text">
-                <div class="visit-counter-title" id="visitTitle"></div>
-                <div class="visit-counter-sub" id="visitSub"></div>
-            </div>
-            <button class="visit-counter-close" onclick="document.getElementById('visitCounter').style.display='none'">✕</button>
         </div>
 
         <!-- CHATBOT -->

@@ -838,19 +838,34 @@ section {
   max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
-  padding: 30px;
+  padding: 56px 30px 30px;
   position: relative;
 }
 
 .lightbox-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
+  position: sticky;
+  top: 0;
+  float: right;
+  margin: -46px -6px 0 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--espresso);
   border: none;
-  font-size: 1.4rem;
+  font-size: 1rem;
   cursor: pointer;
-  color: var(--charcoal, #2C2420);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: 0 2px 12px rgba(44,36,32,0.3);
+  transition: background 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+.lightbox-close:hover {
+  background: var(--taupe);
+  transform: scale(1.1);
 }
 
 .lightbox-title {
