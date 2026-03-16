@@ -149,15 +149,18 @@
             opacity: 0;
             animation: popupFadeIn 0.6s 1.8s forwards;
         }
+        /* Card and buttons always clickable regardless of overlay animation */
+        #welcome-popup .popup-card,
+        #welcome-popup .popup-close,
+        #welcome-popup .popup-x {
+            pointer-events: auto !important;
+        }
         @keyframes popupFadeIn {
             from { opacity: 0; transform: scale(0.97); }
             to   { opacity: 1; transform: scale(1); }
         }
         #welcome-popup.closing {
-            animation: popupFadeOut 0.4s forwards;
-        }
-        @keyframes popupFadeOut {
-            to { opacity: 0; transform: scale(0.96); pointer-events: none; }
+            pointer-events: none !important;
         }
         .popup-card {
             background: var(--cream, #faf8f5);
@@ -1327,16 +1330,7 @@
             <button class="lang-banner-close" onclick="document.getElementById('langBanner').style.display='none'">✕</button>
         </div>
 
-        <!-- APPOINTMENT TOAST -->
-        <div class="appt-toast" id="apptToast" style="display:none;">
-            <div class="appt-toast-icon"><i class="fa-regular fa-calendar-check"></i></div>
-            <div class="appt-toast-body">
-                <div class="appt-toast-title" data-en="Limited slots this month" data-no="Begrenset plasser denne måneden">Limited slots this month</div>
-                <div class="appt-toast-sub" data-en="Book now on Instagram or WhatsApp" data-no="Bestill nå på Instagram eller WhatsApp">Book now on Instagram or WhatsApp</div>
-            </div>
-            <a href="https://www.instagram.com/saloncoiff1rst" target="_blank" rel="noopener" class="appt-toast-btn" data-en="Book" data-no="Bestill">Book</a>
-            <button class="appt-toast-x" id="apptToastX">✕</button>
-        </div>
+
 
         <!-- CHATBOT -->
 
@@ -1379,22 +1373,25 @@
             <a href="#location" class="mob-nav-item" data-en="Location" data-no="Lokasjon">Location</a>
         </nav>
 
-        <script>
+        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
           function positionSubNav() {
             var navbar = document.getElementById('navbar');
             var subNav = document.getElementById('mobileBottomNav');
             if (!navbar || !subNav) return;
-            if (window.innerWidth > 430) {
+            if (window.innerWidth > 900) {
+              subNav.style.top = '';
               subNav.style.display = 'none';
               return;
             }
-            subNav.style.display = 'flex';
-            subNav.style.top = navbar.getBoundingClientRect().bottom + 'px';
+            subNav.style.display = '';
+            var navH = navbar.getBoundingClientRect().height;
+            subNav.style.top = navH + 'px';
           }
-          window.addEventListener('load', positionSubNav);
+          positionSubNav();
           window.addEventListener('resize', positionSubNav);
           window.addEventListener('scroll', positionSubNav);
         </script>
+
         <script src="./js/script.js"></script>
-</body>
+    </body>
 </html>

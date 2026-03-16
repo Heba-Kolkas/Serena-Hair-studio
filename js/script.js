@@ -1,24 +1,20 @@
 // ── WELCOME POPUP ──
 (function() {
   function closePopup() {
-    const popup = document.getElementById('welcome-popup');
+    var popup = document.getElementById('welcome-popup');
     if (!popup) return;
-    // Restore scroll IMMEDIATELY — never inside a timeout
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
-    popup.classList.add('closing');
-    setTimeout(() => { popup.style.display = 'none'; }, 400);
-    // Trigger toast after 3s on popup close
-    setTimeout(() => { if (typeof window._showToast === 'function') window._showToast(); }, 3000);
+    popup.remove();
   }
   function initPopup() {
-    const btnClose = document.getElementById('popupClose');
-    const btnX     = document.getElementById('popupX');
-    const popup    = document.getElementById('welcome-popup');
+    var btnClose = document.getElementById('popupClose');
+    var btnX     = document.getElementById('popupX');
+    var popup    = document.getElementById('welcome-popup');
     if (btnClose) btnClose.addEventListener('click', closePopup);
     if (btnX)     btnX.addEventListener('click', closePopup);
-    if (popup)    popup.addEventListener('click', e => { if (e.target === popup) closePopup(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+    if (popup)    popup.addEventListener('click', function(e) { if (e.target === popup) closePopup(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePopup(); });
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPopup);
@@ -1033,26 +1029,26 @@ if (!window._studioSerenaChatInit) {
   const day = new Date().getDay();
   const msgs = {
     en: [
-      h < 6  ? 'Night owl. See you tomorrow.' :
-      h < 12 ? 'Good morning. Look incredible today.' :
+      h < 6  ? 'Up late? We\'re here.' :
+      h < 12 ? 'Good morning. Look great.' :
       h < 17 ? 'Good afternoon. Treat yourself.' :
-      h < 21 ? 'Good evening. Glow up starts here.' :
-               'Late night? DM us anytime.',
+      h < 21 ? 'Good evening. Glow up.' :
+               'Late night. DM us.',
     ],
     no: [
-      h < 6  ? 'Nattuglen. Vi sees i morgen.' :
-      h < 12 ? 'God morgen. Se fantastisk ut.' :
-      h < 17 ? 'God ettermiddag. Unne deg selv.' :
-      h < 21 ? 'God kveld. Din forvandling starter.' :
-               'Seint ute? Send oss en DM.',
+      h < 6  ? 'Seint ute? DM oss.' :
+      h < 12 ? 'God morgen. Se bra.' :
+      h < 17 ? 'God ettermiddag. Unne deg.' :
+      h < 21 ? 'God kveld. Glow up.' :
+               'Sent ute. Send DM.',
     ]
   };
   // Weekend special
   let msgEn = msgs.en[0];
   let msgNo = msgs.no[0];
   if (day === 0 || day === 6) {
-    msgEn = 'Happy weekend. Book ahead.';
-    msgNo = 'God helg. Bestill time nå.';
+    msgEn = 'Happy weekend. Book now.';
+    msgNo = 'God helg. Bestill nå.';
   }
   el.setAttribute('data-en', msgEn);
   el.setAttribute('data-no', msgNo);
@@ -1097,36 +1093,8 @@ function langBannerPick(l) {
   }
 }
 
-// ── APPOINTMENT REMINDER TOAST ──
-(function() {
-  const toast = document.getElementById('apptToast');
-  if (!toast) return;
-
-  // Exposed so popup close can trigger it
-  window._showToast = function() {
-    if (sessionStorage.getItem('toastShown')) return;
-    sessionStorage.setItem('toastShown', '1');
-    toast.style.display = 'flex';
-    toast.style.opacity = '1';
-    toast.classList.remove('is-showing');
-    void toast.offsetWidth;
-    toast.classList.add('is-showing');
-    // Auto-hide after 30 seconds
-    setTimeout(() => {
-      toast.style.transition = 'opacity 0.5s';
-      toast.style.opacity = '0';
-      setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = ''; toast.style.transition = ''; }, 500);
-    }, 30000);
-  };
-
-  // Close button (X)
-  const xBtn = document.getElementById('apptToastX');
-  if (xBtn) xBtn.addEventListener('click', () => {
-    toast.style.transition = 'opacity 0.3s';
-    toast.style.opacity = '0';
-    setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = ''; toast.style.transition = ''; }, 300);
-  });
-})();
+// ── APPOINTMENT REMINDER TOAST REMOVED ──
+window._showToast = function() {};
 
 // ── BLACK CARD ──
 (function() {
