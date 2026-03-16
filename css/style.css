@@ -1739,12 +1739,12 @@ section {
 /* ── TABLET PORTRAIT (600px–899px) ── */
 @media (max-width: 900px) {
   nav {
-    padding: 1.2rem 2rem;
+    padding: 0.4rem 1.2rem;
     background: var(--cream) !important;
     border-bottom: 1px solid var(--warmgrey);
   }
   nav.scrolled {
-    padding: 0.9rem 2rem;
+    padding: 0.3rem 1.2rem;
   }
 
   .nav-links {
@@ -1827,13 +1827,13 @@ section {
 
   /* Nav */
   nav {
-    padding: 1rem 1.2rem;
+    padding: 0.35rem 1rem;
     background: var(--cream) !important;
     border-bottom: 1px solid var(--warmgrey);
   }
 
   nav.scrolled {
-    padding: 0.8rem 1.2rem;
+    padding: 0.25rem 1rem;
   }
 
   .nav-links {
