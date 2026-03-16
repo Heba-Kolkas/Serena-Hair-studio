@@ -79,12 +79,24 @@
     }
     </script>
 
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap"
-        rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Fonts — non-blocking -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" /></noscript>
+
+    <!-- Font Awesome — non-blocking -->
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" /></noscript>
+
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#2C2420" />
     <style>
         /* ── BOOK NOW BUTTON ── */
         .btn-book-now {
@@ -430,20 +442,8 @@
             .hamburger { display: flex !important; }
         }
     </style>
-    <!-- Critical image preloads — above the fold, load immediately -->
-    <link rel="preload" as="image" href="./html/Pics/Team/Hasan.jpg">
-    <link rel="preload" as="image" href="./html/Pics/Balayage/After.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Balayage/Before.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Balayage/Blayage12.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Farge/Farge1.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Treatment/cover.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Extensions/cover.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Haircut/Haircut5.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Styling/styling4.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Brides/Bride5.jpeg">
-    <link rel="preload" as="image" href="./html/Pics/Team/Kani.jpg">
-    <link rel="preload" as="image" href="./html/Pics/Team/Taniya.jpg">
-    <link rel="preload" as="image" href="./html/Pics/Team/Heba.jpg">
+    <!-- Only preload the single most critical above-fold image -->
+    <link rel="preload" as="image" href="./html/Pics/Team/Hasan.jpg" fetchpriority="high">
 </head>
 
 <body>
@@ -452,7 +452,7 @@
     <div id="welcome-popup" role="dialog" aria-modal="true" aria-label="Welcome to Studio Serena">
         <div class="popup-card">
             <div class="popup-img-wrap">
-                <img src="./html/Pics/Team/Hasan.jpg" loading="lazy" alt="Hassan K. — Founder of Studio Serena" loading="eager">
+                <img src="./html/Pics/Team/Hasan.jpg" loading="eager" fetchpriority="high" alt="Hassan K. — Founder of Studio Serena">
                 <div class="popup-img-overlay"></div>
                 <button class="popup-x" id="popupX" aria-label="Close">✕</button>
                 <div class="popup-badge">
@@ -623,11 +623,11 @@
                     <div class="gallery-cat-label reveal">Balayage</div>
                 </div>
                 <div class="gallery-cat-card" onclick="openLightbox('Farge')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Farge/Farge1.jpeg" alt="Farge" loading="eager"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Farge/Farge1.jpeg" alt="Farge" loading="lazy" decoding="async"></div>
                     <div class="gallery-cat-label reveal" data-en="Colour" data-no="Farge">Colour</div>
                 </div>
                 <div class="gallery-cat-card" onclick="openLightbox('HairTreatment')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Treatment/cover.jpeg" alt="Keratin Treatment" loading="eager"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Treatment/cover.jpeg" alt="Keratin Treatment" loading="lazy" decoding="async"></div>
                     <div class="gallery-cat-label reveal" data-en="Keratin Treatment" data-no="Keratinbehandling">
                         Keratin Treatment
                         <a href="https://www.instagram.com/lavellaprofessional?igsh=ZngyNHZkamFwa3J4" target="_blank" rel="noopener noreferrer" class="team-social-link gallery-ig-link" onclick="event.stopPropagation()">
@@ -636,19 +636,19 @@
                     </div>
                 </div>
                 <div class="gallery-cat-card" onclick="openLightbox('Extensions')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Extensions/cover.jpeg" alt="Extensions" loading="eager"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Extensions/cover.jpeg" alt="Extensions" loading="lazy" decoding="async"></div>
                     <div class="gallery-cat-label reveal">Extensions</div>
                 </div>
                 <div class="gallery-cat-card" onclick="openLightbox('Haircut')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Haircut/Haircut5.jpeg" alt="Haircut" loading="eager"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Haircut/Haircut5.jpeg" alt="Haircut" loading="lazy" decoding="async"></div>
                     <div class="gallery-cat-label reveal" data-en="Cut & Style" data-no="Klipp & Style">Cut & Style</div>
                 </div>
                 <div class="gallery-cat-card" onclick="openLightbox('Styling')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Styling/styling4.jpeg" alt="Styling" loading="eager"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Styling/styling4.jpeg" alt="Styling" loading="lazy" decoding="async"></div>
                     <div class="gallery-cat-label reveal">Styling</div>
                 </div>
                 <div class="gallery-cat-card" onclick="openLightbox('Brides')">
-                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Brides/Bride5.jpeg" alt="Brides" loading="eager"></div>
+                    <div class="gallery-cat-img-wrap"><img src="./html/Pics/Brides/Bride5.jpeg" alt="Brides" loading="lazy" decoding="async"></div>
                     <div class="gallery-cat-label reveal" data-en="Bridal" data-no="Brud">Bridal</div>
                 </div>
             </div>
@@ -1482,6 +1482,16 @@
           window.addEventListener('scroll', positionSubNav);
         </script>
 
-        <script src="./js/script.js"></script>
+        <script src="./js/script.js" defer></script>
+
+        <!-- Service Worker — enables offline & fast repeat loading -->
+        <script>
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('./sw.js')
+                .catch(function() {});
+            });
+          }
+        </script>
     </body>
 </html>

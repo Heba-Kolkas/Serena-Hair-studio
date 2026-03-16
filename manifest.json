@@ -1,0 +1,25 @@
+{
+  "name": "Studio Serena Hair",
+  "short_name": "Studio Serena",
+  "description": "Oslo's premier hair studio — Balayage, Extensions, Keratin & Bridal Hair",
+  "start_url": "/Serena-Hair-studio/",
+  "scope": "/Serena-Hair-studio/",
+  "display": "standalone",
+  "background_color": "#2C2420",
+  "theme_color": "#2C2420",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./html/Pics/Team/Hasan.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "./html/Pics/Team/Hasan.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ]
+}
