@@ -843,10 +843,9 @@ section {
 }
 
 .lightbox-close {
-  position: sticky;
-  top: 0;
-  float: right;
-  margin: -46px -6px 0 0;
+  position: absolute;
+  top: 14px;
+  right: 14px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -858,7 +857,7 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 20;
   box-shadow: 0 2px 12px rgba(44,36,32,0.3);
   transition: background 0.2s, transform 0.2s;
   flex-shrink: 0;
@@ -1949,7 +1948,7 @@ section {
 
   /* Lightbox */
   .lightbox-box {
-    padding: 20px;
+    padding: 56px 16px 20px;
   }
 
   .lightbox-grid {
