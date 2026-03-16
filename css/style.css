@@ -3200,6 +3200,43 @@ nav.scrolled #scroll-progress {
   display: none !important;
 }
 
+@media (max-width: 430px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 9400;
+    background: rgba(44, 36, 32, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    justify-content: space-around;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .mob-nav-item {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    color: rgba(255,255,255,0.9) !important;
+    font-family: var(--font-body);
+    font-size: 0.6rem;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.1rem;
+    transition: color 0.2s;
+    white-space: nowrap;
+  }
+
+  .mob-nav-item:hover,
+  .mob-nav-item.active {
+    color: #fff !important;
+  }
+}
+
 /* ── PREVENT iOS ZOOM ON ALL INPUTS ── */
 input, textarea, select {
   font-size: 16px !important;

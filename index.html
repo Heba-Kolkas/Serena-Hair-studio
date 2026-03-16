@@ -1371,6 +1371,30 @@
             </div>
         </div>
 
+        <!-- MOBILE SUB-NAV -->
+        <nav class="mobile-bottom-nav" id="mobileBottomNav">
+            <a href="#gallery" class="mob-nav-item" data-en="Gallery" data-no="Galleri">Gallery</a>
+            <a href="#team" class="mob-nav-item" data-en="Team" data-no="Team">Team</a>
+            <a href="#testimonials" class="mob-nav-item" data-en="Reviews" data-no="Anmeldelser">Reviews</a>
+            <a href="#location" class="mob-nav-item" data-en="Location" data-no="Lokasjon">Location</a>
+        </nav>
+
+        <script>
+          function positionSubNav() {
+            var navbar = document.getElementById('navbar');
+            var subNav = document.getElementById('mobileBottomNav');
+            if (!navbar || !subNav) return;
+            if (window.innerWidth > 430) {
+              subNav.style.display = 'none';
+              return;
+            }
+            subNav.style.display = 'flex';
+            subNav.style.top = navbar.getBoundingClientRect().bottom + 'px';
+          }
+          window.addEventListener('load', positionSubNav);
+          window.addEventListener('resize', positionSubNav);
+          window.addEventListener('scroll', positionSubNav);
+        </script>
         <script src="./js/script.js"></script>
 </body>
 </html>

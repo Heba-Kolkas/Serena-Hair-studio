@@ -1033,26 +1033,26 @@ if (!window._studioSerenaChatInit) {
   const day = new Date().getDay();
   const msgs = {
     en: [
-      h < 6  ? 'Still up? Come in tomorrow — we open at 11.' :
-      h < 12 ? 'Good morning — start your week looking incredible.' :
-      h < 17 ? 'Good afternoon — treat yourself today.' :
-      h < 21 ? 'Good evening — your glow-up starts here.' :
-               'Late night browsing? DM us on Instagram.',
+      h < 6  ? 'Night owl. See you tomorrow.' :
+      h < 12 ? 'Good morning. Look incredible today.' :
+      h < 17 ? 'Good afternoon. Treat yourself.' :
+      h < 21 ? 'Good evening. Glow up starts here.' :
+               'Late night? DM us anytime.',
     ],
     no: [
-      h < 6  ? 'Fremdeles oppe? Kom innom i morgen — vi åpner kl. 11.' :
-      h < 12 ? 'God morgen — start uken din med å se fantastisk ut.' :
-      h < 17 ? 'God ettermiddag — unne deg selv litt i dag.' :
-      h < 21 ? 'God kveld — din forvandling starter her.' :
-               'Seint ute? Send oss en DM på Instagram.',
+      h < 6  ? 'Nattuglen. Vi sees i morgen.' :
+      h < 12 ? 'God morgen. Se fantastisk ut.' :
+      h < 17 ? 'God ettermiddag. Unne deg selv.' :
+      h < 21 ? 'God kveld. Din forvandling starter.' :
+               'Seint ute? Send oss en DM.',
     ]
   };
   // Weekend special
   let msgEn = msgs.en[0];
   let msgNo = msgs.no[0];
   if (day === 0 || day === 6) {
-    msgEn = 'Enjoying the weekend? Book ahead for next week.';
-    msgNo = 'Nyter helgen? Bestill time til neste uke.';
+    msgEn = 'Happy weekend. Book ahead.';
+    msgNo = 'God helg. Bestill time nå.';
   }
   el.setAttribute('data-en', msgEn);
   el.setAttribute('data-no', msgNo);
