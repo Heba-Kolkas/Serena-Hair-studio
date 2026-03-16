@@ -8,6 +8,9 @@
     document.documentElement.style.overflow = '';
     popup.classList.add('closing');
     setTimeout(() => { popup.style.display = 'none'; }, 400);
+    // Trigger tip card after 3s, toast after 6s — staggered so they don't overlap
+    setTimeout(() => { if (typeof window._showTip === 'function') window._showTip(); }, 3000);
+    setTimeout(() => { if (typeof window._showToast === 'function') window._showToast(); }, 6000);
   }
   function initPopup() {
     const btnClose = document.getElementById('popupClose');
@@ -41,10 +44,17 @@ window.addEventListener('load', () => {
 
 // ── NAV & BACK TO TOP ──
 const navbar = document.getElementById('navbar');
+const scrollProgress = document.getElementById('scroll-progress');
 window.addEventListener('scroll', () => {
   if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 60);
   const backTop = document.getElementById('back-top');
   if (backTop) backTop.classList.toggle('visible', window.scrollY > 400);
+  // Scroll progress bar
+  if (scrollProgress) {
+    const docH = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const pct = docH > 0 ? (window.scrollY / docH) * 100 : 0;
+    scrollProgress.style.width = pct.toFixed(2) + '%';
+  }
 });
 
 // ── MOBILE MENU ──
@@ -65,25 +75,51 @@ function closeMob() {
 // ── THEME TOGGLE ──
 const themeBtn = document.getElementById('themeToggle');
 if (themeBtn) {
+  function _syncThemeIcon(isDark) {
+    const moon = themeBtn.querySelector('.theme-icon-moon');
+    const sun  = themeBtn.querySelector('.theme-icon-sun');
+    if (moon) moon.style.display = isDark ? 'none' : '';
+    if (sun)  sun.style.display  = isDark ? ''     : 'none';
+  }
   themeBtn.addEventListener('click', () => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-    themeBtn.textContent = isDark ? '☾ Dark' : '☀ Light';
+    const newTheme = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    _syncThemeIcon(!isDark);
+    // Re-render black card tier if visible
+    if (typeof window._bcRender === 'function') window._bcRender();
   });
+  // Sync icon on page load
+  _syncThemeIcon(document.documentElement.getAttribute('data-theme') === 'dark');
 }
 
 // ── LANGUAGE TOGGLE ──
 let lang = 'en';
 const langBtn = document.getElementById('langToggle');
+const langBtnMob = document.getElementById('langToggleMob');
 if (langBtn) {
   langBtn.addEventListener('click', () => {
     lang = lang === 'en' ? 'no' : 'en';
     langBtn.textContent = lang === 'en' ? 'NO | EN' : 'EN | NO';
+    if (langBtnMob) langBtnMob.textContent = langBtn.textContent;
 
-    // Translate all [data-en] elements
+    // Translate all [data-en] elements — smart: preserve child elements
     document.querySelectorAll('[data-en]').forEach(el => {
       const val = el.getAttribute('data-' + lang);
-      if (val) el.innerHTML = val;
+      if (!val) return;
+      // If element has child ELEMENT nodes (icons, links etc), only update text nodes
+      const hasChildElements = Array.from(el.childNodes).some(n => n.nodeType === 1);
+      if (hasChildElements) {
+        // Only update text nodes directly inside this element, leave child elements alone
+        Array.from(el.childNodes).forEach(node => {
+          if (node.nodeType === 3 && node.textContent.trim()) {
+            // This is a text node with content — but we use data-en on parent for context only
+            // Skip direct text replacement here; child spans handle their own data-en
+          }
+        });
+      } else {
+        el.innerHTML = val;
+      }
     });
 
     // Translate FAQ answer <p> elements (they have data-en too)
@@ -129,6 +165,11 @@ if (langBtn) {
       if (v) popupBtn.textContent = v;
     }
   });
+}
+
+
+if (langBtnMob) {
+  langBtnMob.addEventListener('click', () => { if (langBtn) langBtn.click(); });
 }
 
 // ── SCROLL REVEAL ──
@@ -305,65 +346,118 @@ const galleryData = {
 };
 
 
-// ── PRE-FETCH VIDEOS & IMAGES on hover/touch so lightbox opens instantly ──
-(function preloadOnHover() {
-  const preloadCache = {};
+// ── LIGHTBOX VIDEO SYSTEM — autoplay, muted, infinite loop, works on slow wifi ──
 
-  function prefetchCategory(cat) {
-    if (preloadCache[cat]) return;
-    preloadCache[cat] = true;
-    const items = galleryData[cat] || [];
-    items.forEach(src => {
-      if (/\.(mp4|mov|webm)$/i.test(src)) {
-        // Video: use <source> element — same as lightbox, ensures browser fetches it
-        const v = document.createElement('video');
-        v.preload = 'auto';
-        v.muted = true;
-        v.playsInline = true;
-        const s = document.createElement('source');
-        s.src = src;
-        s.type = 'video/mp4';
-        v.appendChild(s);
-        v.load();
-      } else {
-        // Image: use a hidden Image object to trigger browser cache
-        const img = new Image();
-        img.src = src;
-      }
-    });
-  }
-
-  document.querySelectorAll('.gallery-cat-card').forEach(card => {
-    const oncard = card.getAttribute('onclick') || '';
-    const match = oncard.match(/openLightbox\('([^']+)'\)/);
-    if (!match) return;
-    const cat = match[1];
-    // Prefetch on hover (desktop) and on first touch (mobile)
-    card.addEventListener('mouseenter', () => prefetchCategory(cat));
-    card.addEventListener('touchstart',  () => prefetchCategory(cat), { passive: true });
+// IntersectionObserver: play when scrolled into view, pause when out → saves bandwidth on slow wifi
+const _videoPlayObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const v = entry.target;
+    if (entry.isIntersecting) {
+      const p = v.play();
+      if (p && p.catch) p.catch(() => {});
+    } else {
+      v.pause();
+    }
   });
-})();
+}, { threshold: 0.2 });
+
+function _buildVideoWrapper(src, eager) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'video-wrap';
+
+  // Shimmer shown while buffering
+  const shimmer = document.createElement('div');
+  shimmer.className = 'video-shimmer';
+  wrapper.appendChild(shimmer);
+
+  const video = document.createElement('video');
+  video.muted       = true;
+  video.loop        = true;
+  video.playsInline = true;
+  video.autoplay    = true;
+  video.setAttribute('muted', '');
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  video.setAttribute('autoplay', '');
+  // First few videos: preload=auto (fast start). Rest: preload=metadata (saves data on slow wifi)
+  video.preload = eager ? 'auto' : 'metadata';
+
+  const source = document.createElement('source');
+  source.src  = src;
+  source.type = 'video/mp4';
+  video.appendChild(source);
+
+  // Remove shimmer once first frame is ready
+  video.addEventListener('loadeddata', () => {
+    shimmer.style.transition = 'opacity 0.3s';
+    shimmer.style.opacity = '0';
+    setTimeout(() => shimmer.remove(), 320);
+  }, { once: true });
+
+  // Tap to play if autoplay was blocked (some iOS / strict browsers)
+  wrapper.addEventListener('click', () => {
+    if (video.paused) { const p = video.play(); if (p && p.catch) p.catch(() => {}); }
+  });
+
+  video.load();
+
+  // Try play immediately — works on all muted-autoplay-capable browsers
+  const tryPlay = () => { const p = video.play(); if (p && p.catch) p.catch(() => {}); };
+  tryPlay();
+  setTimeout(tryPlay, 150);
+  setTimeout(tryPlay, 600);
+
+  // Watch viewport to play/pause automatically
+  _videoPlayObserver.observe(video);
+
+  wrapper.appendChild(video);
+  return wrapper;
+}
+
+// Only prefetch images on hover (not videos — stream them on demand to save bandwidth)
+const _imgPrefetchCache = {};
+document.querySelectorAll('.gallery-cat-card').forEach(card => {
+  const oncard = card.getAttribute('onclick') || '';
+  const match  = oncard.match(/openLightbox\('([^']+)'\)/);
+  if (!match) return;
+  const cat = match[1];
+  const prefetch = () => {
+    if (_imgPrefetchCache[cat]) return;
+    _imgPrefetchCache[cat] = true;
+    (galleryData[cat] || []).forEach(src => {
+      if (!/\.(mp4|mov|webm)$/i.test(src)) { const i = new Image(); i.src = src; }
+    });
+  };
+  card.addEventListener('mouseenter', prefetch);
+  card.addEventListener('touchstart', prefetch, { passive: true });
+});
 
 function openLightbox(category) {
   const overlay = document.getElementById('lightboxOverlay');
-  const grid = document.getElementById('lightboxGrid');
-  const title = document.getElementById('lightboxTitle');
+  const grid    = document.getElementById('lightboxGrid');
+  const title   = document.getElementById('lightboxTitle');
   if (!overlay || !grid || !title) return;
 
-  // Human-readable titles (EN | NO)
   const categoryTitles = {
-    Balayage:      { en: 'Balayage',           no: 'Balayage' },
-    Farge:         { en: 'Colour',             no: 'Farge' },
-    HairTreatment: { en: 'Keratin Treatment',  no: 'Keratinbehandling' },
-    Extensions:    { en: 'Extensions',         no: 'Extensions' },
-    Haircut:       { en: 'Cut & Style',        no: 'Klipp & Style' },
-    Styling:       { en: 'Styling',            no: 'Styling' },
-    Brides:        { en: 'Bridal',             no: 'Brud' },
+    Balayage:      { en: 'Balayage',          no: 'Balayage' },
+    Farge:         { en: 'Colour',            no: 'Farge' },
+    HairTreatment: { en: 'Keratin Treatment', no: 'Keratinbehandling' },
+    Extensions:    { en: 'Extensions',        no: 'Extensions' },
+    Haircut:       { en: 'Cut & Style',       no: 'Klipp & Style' },
+    Styling:       { en: 'Styling',           no: 'Styling' },
+    Brides:        { en: 'Bridal',            no: 'Brud' },
   };
   const currentLang = (typeof lang !== 'undefined') ? lang : 'en';
   const titleObj = categoryTitles[category];
   title.textContent = titleObj ? titleObj[currentLang] || titleObj.en : category;
 
+  // Clean up all previous videos before clearing grid
+  grid.querySelectorAll('video').forEach(v => {
+    _videoPlayObserver.unobserve(v);
+    v.pause();
+    v.src = '';
+    v.load();
+  });
   grid.innerHTML = '';
 
   const items = galleryData[category] || [];
@@ -374,51 +468,51 @@ function openLightbox(category) {
     return;
   }
 
+  let videoIdx = 0;
   items.forEach(src => {
-    const isVideo = /\.(mp4|mov|webm)$/i.test(src);
-    if (isVideo) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'video-wrap';
-      const video = document.createElement('video');
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.preload = 'auto';
-      video.setAttribute('playsinline', '');
-      video.setAttribute('webkit-playsinline', '');
-      video.setAttribute('muted', '');
-      const source = document.createElement('source');
-      source.src = src;
-      source.type = 'video/mp4';
-      video.appendChild(source);
-      video.addEventListener('canplay', () => { video.play().catch(() => {}); }, { once: true });
-      wrapper.appendChild(video);
-      grid.appendChild(wrapper);
-      video.load();
+    if (/\.(mp4|mov|webm)$/i.test(src)) {
+      // First 3 videos: eager (preload=auto). Rest: lazy (preload=metadata)
+      grid.appendChild(_buildVideoWrapper(src, videoIdx < 3));
+      videoIdx++;
     } else {
       const img = document.createElement('img');
-      img.src = src;
-      img.alt = category;
-      img.loading = 'lazy';
+      img.src      = src;
+      img.alt      = category;
+      img.loading  = 'lazy';
+      img.decoding = 'async';
       grid.appendChild(img);
     }
   });
 
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
+
+  // Force-play all videos after overlay is painted
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      grid.querySelectorAll('video').forEach(v => {
+        const p = v.play();
+        if (p && p.catch) p.catch(() => {});
+      });
+    });
+  });
 }
 
 function closeLightbox() {
   const overlay = document.getElementById('lightboxOverlay');
   if (!overlay) return;
+
   overlay.querySelectorAll('video').forEach(v => {
+    _videoPlayObserver.unobserve(v);
     v.pause();
-    v.removeAttribute('src');
+    v.src = '';
     v.innerHTML = '';
     v.load();
   });
+
   overlay.classList.remove('active');
   document.body.style.overflow = '';
+
   setTimeout(() => {
     const grid = document.getElementById('lightboxGrid');
     if (grid) grid.innerHTML = '';
@@ -610,7 +704,7 @@ if (!window._studioSerenaChatInit) {
     },
     {
       keys: ['taniya'],
-      reply: "Taniya I. is our Treatment Expert, specialising in Keratin and restorative treatments ✦"
+      reply: "Taniya S. is our Treatment Expert, specialising in Keratin and restorative treatments ✦"
     },
     {
       keys: ['heba'],
@@ -618,7 +712,7 @@ if (!window._studioSerenaChatInit) {
     },
     {
       keys: ['team', 'staff', 'stylists', 'ansatte', 'hvem jobber'],
-      reply: "Our expert team:\n✦ Hassan K. — Founder (25+ years luxury experience)\n✦ Kani M. — Stylist & MUA (bridal & balayage)\n✦ Taniya I. — Treatment Expert (Keratin & restoration)\n✦ Heba K. — Creative Lead & Communications"
+      reply: "Our expert team:\n✦ Hassan K. — Founder (25+ years luxury experience)\n✦ Kani M. — Stylist & MUA (bridal & balayage)\n✦ Taniya S. — Treatment Expert (Keratin & restoration)\n✦ Heba K. — Creative Lead & Communications"
     },
 
     // LOCATION & HOURS
@@ -928,3 +1022,321 @@ if (!window._studioSerenaChatInit) {
   }
 
 } // end guard
+// ═══════════════════════════════════════════════════════════════
+// NEW FEATURES
+// ═══════════════════════════════════════════════════════════════
+
+// ── HERO TIME-OF-DAY GREETING ──
+(function() {
+  const el = document.getElementById('heroTimeGreeting');
+  if (!el) return;
+  const h = new Date().getHours();
+  const day = new Date().getDay();
+  const msgs = {
+    en: [
+      h < 6  ? 'Still up? Come in tomorrow — we open at 11.' :
+      h < 12 ? 'Good morning — start your week looking incredible.' :
+      h < 17 ? 'Good afternoon — treat yourself today.' :
+      h < 21 ? 'Good evening — your glow-up starts here.' :
+               'Late night browsing? DM us on Instagram.',
+    ],
+    no: [
+      h < 6  ? 'Fremdeles oppe? Kom innom i morgen — vi åpner kl. 11.' :
+      h < 12 ? 'God morgen — start uken din med å se fantastisk ut.' :
+      h < 17 ? 'God ettermiddag — unne deg selv litt i dag.' :
+      h < 21 ? 'God kveld — din forvandling starter her.' :
+               'Seint ute? Send oss en DM på Instagram.',
+    ]
+  };
+  // Weekend special
+  let msgEn = msgs.en[0];
+  let msgNo = msgs.no[0];
+  if (day === 0 || day === 6) {
+    msgEn = 'Enjoying the weekend? Book ahead for next week.';
+    msgNo = 'Nyter helgen? Bestill time til neste uke.';
+  }
+  el.setAttribute('data-en', msgEn);
+  el.setAttribute('data-no', msgNo);
+  el.textContent = msgEn;
+})();
+
+// ── LANGUAGE AUTO-DETECT BANNER ──
+(function() {
+  const banner = document.getElementById('langBanner');
+  const bannerText = document.getElementById('langBannerText');
+  if (!banner || !bannerText) return;
+
+  // Only show once per session
+  if (sessionStorage.getItem('langBannerDismissed')) return;
+
+  const browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+  const isNorwegian = browserLang.startsWith('nb') || browserLang.startsWith('nn') || browserLang.startsWith('no');
+  const isEnglish = browserLang.startsWith('en');
+
+  // Only show if browser language differs from current lang variable
+  setTimeout(() => {
+    if (isNorwegian && lang === 'en') {
+      bannerText.textContent = 'Vi ser at du er norsk — vil du bytte til norsk?';
+      document.getElementById('langBannerNO').classList.add('active');
+      banner.style.display = 'flex';
+    } else if (isEnglish && lang === 'no') {
+      bannerText.textContent = 'We detected English — switch language?';
+      document.getElementById('langBannerEN').classList.add('active');
+      banner.style.display = 'flex';
+    }
+  }, 2000);
+})();
+
+function langBannerPick(l) {
+  const banner = document.getElementById('langBanner');
+  if (banner) banner.style.display = 'none';
+  sessionStorage.setItem('langBannerDismissed', '1');
+  // Trigger the same lang toggle logic
+  if (l !== lang) {
+    const langBtn = document.getElementById('langToggle');
+    if (langBtn) langBtn.click();
+  }
+}
+
+// ── DAILY HAIR TIP CARD ──
+(function() {
+  const el = document.getElementById('tipFloat');
+  const body = document.getElementById('tipFloatBody');
+  if (!el || !body) return;
+
+  const tips = [
+    { en: 'Always apply heat protectant before blow-drying. Even low heat causes cumulative damage — protect those ends every single time.', no: 'Bruk alltid varmebeskyttelse før du føner. Selv lav varme forårsaker kumulativ skade — beskytt endene dine hver eneste gang.' },
+    { en: 'Sleep on a silk pillowcase. Cotton creates friction that breaks hair overnight — silk lets your hair glide freely and stay frizz-free.', no: 'Sov på en silkepute. Bomull skaper friksjon som bryter håret om natten — silke lar håret gli fritt og forbli krøllefritt.' },
+    { en: 'Rinse your hair with cold water at the end of every wash. It seals the cuticle and locks in shine better than any product.', no: 'Skyll håret med kaldt vann på slutten av hver vask. Det forseglar kutikkelen og låser inn glans bedre enn noe produkt.' },
+    { en: "Don't brush wet hair — use a wide-tooth comb instead. Wet hair stretches and breaks up to 3x more easily than dry hair.", no: 'Ikke børst vått hår — bruk en grov kam i stedet. Vått hår strekkes og brekkes opp til 3 ganger lettere enn tørt hår.' },
+    { en: 'Trim your ends every 8–10 weeks even if you are growing your hair. Removing split ends actually helps hair grow longer, faster.', no: 'Klipp endene dine hver 8–10 uke selv om du vokser håret. Å fjerne kløyvde ender hjelper faktisk håret å vokse lengre og raskere.' },
+    { en: 'Massage your scalp for 2 minutes before washing. It stimulates blood flow to the follicles and noticeably improves hair density over time.', no: 'Massér hodebunnen i 2 minutter før vask. Det stimulerer blodstrøm til folliklene og forbedrer hårtetthet merkbart over tid.' },
+    { en: 'Less is more with dry shampoo. Overuse builds up on the scalp and can clog follicles — use it max 2 days between washes.', no: 'Mindre er mer med tørrshampo. Overbruk bygger seg opp på hodebunnen og kan tette follikler — bruk det maks 2 dager mellom vask.' },
+  ];
+
+  const dayIdx = new Date().getDay(); // 0-6, one tip per day of week
+  const tip = tips[dayIdx];
+  body.setAttribute('data-en', tip.en);
+  body.setAttribute('data-no', tip.no);
+  body.textContent = tip.en;
+
+  const today = new Date().toDateString();
+
+  // Exposed so popup close can trigger it
+  window._showTip = function() {
+    if (localStorage.getItem('tipDismissed') === today) return;
+    el.style.display = 'block';
+    el.style.opacity = '1';
+    el.classList.remove('is-showing');
+    void el.offsetWidth; // force reflow so animation restarts cleanly
+    el.classList.add('is-showing');
+    // Auto-hide after 30 seconds
+    setTimeout(() => {
+      el.style.transition = 'opacity 0.5s';
+      el.style.opacity = '0';
+      setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; el.classList.remove('is-showing'); }, 500);
+    }, 30000);
+  };
+
+  // Close button
+  const closeBtn = document.getElementById('tipFloatClose');
+  if (closeBtn) closeBtn.addEventListener('click', () => {
+    localStorage.setItem('tipDismissed', today);
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.3s';
+    setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, 300);
+  });
+})();
+
+// ── APPOINTMENT REMINDER TOAST ──
+(function() {
+  const toast = document.getElementById('apptToast');
+  if (!toast) return;
+
+  // Exposed so popup close can trigger it
+  window._showToast = function() {
+    if (sessionStorage.getItem('toastShown')) return;
+    sessionStorage.setItem('toastShown', '1');
+    toast.style.display = 'flex';
+    toast.style.opacity = '1';
+    toast.classList.remove('is-showing');
+    void toast.offsetWidth;
+    toast.classList.add('is-showing');
+    // Auto-hide after 30 seconds
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.5s';
+      toast.style.opacity = '0';
+      setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = ''; toast.style.transition = ''; }, 500);
+    }, 30000);
+  };
+
+  // Close button (X)
+  const xBtn = document.getElementById('apptToastX');
+  if (xBtn) xBtn.addEventListener('click', () => {
+    toast.style.transition = 'opacity 0.3s';
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = ''; toast.style.transition = ''; }, 300);
+  });
+})();
+
+// ── WELCOME BACK VISIT COUNTER ──
+(function() {
+  const counter = document.getElementById('visitCounter');
+  const numEl = document.getElementById('visitNum');
+  const titleEl = document.getElementById('visitTitle');
+  const subEl = document.getElementById('visitSub');
+  if (!counter || !numEl) return;
+
+  // Get and increment visit count
+  let visits = parseInt(localStorage.getItem('ssVisitCount') || '0') + 1;
+  localStorage.setItem('ssVisitCount', visits);
+
+  if (visits < 2) return; // Don't show on first ever visit
+
+  numEl.textContent = visits;
+
+  const msgs = {
+    en: [
+      { title: 'Welcome back!', sub: 'Great to see you again at Studio Serena.' },
+      { title: 'You\'re back ✦', sub: 'You\'ve visited us 3 times — you\'re practically family.' },
+      { title: 'A loyal friend ✦', sub: 'Your Gold Client status is just one visit away.' },
+      { title: 'Gold Client ✦', sub: 'You\'re one of our most valued visitors. Thank you.' },
+      { title: 'VIP ✦', sub: 'You\'ve visited 5+ times. You are Studio Serena.' },
+    ],
+    no: [
+      { title: 'Velkommen tilbake!', sub: 'Så hyggelig å se deg igjen hos Studio Serena.' },
+      { title: 'Du er tilbake ✦', sub: 'Du har besøkt oss 3 ganger — du er nesten familie.' },
+      { title: 'En lojal venn ✦', sub: 'Gull-klientstatus er bare ett besøk unna.' },
+      { title: 'Gullklient ✦', sub: 'Du er en av våre mest verdsatte besøkende. Takk.' },
+      { title: 'VIP ✦', sub: 'Du har besøkt 5+ ganger. Du er Studio Serena.' },
+    ]
+  };
+
+  const idx = Math.min(visits - 2, 4);
+  const m = msgs.en[idx];
+  if (titleEl) { titleEl.textContent = m.title; titleEl.setAttribute('data-en', m.title); titleEl.setAttribute('data-no', msgs.no[idx].title); }
+  if (subEl) { subEl.textContent = m.sub; subEl.setAttribute('data-en', m.sub); subEl.setAttribute('data-no', msgs.no[idx].sub); }
+
+  // Show after 60 seconds (1 minute)
+  setTimeout(() => {
+    counter.style.display = 'flex';
+    counter.classList.remove('is-showing');
+    void counter.offsetWidth;
+    counter.classList.add('is-showing');
+    // Auto-hide after 8 seconds
+    setTimeout(() => {
+      counter.style.opacity = '0';
+      counter.style.transition = 'opacity 0.5s';
+      setTimeout(() => { counter.style.display = 'none'; }, 500);
+    }, 8000);
+  }, 60000);
+})();
+
+// ── BLACK CARD ──
+(function() {
+  const card = document.getElementById('bcCard');
+  const nameInput = document.getElementById('bcNameInput');
+  const holderName = document.getElementById('bcHolderName');
+  const tierBadge = document.getElementById('bcTierBadge');
+  const tierInfo = document.getElementById('bcTierInfo');
+  const dotsEl = document.getElementById('bcDots');
+  if (!card) return;
+
+  const tiers = [
+    { name: 'New Client',    nameNo: 'Ny Klient',       min: 0, color: 'rgba(181,168,154,0.7)' },
+    { name: 'Silver Client', nameNo: 'Sølv Klient',     min: 2, color: '#c0c0c0' },
+    { name: 'Gold Client',   nameNo: 'Gull Klient',     min: 4, color: '#C9A96E' },
+    { name: 'VIP ✦',         nameNo: 'VIP ✦',           min: 6, color: '#fff' },
+  ];
+
+  // Load saved data
+  const savedName = localStorage.getItem('bcName') || '';
+  const visits = parseInt(localStorage.getItem('ssVisitCount') || '1');
+
+  if (savedName) {
+    holderName.textContent = savedName.toUpperCase();
+    if (nameInput) nameInput.value = savedName;
+  }
+
+  function renderCard() {
+    // Dots — 1 per visit, max 7
+    if (dotsEl) {
+      dotsEl.innerHTML = '';
+      for (let i = 0; i < 7; i++) {
+        const d = document.createElement('div');
+        d.className = 'bc-visit-dot' + (i < visits ? ' filled' : '');
+        dotsEl.appendChild(d);
+      }
+    }
+    // Tier
+    const currentTier = [...tiers].reverse().find(t => visits >= t.min) || tiers[0];
+    if (tierBadge) {
+      tierBadge.textContent = lang === 'no' ? currentTier.nameNo : currentTier.name;
+      tierBadge.style.color = currentTier.color;
+    }
+    // Next tier info
+    const nextTier = tiers.find(t => t.min > visits);
+    if (tierInfo && nextTier) {
+      const visitsNeeded = nextTier.min - visits;
+      tierInfo.textContent = lang === 'no'
+        ? `${visitsNeeded} besøk til ${nextTier.nameNo}`
+        : `${visitsNeeded} more visit${visitsNeeded !== 1 ? 's' : ''} until ${nextTier.name}`;
+    } else if (tierInfo) {
+      tierInfo.textContent = lang === 'no' ? 'Du er VIP ✦' : 'You\'ve reached VIP status ✦';
+    }
+  }
+
+  renderCard();
+
+  // Name input
+  if (nameInput) {
+    nameInput.addEventListener('input', () => {
+      const v = nameInput.value.trim();
+      if (holderName) holderName.textContent = v ? v.toUpperCase() : (lang === 'no' ? 'DITT NAVN' : 'YOUR NAME');
+      if (v) localStorage.setItem('bcName', v);
+    });
+  }
+
+  // 3D tilt on hover
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    card.style.transform = `perspective(700px) rotateY(${x * 20}deg) rotateX(${-y * 14}deg) translateY(-6px)`;
+    card.style.boxShadow = `${-x * 20}px ${y * 10}px 50px rgba(0,0,0,0.6)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+    card.style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
+  });
+
+  // Re-render when lang changes
+  window._bcRender = renderCard;
+})();
+
+// ── STYLE QUIZ ──
+const quizAnswers = {
+  frizz:   { en: 'Keratin Treatment',       no: 'Keratinbehandling',     descEn: 'Your hair is crying out for a Keratin Treatment. It will eliminate frizz, restore shine, and last up to 6 months. Taniya S. is our specialist — she will transform it completely.', descNo: 'Håret ditt ber om en Keratinbehandling. Den eliminerer krøll, gjenoppretter glans og varer opptil 6 måneder. Taniya S. er vår spesialist.' },
+  colour:  { en: 'Balayage',                no: 'Balayage',              descEn: 'You need Balayage. Our signature freehand colouring technique creates natural-looking sun-kissed dimension with zero harsh lines. Hassan K. is the master of this craft.', descNo: 'Du trenger Balayage. Vår signatur frihand-fargeteknikk skaper naturlig solkysset dimensjon uten harde linjer. Hassan K. er mester i dette.' },
+  length:  { en: 'Hair Extensions',         no: 'Hårextensions',         descEn: 'Extensions are your answer. We apply high-quality extensions that blend seamlessly with your natural hair — nobody will ever know. Hassan specialises in making them look and feel completely real.', descNo: 'Extensions er svaret ditt. Vi applicerer høykvalitetsextensions som blender sømløst med naturlig hår — ingen vil vite det.' },
+  special: { en: 'Bridal & Event Package',  no: 'Brudie- og Eventpakke', descEn: 'For a special occasion, you deserve the full bridal experience — hair and makeup by Kani M., our Senior Stylist and Makeup Artist. Every detail, perfected.', descNo: 'For en spesiell anledning fortjener du den fulle brudeopplevelsen — hår og sminke av Kani M.' },
+  health:  { en: 'Protein Treatment',       no: 'Proteinbehandling',     descEn: 'A Protein Treatment will rebuild your hair from the inside. It replenishes broken protein bonds caused by heat and chemical processing — leaving hair noticeably stronger and fuller.', descNo: 'En proteinbehandling vil gjenoppbygge håret ditt innenfra. Den fyller ødelagte proteinbindinger forårsaket av varme og kjemisk behandling.' },
+  hijabi:  { en: 'Private Hijabi Service',  no: 'Privat Hijabi-tjeneste', descEn: 'We have a fully private room exclusively for hijabi clients. Complete privacy, complete respect, complete artistry. Book in advance to secure your private appointment.', descNo: 'Vi har et fullt privat rom eksklusivt for hijabi-klienter. Komplett personvern, komplett respekt, komplett håndverk.' },
+};
+
+function quizPick(answer) {
+  const result = quizAnswers[answer];
+  if (!result) return;
+  document.getElementById('quizStep1').style.display = 'none';
+  const wrap = document.getElementById('quizResult');
+  wrap.style.display = 'block';
+  const serviceEl = document.getElementById('quizService');
+  const descEl = document.getElementById('quizDesc');
+  if (serviceEl) { serviceEl.textContent = lang === 'no' ? result.no : result.en; }
+  if (descEl) { descEl.textContent = lang === 'no' ? result.descNo : result.descEn; }
+}
+
+function quizRestart() {
+  document.getElementById('quizStep1').style.display = 'block';
+  document.getElementById('quizResult').style.display = 'none';
+}

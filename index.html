@@ -117,8 +117,8 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .nav-controls .btn-book-now span { display: none; }
-            .nav-controls .btn-book-now { padding: 0.45rem 0.7rem; }
+            .nav-controls .btn-book-now span { display: inline; }
+            .nav-controls .btn-book-now { padding: 0.4rem 0.8rem; font-size: 0.72rem; }
             .footer-top { grid-template-columns: 1fr 1fr !important; gap: 2rem !important; }
             .location-inner { flex-direction: column !important; gap: 2rem; }
             .map-frame { width: 100% !important; height: 280px !important; }
@@ -316,46 +316,31 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 26px;
-            height: 26px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.18);
-            color: #fff;
-            font-size: 0.85rem;
+            background: rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.9);
+            font-size: 1rem;
             text-decoration: none;
             margin-left: 0.5rem;
             vertical-align: middle;
+            border: 1px solid rgba(255,255,255,0.4);
+            backdrop-filter: blur(4px);
             transition: background 0.2s, transform 0.2s;
-            border: 1px solid rgba(255,255,255,0.35);
         }
-        .gallery-ig-link:hover { background: rgba(255,255,255,0.35); transform: scale(1.15); }
+        .gallery-ig-link:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.8); transform: scale(1.1); }
 
-        /* ── NAV — always visible on all orientations ── */
+        /* ── NAV — always visible ── */
         @media (max-width: 900px) {
-            nav {
-                padding: 0.9rem 1.2rem !important;
-                background: var(--cream) !important;
-                border-bottom: 1px solid var(--warmgrey) !important;
-                min-height: 56px;
-            }
+            nav { padding: 0.8rem 1.2rem !important; min-height: 56px; }
             .nav-logo { font-size: 1.15rem; }
             .hamburger { display: flex !important; }
         }
-        /* Landscape phones */
         @media (max-height: 500px) and (orientation: landscape) {
-            nav {
-                padding: 0.5rem 1.2rem !important;
-                background: var(--cream) !important;
-                border-bottom: 1px solid var(--warmgrey) !important;
-                position: fixed !important;
-                top: 0; left: 0; right: 0;
-                z-index: 999 !important;
-            }
-            .nav-logo { font-size: 1rem; }
+            nav { padding: 0.4rem 1.2rem !important; }
             .nav-links { display: none !important; }
             .hamburger { display: flex !important; }
-            .nav-controls { gap: 0.35rem; }
-            .toggle-btn { font-size: 0.7rem; padding: 0.2rem 0.5rem; }
         }
     </style>
     <!-- Critical image preloads — above the fold, load immediately -->
@@ -410,6 +395,7 @@
     </div>
 
     <nav id="navbar">
+        <div id="scroll-progress" style="position:absolute;bottom:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,#B5A89A,#C9A96E);transition:width 0.1s linear;pointer-events:none;z-index:1;"></div>
         <a href="#hero" class="nav-logo">Studio Serena</a>
         <ul class="nav-links" id="navLinks">
             <li><a href="#gallery" data-en="Gallery" data-no="Galleri">Gallery</a></li>
@@ -422,7 +408,10 @@
                 <i class="fa-brands fa-instagram"></i><span>Book Now</span>
             </a>
             <button class="lang-toggle" id="langToggle">No | En</button>
-            <button class="toggle-btn" id="themeToggle">☾ Dark</button>
+            <button class="toggle-btn" id="themeToggle" aria-label="Toggle theme">
+                    <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
         </div>
         <button class="hamburger" id="hamburger" aria-label="Menu">
             <span></span><span></span><span></span>
@@ -430,11 +419,17 @@
     </nav>
 
     <div class="mobile-menu" id="mobileMenu">
-        <button class="close-menu" id="closeMenu">✕</button>
+        <button class="close-menu" id="closeMenu" aria-label="Close menu">✕</button>
         <a href="#gallery" onclick="closeMob()" data-en="Gallery" data-no="Galleri">Gallery</a>
         <a href="#team" onclick="closeMob()" data-en="Team" data-no="Team">Team</a>
         <a href="#testimonials" onclick="closeMob()" data-en="Reviews" data-no="Anmeldelser">Reviews</a>
         <a href="#location" onclick="closeMob()" data-en="Location" data-no="Lokasjon">Location</a>
+        <div class="mobile-menu-controls">
+            <button class="lang-toggle" id="langToggleMob">No | En</button>
+            <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="mobile-menu-book btn-book-now" target="_blank" rel="noopener noreferrer" onclick="closeMob()">
+                <i class="fa-brands fa-instagram"></i> <span data-en="Book Now" data-no="Bestill">Book Now</span>
+            </a>
+        </div>
     </div>
 
     <section id="hero">
@@ -450,10 +445,11 @@
         <div class="hero-content">
             <p class="hero-eyebrow" data-en="Style & Shine" data-no="Stil og Glans">Style & Shine</p>
             <h1 class="hero-title">Studio<br /><em>Serena</em></h1>
+            <p class="hero-time-greeting" id="heroTimeGreeting"></p>
             <p class="hero-sub" data-en="— Hair —" data-no="— Hår —">— Hair —</p>
             <div class="hero-cta">
-                <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="btn-book-now" target="_blank" rel="noopener noreferrer" data-en="Book on Instagram" data-no="Bestill på Instagram">
-                    <i class="fa-brands fa-instagram"></i> Book on Instagram
+                <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="btn-book-now" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-brands fa-instagram"></i> <span data-en="Book on Instagram" data-no="Bestill på Instagram">Book on Instagram</span>
                 </a>
                 <a href="#gallery" class="btn-outline" data-en="View Portfolio" data-no="Se Portefølje">View Portfolio</a>
             </div>
@@ -547,7 +543,7 @@
                     <div class="gallery-cat-img-wrap"><img src="./html/Pics/Treatment/cover.jpeg" alt="Keratin Treatment" loading="eager"></div>
                     <div class="gallery-cat-label" data-en="Keratin Treatment" data-no="Keratinbehandling">
                         Keratin Treatment
-                        <a href="https://www.instagram.com/lavellaprofessional?igsh=ZngyNHZkamFwa3J4" target="_blank" rel="noopener noreferrer" class="gallery-ig-link" onclick="event.stopPropagation()">
+                        <a href="https://www.instagram.com/lavellaprofessional?igsh=ZngyNHZkamFwa3J4" target="_blank" rel="noopener noreferrer" class="team-social-link gallery-ig-link" onclick="event.stopPropagation()">
                             <i class="fa-brands fa-instagram"></i>
                         </a>
                     </div>
@@ -570,6 +566,10 @@
                 </div>
             </div>
         </section>
+
+        </section><!-- /services-ribbon -->
+
+        </section><!-- /services-ribbon -->
 
         <!-- LIGHTBOX -->
         <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
@@ -634,13 +634,13 @@
                 </div>
                 <div class="team-card reveal">
                     <div class="team-img-wrap">
-                        <img src="./html/Pics/Team/Taniya.jpg" loading="lazy" alt="Taniya I.">
+                        <img src="./html/Pics/Team/Taniya.jpg" loading="lazy" alt="Taniya S.">
                         <div class="team-overlay"></div>
                         <div class="team-socials">
                             <a href="https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
                         </div>
                     </div>
-                    <div class="team-name">Taniya I.</div>
+                    <div class="team-name">Taniya S.</div>
                     <div class="team-role" data-en="Keratin &amp; Hair Treatment Specialist" data-no="Keratin &amp; Hårbehandlingsspesialist">Keratin &amp; Hair Treatment Specialist</div>
                     <div class="team-bio"
                         data-en="Extensive luxury experience. A highly talented specialist in Keratin and restorative hair treatments for all clients—including hijabis."
@@ -1153,20 +1153,16 @@
             <div class="divider reveal"></div>
             <div class="faq-list reveal">
                 <div class="faq-item">
-                    <button class="faq-q" data-en="How do I get in touch with the studio?" data-no="Hvordan tar jeg kontakt med studioet?">
-                        How do I get in touch with the studio?<span class="faq-icon">+</span>
-                    </button>
+                    <button class="faq-q"><span class="faq-text" data-en="How do I get in touch with the studio?" data-no="Hvordan tar jeg kontakt med studioet?">How do I get in touch with the studio?</span><span class="faq-icon">+</span></button>
                     <div class="faq-a">
                         <p data-en="You can call us at +47 453 97 631, email us at Hassan.kolkas@hotmail.com, or message us on Instagram @saloncoiff1rst — we'd love to hear from you."
                            data-no="Du kan ringe oss på +47 453 97 631, sende e-post til Hassan.kolkas@hotmail.com, eller sende melding på Instagram @saloncoiff1rst — vi hører gjerne fra deg.">
-                            You can call us at +47 453 97 631, email us at <a href="/cdn-cgi/l/email-protection#96def7e5e5f7f8b8fdf9fafdf7e5d6fef9e2fbf7fffab8f5f9fb"><span class="__cf_email__" data-cfemail="abe3cad8d8cac585c0c4c7c0cad8ebc3c4dfc6cac2c785c8c4c6">[email&#160;protected]</span></a>, or message us on Instagram @saloncoiff1rst — we'd love to hear from you.
+                            You can call us at +47 453 97 631, email us at <a href="mailto:Hassan.kolkas@hotmail.com">Hassan.kolkas@hotmail.com</a>, or message us on Instagram @saloncoiff1rst — we'd love to hear from you.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
-                    <button class="faq-q" data-en="Do you offer a consultation before treatment?" data-no="Tilbyr dere konsultasjon før behandling?">
-                        Do you offer a consultation before treatment?<span class="faq-icon">+</span>
-                    </button>
+                    <button class="faq-q"><span class="faq-text" data-en="Do you offer a consultation before treatment?" data-no="Tilbyr dere konsultasjon før behandling?">Do you offer a consultation before treatment?</span><span class="faq-icon">+</span></button>
                     <div class="faq-a">
                         <p data-en="Yes! All new clients receive a complimentary consultation to discuss goals, hair health, and the best treatment plan."
                            data-no="Ja! Alle nye kunder får en gratis konsultasjon for å snakke om mål, hårhelse og den beste behandlingsplanen.">
@@ -1175,9 +1171,7 @@
                     </div>
                 </div>
                 <div class="faq-item">
-                    <button class="faq-q" data-en="What brands do you use?" data-no="Hvilke merker bruker dere?">
-                        What brands do you use?<span class="faq-icon">+</span>
-                    </button>
+                    <button class="faq-q"><span class="faq-text" data-en="What brands do you use?" data-no="Hvilke merker bruker dere?">What brands do you use?</span><span class="faq-icon">+</span></button>
                     <div class="faq-a">
                         <p data-en="We work exclusively with Schwarzkopf, Olaplex, L'Anza, and Shu Uemura Art of Hair — the finest professional lines available."
                            data-no="Vi jobber eksklusivt med Schwarzkopf, Olaplex, L'Anza og Shu Uemura Art of Hair — de fineste profesjonelle produktene som finnes.">
@@ -1186,9 +1180,7 @@
                     </div>
                 </div>
                 <div class="faq-item">
-                    <button class="faq-q" data-en="Is the hijabi service available for walk-ins?" data-no="Er hijabi-tjenesten tilgjengelig for walk-ins?">
-                        Is the hijabi service available for walk-ins?<span class="faq-icon">+</span>
-                    </button>
+                    <button class="faq-q"><span class="faq-text" data-en="Is the hijabi service available for walk-ins?" data-no="Er hijabi-tjenesten tilgjengelig for walk-ins?">Is the hijabi service available for walk-ins?</span><span class="faq-icon">+</span></button>
                     <div class="faq-a">
                         <p data-en="We recommend booking in advance to ensure our private room is available. All services are provided with full privacy and respect."
                            data-no="Vi anbefaler å bestille på forhånd for å sikre at vårt private rom er tilgjengelig. Alle tjenester utføres med full personvern og respekt.">
@@ -1197,9 +1189,7 @@
                     </div>
                 </div>
                 <div class="faq-item">
-                    <button class="faq-q" data-en="How long does a balayage appointment take?" data-no="Hvor lang tid tar en balayage-time?">
-                        How long does a balayage appointment take?<span class="faq-icon">+</span>
-                    </button>
+                    <button class="faq-q"><span class="faq-text" data-en="How long does a balayage appointment take?" data-no="Hvor lang tid tar en balayage-time?">How long does a balayage appointment take?</span><span class="faq-icon">+</span></button>
                     <div class="faq-a">
                         <p data-en="Depending on hair length and complexity, a balayage appointment typically takes 3–5 hours, including toning and styling."
                            data-no="Avhengig av hårlengde og kompleksitet tar en balayage-time typisk 3–5 timer, inkludert toning og styling.">
@@ -1208,15 +1198,69 @@
                     </div>
                 </div>
                 <div class="faq-item">
-                    <button class="faq-q" data-en="Do you have parking nearby?" data-no="Er det parkering i nærheten?">
-                        Do you have parking nearby?<span class="faq-icon">+</span>
-                    </button>
+                    <button class="faq-q"><span class="faq-text" data-en="Do you have parking nearby?" data-no="Er det parkering i nærheten?">Do you have parking nearby?</span><span class="faq-icon">+</span></button>
                     <div class="faq-a">
                         <p data-en="Street parking is available on Torshovgata. The nearest public car park is a few minutes walk. We are also accessible by public transport — tram and bus stops are nearby."
                            data-no="Gateparkering er tilgjengelig på Torshovgata. Nærmeste parkeringshus er noen minutters gange. Vi er også tilgjengelig med offentlig transport — trikk- og bussholdeplasser er i nærheten.">
                             Street parking is available on Torshovgata. The nearest public car park is a few minutes walk. We are also accessible by public transport — tram and bus stops are nearby.
                         </p>
                     </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- BLACK CARD -->
+        <section id="black-card-section">
+            <p class="section-eyebrow reveal" data-en="Your Loyalty Card" data-no="Ditt Lojalitetskort">Your Loyalty Card</p>
+            <h2 class="section-title reveal">The <em>Black Card</em></h2>
+            <div class="divider reveal"></div>
+            <p class="bc-section-sub reveal" data-en="Your card lives here — in your browser, forever. It remembers you every time you return." data-no="Kortet ditt lever her — i nettleseren din, for alltid. Det husker deg hver gang du kommer tilbake.">Your card lives here — in your browser, forever. It remembers you every time you return.</p>
+            <div class="bc-stage reveal">
+                <div class="bc-card" id="bcCard">
+                    <div class="bc-shine"></div>
+                    <div class="bc-top-row">
+                        <div class="bc-logo-text">Studio Serena</div>
+                        <div class="bc-chip-el"></div>
+                    </div>
+                    <div class="bc-dots-row" id="bcDots"></div>
+                    <div class="bc-mid-num">•••• •••• •••• 2026</div>
+                    <div class="bc-bot-row">
+                        <div class="bc-holder-name" id="bcHolderName" data-en="Your Name" data-no="Ditt Navn">Your Name</div>
+                        <div class="bc-tier-badge" id="bcTierBadge">New Client</div>
+                    </div>
+                </div>
+                <div class="bc-controls">
+                    <p class="bc-hint" data-en="Type your name to personalise your card" data-no="Skriv navnet ditt for å personalisere kortet">Type your name to personalise your card</p>
+                    <input class="bc-name-input" id="bcNameInput" type="text" maxlength="22" placeholder="Your name...">
+                    <div class="bc-tier-info" id="bcTierInfo"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STYLE QUIZ -->
+        <section id="style-quiz">
+            <p class="section-eyebrow reveal" data-en="Find Your Style" data-no="Finn Din Stil">Find Your Style</p>
+            <h2 class="section-title reveal">What does your hair <em>need?</em></h2>
+            <div class="divider reveal"></div>
+            <div class="quiz-wrap" id="quizWrap">
+                <div class="quiz-step" id="quizStep1">
+                    <p class="quiz-q reveal" data-en="What is your biggest hair concern right now?" data-no="Hva er din største hårutfordring akkurat nå?">What is your biggest hair concern right now?</p>
+                    <div class="quiz-opts reveal">
+                        <button class="quiz-opt" onclick="quizPick('frizz')"><span data-en="Frizz &amp; damage" data-no="Krøll og skade">Frizz &amp; damage</span></button>
+                        <button class="quiz-opt" onclick="quizPick('colour')"><span data-en="Dull, flat colour" data-no="Kjedelig, flat farge">Dull, flat colour</span></button>
+                        <button class="quiz-opt" onclick="quizPick('length')"><span data-en="I want more length" data-no="Jeg vil ha mer lengde">I want more length</span></button>
+                        <button class="quiz-opt" onclick="quizPick('special')"><span data-en="Special occasion coming" data-no="Spesiell anledning">Special occasion coming</span></button>
+                        <button class="quiz-opt" onclick="quizPick('health')"><span data-en="My hair feels weak" data-no="Håret mitt føles svakt">My hair feels weak</span></button>
+                        <button class="quiz-opt" onclick="quizPick('hijabi')"><span data-en="I need a private space" data-no="Jeg trenger et privat rom">I need a private space</span></button>
+                    </div>
+                </div>
+                <div class="quiz-result-wrap" id="quizResult" style="display:none;">
+                    <div class="quiz-result-icon"><i class="fa-solid fa-scissors"></i></div>
+                    <div class="quiz-result-service" id="quizService"></div>
+                    <div class="quiz-result-desc" id="quizDesc"></div>
+                    <a href="https://www.instagram.com/saloncoiff1rst" target="_blank" rel="noopener" class="quiz-book-btn" data-en="Book this service" data-no="Bestill denne tjenesten">Book this service</a>
+                    <button class="quiz-restart-btn" onclick="quizRestart()" data-en="Try again" data-no="Prøv igjen">Try again</button>
                 </div>
             </div>
         </section>
@@ -1260,7 +1304,7 @@
                     <p class="footer-col-title" data-en="Contact" data-no="Kontakt">Contact</p>
                     <ul class="footer-links">
                         <li><a href="tel:+4745397631">+47 453 97 631</a></li>
-                        <li><a href="/cdn-cgi/l/email-protection#90d8f1e3e3f1febefbfffcfbf1e3d0f8ffe4fdf1f9fcbef3fffd"><span class="__cf_email__" data-cfemail="83cbe2f0f0e2edade8ecefe8e2f0c3ebecf7eee2eaefade0ecee">[email&#160;protected]</span></a></li>
+                        <li><a href="mailto:Hassan.kolkas@hotmail.com">Hassan.kolkas@hotmail.com</a></li>
                         <li><a href="#location">Torshovgata 5, Oslo</a></li>
                     </ul>
                 </div>
@@ -1274,7 +1318,58 @@
         <!-- BACK TO TOP -->
         <button id="back-top" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
+
+        <!-- LANG DETECT BANNER -->
+        <div class="lang-banner" id="langBanner" style="display:none;">
+            <span class="lang-banner-text" id="langBannerText"></span>
+            <div class="lang-banner-btns">
+                <button class="lang-banner-btn" id="langBannerEN" onclick="langBannerPick('en')">EN</button>
+                <button class="lang-banner-btn" id="langBannerNO" onclick="langBannerPick('no')">NO</button>
+            </div>
+            <button class="lang-banner-close" onclick="document.getElementById('langBanner').style.display='none'">✕</button>
+        </div>
+
+        <!-- HAIR TIP CARD -->
+        <div class="tip-float" id="tipFloat">
+            <div class="tip-float-inner">
+                <div class="tip-float-top">
+                    <div class="tip-float-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div class="tip-float-info">
+                        <div class="tip-float-title" data-en="Hair tip of the day" data-no="Hårtips for dagen">Hair tip of the day</div>
+                        <div class="tip-float-sub">Studio Serena</div>
+                    </div>
+                    <button class="tip-float-close" id="tipFloatClose">✕</button>
+                </div>
+                <div class="tip-float-body" id="tipFloatBody"></div>
+            </div>
+        </div>
+
+        <!-- APPOINTMENT TOAST -->
+        <div class="appt-toast" id="apptToast" style="display:none;">
+            <div class="appt-toast-icon"><i class="fa-regular fa-calendar-check"></i></div>
+            <div class="appt-toast-body">
+                <div class="appt-toast-title" data-en="Limited slots this month" data-no="Begrenset plasser denne måneden">Limited slots this month</div>
+                <div class="appt-toast-sub" data-en="Book now on Instagram or WhatsApp" data-no="Bestill nå på Instagram eller WhatsApp">Book now on Instagram or WhatsApp</div>
+            </div>
+            <a href="https://www.instagram.com/saloncoiff1rst" target="_blank" rel="noopener" class="appt-toast-btn" data-en="Book" data-no="Bestill">Book</a>
+            <button class="appt-toast-x" id="apptToastX">✕</button>
+        </div>
+
+        <!-- VISIT COUNTER -->
+        <div class="visit-counter" id="visitCounter" style="display:none;">
+            <div class="visit-counter-circle">
+                <span class="visit-counter-num" id="visitNum">1</span>
+                <span class="visit-counter-word" data-en="visits" data-no="besøk">visits</span>
+            </div>
+            <div class="visit-counter-text">
+                <div class="visit-counter-title" id="visitTitle"></div>
+                <div class="visit-counter-sub" id="visitSub"></div>
+            </div>
+            <button class="visit-counter-close" onclick="document.getElementById('visitCounter').style.display='none'">✕</button>
+        </div>
+
         <!-- CHATBOT -->
+
         <div class="chat-bubble" id="chatBubble">
             <svg viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12c0 1.89.52 3.66 1.43 5.16L2 22l4.84-1.43C8.34 21.48 10.11 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.66 0-3.22-.48-4.53-1.3l-.32-.19-3.36.88.88-3.36-.19-.32C3.48 15.22 3 13.66 3 12c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9z" />
