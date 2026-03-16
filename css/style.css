@@ -817,7 +817,7 @@ section {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
-  z-index: 9000;
+  z-index: 9600;
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -857,7 +857,7 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 20;
+  z-index: 9700;
   box-shadow: 0 2px 12px rgba(44,36,32,0.3);
   transition: background 0.2s, transform 0.2s;
   flex-shrink: 0;
