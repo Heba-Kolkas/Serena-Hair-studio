@@ -4,7 +4,81 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Studio Serena — Hair</title>
+
+    <!-- ── PRIMARY SEO ── -->
+    <title>Studio Serena | HårSalong Oslo – Balayage, Extensions & Bridal Hair</title>
+    <meta name="description" content="Studio Serena er Oslos fremste hårSalong på Torshovgata 5. Spesialister på balayage, extensions, keratin, brudestyling og mer. Bestill time i dag!" />
+    <meta name="keywords" content="hårSalong Oslo, balayage Oslo, extensions Oslo, keratin behandling Oslo, brudestyling Oslo, Studio Serena, hår Oslo, frisør Oslo, Torshovgata" />
+    <meta name="author" content="Studio Serena" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://heba-kolkas.github.io/Serena-Hair-studio/" />
+
+    <!-- ── OPEN GRAPH (Facebook / Instagram / WhatsApp previews) ── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://heba-kolkas.github.io/Serena-Hair-studio/" />
+    <meta property="og:title" content="Studio Serena | Hårсаlong Oslo" />
+    <meta property="og:description" content="Oslos fremste hårSalong. Balayage, extensions, keratin & brudestyling. Torshovgata 5, Oslo. Ring +47 453 97 631." />
+    <meta property="og:image" content="https://heba-kolkas.github.io/Serena-Hair-studio/html/Pics/Team/Hasan.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="nb_NO" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:site_name" content="Studio Serena" />
+
+    <!-- ── TWITTER / X CARD ── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Studio Serena | HårSalong Oslo" />
+    <meta name="twitter:description" content="Oslos fremste hårSalong. Balayage, extensions, keratin & brudestyling." />
+    <meta name="twitter:image" content="https://heba-kolkas.github.io/Serena-Hair-studio/html/Pics/Team/Hasan.jpg" />
+
+    <!-- ── SCHEMA.ORG LOCAL BUSINESS (Google reads this directly) ── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HairSalon",
+      "name": "Studio Serena",
+      "description": "Oslos fremste hårSalong – spesialister på balayage, extensions, keratin, og brudestyling.",
+      "url": "https://heba-kolkas.github.io/Serena-Hair-studio/",
+      "telephone": "+4745397631",
+      "email": "Hassan.kolkas@hotmail.com",
+      "image": "https://heba-kolkas.github.io/Serena-Hair-studio/html/Pics/Team/Hasan.jpg",
+      "priceRange": "$$",
+      "currenciesAccepted": "NOK",
+      "paymentAccepted": "Cash, Credit Card",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Torshovgata 5",
+        "addressLocality": "Oslo",
+        "postalCode": "0476",
+        "addressCountry": "NO"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 59.9308,
+        "longitude": 10.7690
+      },
+      "openingHoursSpecification": [
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "11:00", "closes": "17:30" }
+      ],
+      "sameAs": [
+        "https://www.instagram.com/saloncoiff1rst",
+        "https://www.facebook.com/share/18Y3VKWAMN/",
+        "https://www.tiktok.com/@saloncoiff1rst"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Hair Services",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Balayage" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Hair Extensions" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Keratin Treatment" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Bridal Hair" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Hair Colouring" } }
+        ]
+      }
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap"
@@ -131,7 +205,9 @@
             .footer-top { grid-template-columns: 1fr !important; }
             .team-grid { grid-template-columns: 1fr 1fr !important; }
             #stats { grid-template-columns: 1fr 1fr !important; }
-            .hero-cta { flex-direction: column; align-items: center; gap: 0.8rem; }
+            .hero-cta { flex-direction: column; align-items: center; gap: 0.7rem; }
+            .hero-cta .btn-book-now { font-size: 0.72rem !important; padding: 0.7rem 1.4rem !important; }
+            .hero-cta .btn-outline { font-size: 0.65rem !important; padding: 0.7rem 1.6rem !important; width: auto !important; }
             .social-links { flex-direction: column; align-items: center; }
         }
 
@@ -342,9 +418,9 @@
             nav.scrolled .lang-toggle { color: var(--greige) !important; }
             nav.scrolled .toggle-btn { color: var(--greige) !important; border-color: var(--warmgrey) !important; }
             nav.scrolled .hamburger span { background: var(--espresso) !important; }
-            .nav-logo { font-size: 1.15rem; color: #fff !important; }
-            .lang-toggle { color: rgba(255,255,255,0.9) !important; }
-            .toggle-btn { color: rgba(255,255,255,0.9) !important; border-color: rgba(255,255,255,0.4) !important; }
+            .nav-logo { font-size: 0.95rem !important; letter-spacing: 0.08em !important; color: #fff !important; white-space: nowrap !important; }
+            .lang-toggle { color: rgba(255,255,255,0.9) !important; font-size: 0.6rem !important; }
+            .toggle-btn { color: rgba(255,255,255,0.9) !important; border-color: rgba(255,255,255,0.4) !important; width: 28px !important; height: 28px !important; }
             .hamburger { display: flex !important; }
             .hamburger span { background: rgba(255,255,255,0.9) !important; }
         }
