@@ -333,7 +333,8 @@
         .gallery-ig-link:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.8); transform: scale(1.1); }
 
         @media (max-width: 900px) {
-            nav { padding: 0.35rem 1rem !important; min-height: 0; }
+            nav { padding: 0.35rem 1rem !important; min-height: 0; background: transparent !important; border-bottom: 1px solid transparent !important; box-shadow: none !important; }
+            nav.scrolled { background: rgba(250,248,245,0.97) !important; border-bottom: 1px solid var(--warmgrey) !important; }
             .nav-logo { font-size: 1.15rem; }
             .hamburger { display: flex !important; }
         }
@@ -1146,6 +1147,33 @@
             </div>
         </section>
 
+        <!-- STYLE QUIZ -->
+        <section id="style-quiz">
+            <p class="section-eyebrow reveal" data-en="Find Your Style" data-no="Finn Din Stil">Find Your Style</p>
+            <h2 class="section-title reveal">What does your hair <em>need?</em></h2>
+            <div class="divider reveal"></div>
+            <div class="quiz-wrap" id="quizWrap">
+                <div class="quiz-step" id="quizStep1">
+                    <p class="quiz-q reveal" data-en="What is your biggest hair concern right now?" data-no="Hva er din største hårutfordring akkurat nå?">What is your biggest hair concern right now?</p>
+                    <div class="quiz-opts reveal">
+                        <button class="quiz-opt" onclick="quizPick('frizz')"><span data-en="Frizz &amp; damage" data-no="Krøll og skade">Frizz &amp; damage</span></button>
+                        <button class="quiz-opt" onclick="quizPick('colour')"><span data-en="Dull, flat colour" data-no="Kjedelig, flat farge">Dull, flat colour</span></button>
+                        <button class="quiz-opt" onclick="quizPick('length')"><span data-en="I want more length" data-no="Jeg vil ha mer lengde">I want more length</span></button>
+                        <button class="quiz-opt" onclick="quizPick('special')"><span data-en="Special occasion coming" data-no="Spesiell anledning">Special occasion coming</span></button>
+                        <button class="quiz-opt" onclick="quizPick('health')"><span data-en="My hair feels weak" data-no="Håret mitt føles svakt">My hair feels weak</span></button>
+                        <button class="quiz-opt" onclick="quizPick('hijabi')"><span data-en="I need a private space" data-no="Jeg trenger et privat rom">I need a private space</span></button>
+                    </div>
+                </div>
+                <div class="quiz-result-wrap" id="quizResult" style="display:none;">
+                    <div class="quiz-result-icon"><i class="fa-solid fa-scissors"></i></div>
+                    <div class="quiz-result-service" id="quizService"></div>
+                    <div class="quiz-result-desc" id="quizDesc"></div>
+                    <a href="https://www.instagram.com/saloncoiff1rst" target="_blank" rel="noopener" class="quiz-book-btn" data-en="Book this service" data-no="Bestill denne tjenesten">Book this service</a>
+                    <button class="quiz-restart-btn" onclick="quizRestart()" data-en="Try again" data-no="Prøv igjen">Try again</button>
+                </div>
+            </div>
+        </section>
+
         <!-- FAQ -->
         <section id="faq" style="background:var(--linen);">
             <p class="section-eyebrow reveal" data-en="Questions & Answers" data-no="Spørsmål & Svar">Questions & Answers</p>
@@ -1231,33 +1259,6 @@
                     <p class="bc-hint" data-en="Type your name to personalise your card" data-no="Skriv navnet ditt for å personalisere kortet">Type your name to personalise your card</p>
                     <input class="bc-name-input" id="bcNameInput" type="text" maxlength="22" placeholder="Your name...">
                     <div class="bc-tier-info" id="bcTierInfo"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- STYLE QUIZ -->
-        <section id="style-quiz">
-            <p class="section-eyebrow reveal" data-en="Find Your Style" data-no="Finn Din Stil">Find Your Style</p>
-            <h2 class="section-title reveal">What does your hair <em>need?</em></h2>
-            <div class="divider reveal"></div>
-            <div class="quiz-wrap" id="quizWrap">
-                <div class="quiz-step" id="quizStep1">
-                    <p class="quiz-q reveal" data-en="What is your biggest hair concern right now?" data-no="Hva er din største hårutfordring akkurat nå?">What is your biggest hair concern right now?</p>
-                    <div class="quiz-opts reveal">
-                        <button class="quiz-opt" onclick="quizPick('frizz')"><span data-en="Frizz &amp; damage" data-no="Krøll og skade">Frizz &amp; damage</span></button>
-                        <button class="quiz-opt" onclick="quizPick('colour')"><span data-en="Dull, flat colour" data-no="Kjedelig, flat farge">Dull, flat colour</span></button>
-                        <button class="quiz-opt" onclick="quizPick('length')"><span data-en="I want more length" data-no="Jeg vil ha mer lengde">I want more length</span></button>
-                        <button class="quiz-opt" onclick="quizPick('special')"><span data-en="Special occasion coming" data-no="Spesiell anledning">Special occasion coming</span></button>
-                        <button class="quiz-opt" onclick="quizPick('health')"><span data-en="My hair feels weak" data-no="Håret mitt føles svakt">My hair feels weak</span></button>
-                        <button class="quiz-opt" onclick="quizPick('hijabi')"><span data-en="I need a private space" data-no="Jeg trenger et privat rom">I need a private space</span></button>
-                    </div>
-                </div>
-                <div class="quiz-result-wrap" id="quizResult" style="display:none;">
-                    <div class="quiz-result-icon"><i class="fa-solid fa-scissors"></i></div>
-                    <div class="quiz-result-service" id="quizService"></div>
-                    <div class="quiz-result-desc" id="quizDesc"></div>
-                    <a href="https://www.instagram.com/saloncoiff1rst" target="_blank" rel="noopener" class="quiz-book-btn" data-en="Book this service" data-no="Bestill denne tjenesten">Book this service</a>
-                    <button class="quiz-restart-btn" onclick="quizRestart()" data-en="Try again" data-no="Prøv igjen">Try again</button>
                 </div>
             </div>
         </section>
