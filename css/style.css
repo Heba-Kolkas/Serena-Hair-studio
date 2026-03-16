@@ -1378,8 +1378,8 @@ section {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   background: linear-gradient(135deg, var(--espresso), #6b5448);
   border-radius: 50%;
   display: flex;
@@ -1657,10 +1657,14 @@ section {
   flex-shrink: 0;
   gap: 0.5rem;
   background: var(--cream);
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
 }
 
 .chat-input {
   flex: 1;
+  min-width: 0;
   padding: 0.55rem 0;
   background: none;
   border: none;
@@ -1676,8 +1680,9 @@ section {
 
 .chat-send {
   padding: 0;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   background: linear-gradient(135deg, var(--espresso), #6b5448);
   border: none;
   border-radius: 50%;
@@ -1695,6 +1700,12 @@ section {
 .chat-send:hover {
   transform: scale(1.08);
   box-shadow: 0 5px 16px rgba(44,36,32,0.35);
+}
+.chat-send svg {
+  width: 16px;
+  height: 16px;
+  fill: #fff;
+  flex-shrink: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2017,17 +2028,36 @@ section {
     font-size: 0.65rem;
   }
 
-  /* Chatbot — full screen on phones */
+  /* Chatbot — compact on phones */
+  .chat-bubble {
+    width: 46px;
+    height: 46px;
+    bottom: 1.5rem;
+    right: 1rem;
+  }
+  .chat-bubble svg {
+    width: 20px;
+    height: 20px;
+  }
   .chat-window {
-    width: 100vw;
-    right: 0;
-    left: 0;
-    bottom: 0;
-    top: 0;
-    max-height: 100dvh;
-    height: 100dvh;
-    border-radius: 0;
-    transform-origin: bottom center;
+    width: calc(100vw - 1.5rem);
+    right: 0.75rem;
+    left: 0.75rem;
+    bottom: 5rem;
+    top: auto;
+    max-height: 70vh;
+    height: auto;
+    border-radius: 20px;
+    transform-origin: bottom right;
+  }
+  /* Toast sits above chat bubble */
+  .appt-toast {
+    bottom: 5rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    border-radius: 14px;
+    padding: 0.85rem 1rem;
   }
 }
 
@@ -2056,17 +2086,17 @@ section {
 /* ───── BACK TO TOP ───── */
 #back-top {
   position: fixed;
-  bottom: 6.5rem;
-  left: 2rem;
-  width: 44px;
-  height: 44px;
+  bottom: 2rem;
+  left: 1.2rem;
+  width: 40px;
+  height: 40px;
   background: var(--espresso);
   color: var(--cream);
   border: none;
   border-radius: 50%;
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
-  z-index: 500;
+  z-index: 9500;
   opacity: 0;
   visibility: hidden;
   transform: translateY(10px);
@@ -2090,10 +2120,10 @@ section {
 @media (max-width: 599px) {
   #back-top {
     left: 1rem;
-    bottom: 5.5rem;
-    width: 38px;
-    height: 38px;
-    font-size: 0.9rem;
+    bottom: 1.8rem;
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
   }
 }
 
