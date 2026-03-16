@@ -180,38 +180,25 @@ nav.scrolled {
 }
 
 /* Ensure Logo and Links adapt */
-[data-theme="dark"] .nav-logo,
-[data-theme="dark"] .nav-links a,
-[data-theme="dark"] .lang-toggle {
-  color: var(--espresso);
-}
-
 [data-theme="dark"] nav.scrolled .nav-links a {
   color: var(--greige);
 }
 
 [data-theme="dark"] .hamburger span {
-  background: #fff;
-  transition: background 0.4s ease;
-  background: var(--espresso);
+  background: rgba(255,255,255,0.9);
 }
 
 .nav-logo {
-  color: #fff;
-  transition: color 0.4s ease;
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 400;
   letter-spacing: 0.15em;
-  color: var(--espresso);
+  color: #fff;
   text-decoration: none;
   transition: color var(--transition);
 }
 
 nav.scrolled .nav-logo {
-  color: var(--espresso);
-  color: #fff;
-  transition: color 0.4s ease;
   color: var(--espresso);
 }
 
@@ -226,7 +213,7 @@ nav.scrolled .nav-logo {
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--greige);
+  color: rgba(255,255,255,0.85);
   text-decoration: none;
   position: relative;
   transition: color var(--transition);
@@ -258,11 +245,8 @@ nav.scrolled .nav-links a {
 }
 
 .toggle-btn {
-  color: rgba(255,255,255,0.85);
-  border-color: rgba(255,255,255,0.3);
-  transition: color 0.4s, border-color 0.4s;
   background: none;
-  border: 1px solid var(--warmgrey);
+  border: 1px solid rgba(255,255,255,0.4);
   border-radius: 50%;
   padding: 0;
   width: 32px;
@@ -270,7 +254,7 @@ nav.scrolled .nav-links a {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--espresso);
+  color: rgba(255,255,255,0.85);
   cursor: pointer;
   transition: all var(--transition);
   flex-shrink: 0;
@@ -283,10 +267,8 @@ nav.scrolled .nav-links a {
 }
 
 nav.scrolled .toggle-btn {
-  color: var(--espresso);
-  border-color: var(--warmgrey);
-  border-color: var(--warmgrey);
   color: var(--greige);
+  border-color: var(--warmgrey);
 }
 
 .toggle-btn:hover {
@@ -302,7 +284,7 @@ nav.scrolled .toggle-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--greige);
+  color: rgba(255,255,255,0.85);
   font-family: var(--font-body);
   white-space: nowrap;
 }
@@ -322,19 +304,14 @@ nav.scrolled .lang-toggle {
 }
 
 .hamburger span {
-  background: #fff;
-  transition: background 0.4s ease;
   display: block;
   width: 22px;
   height: 1px;
-  background: var(--espresso);
+  background: rgba(255,255,255,0.9);
   transition: all 0.3s;
 }
 
 nav.scrolled .hamburger span {
-  background: var(--espresso);
-  background: #fff;
-  transition: background 0.4s ease;
   background: var(--espresso);
 }
 
@@ -342,7 +319,7 @@ nav.scrolled .hamburger span {
   display: none;
   position: fixed;
   inset: 0;
-  background: var(--espresso);
+  background: #1e1612;
   z-index: 9001;
   flex-direction: column;
   align-items: center;
@@ -358,32 +335,44 @@ nav.scrolled .hamburger span {
   font-family: var(--font-display);
   font-size: 2.5rem;
   font-weight: 300;
-  color: var(--cream);
+  color: #faf8f5;
   text-decoration: none;
   letter-spacing: 0.1em;
+  transition: color 0.2s;
+}
+
+.mobile-menu a:hover {
+  color: #B5A89A;
 }
 
 .mobile-menu .close-menu {
   position: absolute;
-  top: 1.8rem;
-  right: 1.8rem;
-  width: 48px;
-  height: 48px;
+  top: 5.5rem;
+  right: 1.5rem;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: var(--cream);
-  font-size: 1.3rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: #faf8f5;
+  font-size: 1.1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s, transform 0.2s;
-  backdrop-filter: blur(8px);
+  z-index: 9002;
 }
 .mobile-menu .close-menu:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.18);
   transform: rotate(90deg) scale(1.1);
+}
+
+@media (max-width: 599px) {
+  .mobile-menu .close-menu {
+    top: 5.8rem;
+    right: 1.2rem;
+  }
 }
 
 /* ───── HERO ───── */
@@ -3045,20 +3034,20 @@ nav.scrolled #scroll-progress {
   justify-content: center;
 }
 .mobile-menu-controls .lang-toggle {
-  color: rgba(250,248,245,0.6);
+  color: rgba(250,248,245,0.65) !important;
   font-size: 0.75rem;
   letter-spacing: 0.15em;
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.2) !important;
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  background: transparent;
+  background: transparent !important;
   cursor: pointer;
   font-family: var(--font-body);
   transition: all 0.2s;
 }
 .mobile-menu-controls .lang-toggle:hover {
-  color: rgba(250,248,245,0.9);
-  border-color: rgba(255,255,255,0.4);
+  color: rgba(250,248,245,0.95) !important;
+  border-color: rgba(255,255,255,0.4) !important;
 }
 .mobile-menu-book {
   font-size: 0.75rem !important;
@@ -3086,35 +3075,45 @@ nav.scrolled #scroll-progress {
     left: 0;
     right: 0;
     z-index: 9399;
-    background: rgba(44, 36, 32, 0.82);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid transparent;
+    box-shadow: none;
     justify-content: space-around;
     align-items: center;
-    padding: 0.38rem 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 2px 12px rgba(44,36,32,0.18);
-    height: 34px;
+    padding: 0;
+    height: 32px;
+    transition: background 0.35s ease, backdrop-filter 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  .mobile-bottom-nav.subnav-scrolled {
+    background: rgba(18, 13, 10, 0.82) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.45) !important;
   }
 
   .mob-nav-item {
     flex: 1;
     text-align: center;
     text-decoration: none;
-    color: rgba(255,255,255,0.88) !important;
+    color: rgba(255,255,255,0.75) !important;
     font-family: var(--font-body);
-    font-size: 0.6rem;
-    font-weight: 400;
-    letter-spacing: 0.13em;
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    padding: 0.3rem 0.2rem;
+    padding: 0.3rem 0.1rem;
     transition: color 0.2s;
     white-space: nowrap;
+    line-height: 32px;
   }
 
   .mob-nav-item:hover,
   .mob-nav-item.active {
-    color: #fff !important;
+    color: #C9A96E !important;
   }
 }
 

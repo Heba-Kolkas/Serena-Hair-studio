@@ -338,8 +338,15 @@
         @media (max-width: 900px) {
             nav { padding: 0.35rem 1rem !important; min-height: 0; background: transparent !important; border-bottom: 1px solid transparent !important; box-shadow: none !important; }
             nav.scrolled { background: rgba(250,248,245,0.97) !important; border-bottom: 1px solid var(--warmgrey) !important; }
-            .nav-logo { font-size: 1.15rem; }
+            nav.scrolled .nav-logo { color: var(--espresso) !important; }
+            nav.scrolled .lang-toggle { color: var(--greige) !important; }
+            nav.scrolled .toggle-btn { color: var(--greige) !important; border-color: var(--warmgrey) !important; }
+            nav.scrolled .hamburger span { background: var(--espresso) !important; }
+            .nav-logo { font-size: 1.15rem; color: #fff !important; }
+            .lang-toggle { color: rgba(255,255,255,0.9) !important; }
+            .toggle-btn { color: rgba(255,255,255,0.9) !important; border-color: rgba(255,255,255,0.4) !important; }
             .hamburger { display: flex !important; }
+            .hamburger span { background: rgba(255,255,255,0.9) !important; }
         }
         @media (max-height: 500px) and (orientation: landscape) {
             nav { padding: 0.4rem 1.2rem !important; }
@@ -1383,9 +1390,16 @@
               subNav.style.display = 'none';
               return;
             }
-            subNav.style.display = '';
+            subNav.style.display = 'flex';
             var navH = navbar.getBoundingClientRect().height;
             subNav.style.top = navH + 'px';
+            // Toggle dark blur only after scrolling past hero
+            var heroH = window.innerHeight * 0.6;
+            if (window.scrollY > heroH) {
+              subNav.classList.add('subnav-scrolled');
+            } else {
+              subNav.classList.remove('subnav-scrolled');
+            }
           }
           positionSubNav();
           window.addEventListener('resize', positionSubNav);
