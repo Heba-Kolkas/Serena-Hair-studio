@@ -623,7 +623,7 @@ if (!window._studioSerenaChatInit) {
     // BOOKING
     {
       keys: ['book', 'appointment', 'reserve', 'schedule', 'bestille', 'bestill', 'avtale'],
-      reply: "To book an appointment, DM us on Instagram @saloncoiff1rst or call/WhatsApp +47 453 97 631 ✦\nFor å bestille time, kontakt oss på Instagram @saloncoiff1rst eller WhatsApp +47 453 97 631 ✦"
+      reply: "To book an appointment, DM us on Instagram @saloncoiff1rst ✦\nFor å bestille time, kontakt oss på Instagram @saloncoiff1rst ✦"
     },
 
     // SERVICES — specific with descriptions
@@ -737,13 +737,10 @@ if (!window._studioSerenaChatInit) {
       keys: ['instagram', 'insta'],
       reply: "Find us on Instagram @saloncoiff1rst — we'd love to see you there! ✦"
     },
-    {
-      keys: ['phone', 'call', 'ring', 'telefon', 'whatsapp'],
-      reply: "Call or WhatsApp us at +47 453 97 631 ✦"
-    },
+    
     {
       keys: ['contact us', 'kontakt oss', 'reach you', 'get in touch', 'contact', 'kontakt'],
-      reply: "Reach us at / Kontakt oss:\n✦ Phone/WhatsApp: +47 453 97 631\n✦ Instagram: @saloncoiff1rst"
+      reply: "Reach us at / Kontakt oss:\n✦ Instagram: @saloncoiff1rst"
     },
 
     // SMALL TALK — Norwegian
