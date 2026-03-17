@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://heba-kolkas.github.io/Serena-Hair-studio/sitemap.xml
+Sitemap: https://studioserena.no/sitemap.xml

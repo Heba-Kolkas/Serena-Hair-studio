@@ -97,6 +97,7 @@ if (langBtn) {
     lang = lang === 'en' ? 'no' : 'en';
     langBtn.textContent = lang === 'en' ? 'NO | EN' : 'EN | NO';
     if (langBtnMob) langBtnMob.textContent = langBtn.textContent;
+    document.documentElement.lang = lang;
 
     // Translate all [data-en] elements — smart: preserve child elements
     document.querySelectorAll('[data-en]').forEach(el => {
@@ -629,12 +630,12 @@ if (!window._studioSerenaChatInit) {
     // SERVICES — specific with descriptions
     {
       keys: ['balayage'],
-      reply: "Balayage is one of our specialties! ✦\n\nIt's a freehand hair colouring technique that creates soft, natural-looking highlights — no harsh lines, just a beautiful sun-kissed gradient tailored to your hair. Perfect for all hair types and colours.\n\nBook via Instagram @saloncoiff1rst or WhatsApp +47 453 97 631."
+      reply: "Balayage is one of our specialties! ✦\n\nIt's a freehand hair colouring technique that creates soft, natural-looking highlights — no harsh lines, just a beautiful sun-kissed gradient tailored to your hair. Perfect for all hair types and colours.\n\nBook via Instagram @saloncoiff1rst "
     },
 
     {
       keys: ['keratin'],
-      reply: "Our Keratin Treatment is a professional smoothing service that eliminates frizz, reduces styling time, and leaves your hair glossy and manageable for weeks. ✦\n\nThe treatment infuses keratin protein deep into the hair shaft, repairing damage and sealing the cuticle for a sleek, healthy finish.\n\nReach out on Instagram @saloncoiff1rst or WhatsApp +47 453 97 631 to book."
+      reply: "Our Keratin Treatment is a professional smoothing service that eliminates frizz, reduces styling time, and leaves your hair glossy and manageable for weeks. ✦\n\nThe treatment infuses keratin protein deep into the hair shaft, repairing damage and sealing the cuticle for a sleek, healthy finish.\n\nReach out on Instagram @saloncoiff1rst "
     },
 
     {
@@ -649,7 +650,7 @@ if (!window._studioSerenaChatInit) {
 
     {
       keys: ['hijab', 'hijabi', 'privat'],
-      reply: "We offer a fully private, respectful space exclusively for our hijabi clients. ✦\n\nOur salon ensures complete privacy throughout your appointment — you can relax and enjoy your service comfortably and confidently.\n\nBook via Instagram @saloncoiff1rst or WhatsApp +47 453 97 631."
+      reply: "We offer a fully private, respectful space exclusively for our hijabi clients. ✦\n\nOur salon ensures complete privacy throughout your appointment — you can relax and enjoy your service comfortably and confidently.\n\nBook via Instagram @saloncoiff1rst "
     },
 
     {
@@ -674,7 +675,7 @@ if (!window._studioSerenaChatInit) {
 
     {
       keys: ['haircut', 'trim', 'klipp'],
-      reply: "We offer precision haircuts tailored to your face shape, hair type, and personal style. ✦\n\nWhether you're after a classic trim, a fresh new cut, or a full style transformation, our stylists take the time to understand exactly what you're looking for.\n\nBook via Instagram @saloncoiff1rst or WhatsApp +47 453 97 631."
+      reply: "We offer precision haircuts tailored to your face shape, hair type, and personal style. ✦\n\nWhether you're after a classic trim, a fresh new cut, or a full style transformation, our stylists take the time to understand exactly what you're looking for.\n\nBook via Instagram @saloncoiff1rst "
     },
 
     {
@@ -721,7 +722,7 @@ if (!window._studioSerenaChatInit) {
     },
     {
       keys: ['price', 'prices', 'pricing', 'cost', 'how much', 'pris', 'priser', 'hva koster', 'fee'],
-      reply: "For pricing, DM us on Instagram @saloncoiff1rst or WhatsApp +47 453 97 631 ✦\nFor priser, send oss en DM på Instagram @saloncoiff1rst ✦"
+      reply: "For pricing, DM us on Instagram @saloncoiff1rst ✦\nFor priser, send oss en DM på Instagram @saloncoiff1rst ✦"
     },
     {
       keys: ['where are you', 'location', 'address', 'where is', 'find you', 'adresse', 'hvor er dere', 'lokasjon'],
@@ -740,7 +741,7 @@ if (!window._studioSerenaChatInit) {
     
     {
       keys: ['contact us', 'kontakt oss', 'reach you', 'get in touch', 'contact', 'kontakt'],
-      reply: "Reach us at / Kontakt oss:\n✦ Instagram: @saloncoiff1rst"
+      reply: "Reach us at / Kontakt oss:\n✦ Instagram: @saloncoiff1rst\n✦ Email: info@studioserena.no"
     },
 
     // SMALL TALK — Norwegian
@@ -900,11 +901,11 @@ if (!window._studioSerenaChatInit) {
   ];
 
   const fallbackReplies = [
-    "That's a great question! Reach out on Instagram @saloncoiff1rst or WhatsApp +47 453 97 631 ✦",
-    "We'd love to help! DM us on Instagram @saloncoiff1rst or WhatsApp +47 453 97 631 ✦",
-    "Our team would be happy to assist — contact us at +47 453 97 631 ✦",
+    "That's a great question! Reach out on Instagram @saloncoiff1rst ✦",
+    "We'd love to help! DM us on Instagram @saloncoiff1rst ✦",
+    "Our team would be happy to assist — email us at info@studioserena.no ✦",
     "Not sure about that one! DM us on Instagram @saloncoiff1rst and we'll get back to you ✦",
-    "Best way to get a precise answer is to WhatsApp us at +47 453 97 631 ✦",
+    "Best way to get a precise answer is to email us at info@studioserena.no ✦",
   ];
 
   // ── UI helpers ──

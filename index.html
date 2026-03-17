@@ -7,8 +7,8 @@
 
     <!-- ── PRIMARY SEO ── -->
     <title>Studio Serena | Oslo Hair Studio</title>
-    <meta name="description" content="Studio Serena er Oslos fremste hårSalong på Torshovgata 5. Spesialister på balayage, extensions, keratin, brudestyling og mer. Bestill time i dag!" />
-    <meta name="keywords" content="hårSalong Oslo, balayage Oslo, extensions Oslo, keratin behandling Oslo, brudestyling Oslo, Studio Serena, hår Oslo, frisør Oslo, Torshovgata" />
+    <meta name="description" content="Studio Serena er Oslos fremste hårsalong på Torshovgata 5. Spesialister på balayage, extensions, keratin, brudestyling og mer. Bestill time i dag!" />
+    <meta name="keywords" content="hårsalong Oslo, balayage Oslo, extensions Oslo, keratin behandling Oslo, brudestyling Oslo, Studio Serena, hår Oslo, frisør Oslo, Torshovgata" />
     <meta name="author" content="Studio Serena" />
     <meta name="robots" content="index, follow" />
     <!-- ── SECURITY HEADERS ── -->
@@ -17,14 +17,14 @@
     <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
-    <link rel="canonical" href="https://heba-kolkas.github.io/Serena-Hair-studio/" />
+    <link rel="canonical" href="https://studioserena.no/" />
 
     <!-- ── OPEN GRAPH (Facebook / Instagram / WhatsApp previews) ── -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://heba-kolkas.github.io/Serena-Hair-studio/" />
+    <meta property="og:url" content="https://studioserena.no/" />
   <meta property="og:title" content="Studio Serena | Hårsalong Oslo" />
-    <meta property="og:description" content="Oslos fremste hårSalong. Balayage, extensions, keratin & brudestyling. Torshovgata 5, Oslo. Ring +47 453 97 631." />
-    <meta property="og:image" content="https://heba-kolkas.github.io/Serena-Hair-studio/html/Pics/Team/Hasan.jpg" />
+    <meta property="og:description" content="Oslos fremste hårsalong. Balayage, extensions, keratin & brudestyling. Torshovgata 5, Oslo. Ring +47 453 97 631." />
+    <meta property="og:image" content="https://studioserena.no/html/Pics/Team/Hasan.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="nb_NO" />
@@ -33,9 +33,9 @@
 
     <!-- ── TWITTER / X CARD ── -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Studio Serena | HårSalong Oslo" />
-    <meta name="twitter:description" content="Oslos fremste hårSalong. Balayage, extensions, keratin & brudestyling." />
-    <meta name="twitter:image" content="https://heba-kolkas.github.io/Serena-Hair-studio/html/Pics/Team/Hasan.jpg" />
+    <meta name="twitter:title" content="Studio Serena | Hårsalong Oslo" />
+    <meta name="twitter:description" content="Oslos fremste hårsalong. Balayage, extensions, keratin & brudestyling." />
+    <meta name="twitter:image" content="https://studioserena.no/html/Pics/Team/Hasan.jpg" />
 
     <!-- ── SCHEMA.ORG LOCAL BUSINESS (Google reads this directly) ── -->
     <script type="application/ld+json">
@@ -43,10 +43,10 @@
       "@context": "https://schema.org",
       "@type": "HairSalon",
       "name": "Studio Serena",
-      "description": "Oslos fremste hårSalong – spesialister på balayage, extensions, keratin, og brudestyling.",
-      "url": "https://heba-kolkas.github.io/Serena-Hair-studio/",
-      "email": "Hassan.kolkas@hotmail.com",
-      "image": "https://heba-kolkas.github.io/Serena-Hair-studio/html/Pics/Team/Hasan.jpg",
+      "description": "Oslos fremste hårsalong – spesialister på balayage, extensions, keratin, og brudestyling.",
+      "url": "https://studioserena.no/",
+      "email": "info@studioserena.no",
+      "image": "https://studioserena.no/html/Pics/Team/Hasan.jpg",
       "priceRange": "$$",
       "currenciesAccepted": "NOK",
       "paymentAccepted": "Cash, Credit Card",
@@ -446,12 +446,95 @@
             .nav-links { display: none !important; }
             .hamburger { display: flex !important; }
         }
+
+        /* ── COOKIE BANNER ── */
+        #cookie-banner {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 99999;
+            background: rgba(28, 22, 18, 0.97);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(181,168,154,0.25);
+            padding: 1.4rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            transform: translateY(100%);
+            transition: transform 0.45s cubic-bezier(0.22,1,0.36,1);
+            font-family: 'Jost', sans-serif;
+        }
+        #cookie-banner.visible { transform: translateY(0); }
+        .cookie-text {
+            flex: 1; min-width: 220px;
+            font-size: 0.8rem; font-weight: 300;
+            color: rgba(255,255,255,0.72); line-height: 1.7;
+        }
+        .cookie-text strong { color: #fff; font-weight: 500; display: block; margin-bottom: 0.3rem; font-size: 0.85rem; }
+        .cookie-text a { color: #B5A89A; text-decoration: underline; text-underline-offset: 2px; }
+        .cookie-btns { display: flex; gap: 0.75rem; flex-shrink: 0; flex-wrap: wrap; }
+        .cookie-btn-accept {
+            padding: 0.6rem 1.6rem;
+            background: linear-gradient(135deg, #B5A89A, #3f3632);
+            color: #fff; border: none; border-radius: 50px;
+            font-family: 'Jost', sans-serif; font-size: 0.75rem; font-weight: 500;
+            letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3); white-space: nowrap;
+        }
+        .cookie-btn-accept:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+        .cookie-btn-decline {
+            padding: 0.6rem 1.4rem; background: transparent;
+            color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50px; font-family: 'Jost', sans-serif; font-size: 0.75rem;
+            font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase;
+            cursor: pointer; transition: border-color 0.2s, color 0.2s; white-space: nowrap;
+        }
+        .cookie-btn-decline:hover { border-color: rgba(255,255,255,0.5); color: rgba(255,255,255,0.8); }
+        .map-blocked {
+            width: 100%; min-height: 340px;
+            background: rgba(44,36,32,0.06); border-radius: 16px;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 1rem;
+            border: 1px dashed rgba(181,168,154,0.4);
+            font-family: 'Jost', sans-serif; text-align: center; padding: 2rem;
+        }
+        .map-blocked p { font-size: 0.82rem; color: var(--greige); line-height: 1.7; max-width: 280px; }
+        .map-blocked-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--espresso); }
+        .map-enable-btn {
+            padding: 0.55rem 1.4rem;
+            background: linear-gradient(135deg, #B5A89A, #3f3632);
+            color: #fff; border: none; border-radius: 50px;
+            font-family: 'Jost', sans-serif; font-size: 0.75rem; font-weight: 500;
+            letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: transform 0.2s;
+        }
+        .map-enable-btn:hover { transform: translateY(-2px); }
+        @media (max-width: 600px) {
+            #cookie-banner { padding: 1.2rem; }
+            .cookie-btns { width: 100%; }
+            .cookie-btn-accept, .cookie-btn-decline { flex: 1; text-align: center; }
+        }
     </style>
     <!-- Only preload the single most critical above-fold image -->
     <link rel="preload" as="image" href="./html/Pics/Team/Hasan.jpg" fetchpriority="high">
 </head>
 
 <body>
+
+    <!-- ── GDPR COOKIE CONSENT BANNER ── -->
+    <div id="cookie-banner" role="dialog" aria-label="Cookie consent">
+        <div class="cookie-text">
+            <strong>🍪 We use cookies</strong>
+            This site uses Google Maps and Google Fonts, which may set cookies and send data to Google servers. By accepting, you consent to this. Declining means the map will not load.
+            &nbsp;<a href="/privacy-policy.html">Privacy Policy</a> &nbsp;·&nbsp;
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy</a>
+        </div>
+        <div class="cookie-btns">
+            <button class="cookie-btn-decline" id="cookieDecline">Decline</button>
+            <button class="cookie-btn-accept" id="cookieAccept">Accept All</button>
+        </div>
+    </div>
 
     <!-- ── WELCOME POPUP ── -->
     <div id="welcome-popup" role="dialog" aria-modal="true" aria-label="Welcome to Studio Serena">
@@ -701,9 +784,9 @@
                     <div class="team-name">Hassan K.</div>
                     <div class="team-role" data-en="Founder &amp; Master Stylist" data-no="Grunnlegger &amp; Mesterstylisten">Founder &amp; Master Stylist</div>
                     <div class="team-bio"
-                        data-en="25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions, with a masterful touch in every discipline."
-                        data-no="25+ års luksuserfaring fra Oslo og Libanon. En mester innen balayage og extensions, med et mesterlig blikk for alle faglige disipliner.">
-                        25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions, with a masterful touch in every discipline.
+                        data-en="25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions, with an expert touch across every discipline."
+                        data-no="25+ års luksuserfaring fra Oslo og Libanon. En mester innen balayage og extensions, med et ekspertblikk på alle faglige disipliner.">
+                        25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions, with an expert touch across every discipline.
                     </div>
                 </div>
                 <div class="team-card reveal">
@@ -792,8 +875,8 @@
                     <div id="statusBadge" class="status-badge reveal"></div>
                 </div>
                 <div class="reveal">
-                    <iframe class="map-frame"
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1"
+                    <iframe class="map-frame" title="Studio Serena location map"
+                        data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1"
                         allowfullscreen="" loading="lazy"></iframe>
                     <p style="margin-top:1rem;font-size:0.8rem;color:var(--greige);">Torshovgata 5, Oslo · </p>
                 </div>
@@ -1385,12 +1468,13 @@
                         <li><a href="#gallery" data-en="Portfolio" data-no="Portefølje">Portfolio</a></li>
                         <li><a href="#testimonials" data-en="Reviews" data-no="Anmeldelser">Reviews</a></li>
                         <li><a href="#faq" data-en="FAQ" data-no="Spørsmål">FAQ</a></li>
+                        <li><a href="/privacy-policy.html" data-en="Privacy Policy" data-no="Personvernerklæring">Privacy Policy</a></li>
                     </ul>
                 </div>
                 <div>
                     <p class="footer-col-title" data-en="Contact" data-no="Kontakt">Contact</p>
                     <ul class="footer-links">
-                        <li><a href="mailto:Hassan.kolkas@hotmail.com">Send us an Email</a></li>
+                        <li><a href="mailto:info@studioserena.no">info@studioserena.no</a></li>
                         <li><a href="#location">Torshovgata 5, Oslo</a></li>
                     </ul>
                 </div>
@@ -1486,12 +1570,64 @@
 
         <script src="./js/script.js" defer></script>
 
-        <!-- Service Worker — enables offline & fast repeat loading -->
+        
+        <!-- ── GDPR COOKIE CONSENT LOGIC ── -->
+        <script>
+        (function() {
+            var MAP_SRC = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1';
+            var banner  = document.getElementById('cookie-banner');
+            var consent = localStorage.getItem('ss_cookie_consent');
+            if (!consent) {
+                setTimeout(function() { if(banner) banner.classList.add('visible'); }, 1400);
+            } else if (consent === 'accepted') {
+                loadMap();
+            } else {
+                showMapBlocked();
+            }
+            var btnAccept  = document.getElementById('cookieAccept');
+            var btnDecline = document.getElementById('cookieDecline');
+            if (btnAccept) btnAccept.addEventListener('click', function() {
+                localStorage.setItem('ss_cookie_consent', 'accepted');
+                if(banner) banner.classList.remove('visible');
+                loadMap();
+            });
+            if (btnDecline) btnDecline.addEventListener('click', function() {
+                localStorage.setItem('ss_cookie_consent', 'declined');
+                if(banner) banner.classList.remove('visible');
+                showMapBlocked();
+            });
+            function loadMap() {
+                var iframe = document.querySelector('.map-frame');
+                if (iframe && !iframe.src && iframe.dataset.src) { iframe.src = iframe.dataset.src; }
+                var ph = document.getElementById('map-blocked-placeholder');
+                if (ph) ph.remove();
+                if (iframe) iframe.style.display = '';
+            }
+            function showMapBlocked() {
+                var iframe = document.querySelector('.map-frame');
+                if (!iframe) return;
+                iframe.style.display = 'none';
+                if (document.getElementById('map-blocked-placeholder')) return;
+                var ph = document.createElement('div');
+                ph.id = 'map-blocked-placeholder';
+                ph.className = 'map-blocked';
+                ph.innerHTML = '<div class="map-blocked-title">Map not loaded</div>' +
+                    '<p>You declined cookies. Google Maps requires consent to load.</p>' +
+                    '<button class="map-enable-btn" onclick="enableMapConsent()">Enable Map</button>';
+                iframe.parentNode.insertBefore(ph, iframe);
+            }
+            window.enableMapConsent = function() {
+                localStorage.setItem('ss_cookie_consent', 'accepted');
+                loadMap();
+            };
+        })();
+        </script>
+
+        <!-- Service Worker -->
         <script>
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-              navigator.serviceWorker.register('./sw.js')
-                .catch(function() {});
+              navigator.serviceWorker.register('./sw.js').catch(function() {});
             });
           }
         </script>

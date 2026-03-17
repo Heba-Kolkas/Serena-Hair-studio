@@ -36,7 +36,7 @@ self.addEventListener('fetch', event => {
 
   // Skip non-GET and external requests (fonts, CDN etc)
   if (event.request.method !== 'GET') return;
-  if (!url.origin.includes('github.io') && !url.pathname.startsWith('/Serena-Hair-studio')) {
+  if (!url.origin.includes('studioserena.no')) {
     // For external (Google Fonts, Font Awesome) — network with cache fallback
     event.respondWith(
       caches.open(CACHE_NAME).then(cache =>
