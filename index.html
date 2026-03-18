@@ -103,29 +103,6 @@
     <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#2C2420" />
     <style>
-        /* ── TOP BAR ── */
-        #top-bar {
-            background: var(--espresso, #3f3632);
-            color: rgba(255,255,255,0.65);
-            font-family: 'Jost', sans-serif;
-            font-size: 0.72rem;
-            font-weight: 400;
-            letter-spacing: 0.07em;
-            display: flex;
-            justify-content: center;
-            gap: 2.5rem;
-            padding: 0.45rem 1.5rem;
-            flex-wrap: wrap;
-        }
-        #top-bar a {
-            color: var(--taupe, #B5A89A);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        #top-bar a:hover { color: #fff; }
-        #top-bar i { margin-right: 0.3rem; font-size: 0.7rem; }
-        @media (max-width: 480px) { #top-bar { display: none; } }
-
         /* ── BOOK NOW BUTTON ── */
         .btn-book-now {
             display: inline-flex;
@@ -472,75 +449,6 @@
 
         /* ── COOKIE BANNER ── */
         #cookie-banner {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            z-index: 99999;
-            background: rgba(28, 22, 18, 0.97);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(181,168,154,0.25);
-            padding: 1.4rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            transform: translateY(100%);
-            transition: transform 0.45s cubic-bezier(0.22,1,0.36,1);
-            font-family: 'Jost', sans-serif;
-        }
-        #cookie-banner.visible { transform: translateY(0); }
-        .cookie-text {
-            flex: 1; min-width: 220px;
-            font-size: 0.8rem; font-weight: 300;
-            color: rgba(255,255,255,0.72); line-height: 1.7;
-        }
-        .cookie-text strong { color: #fff; font-weight: 500; display: block; margin-bottom: 0.3rem; font-size: 0.85rem; }
-        .cookie-text a { color: #B5A89A; text-decoration: underline; text-underline-offset: 2px; }
-        .cookie-btns { display: flex; gap: 0.75rem; flex-shrink: 0; flex-wrap: wrap; }
-        .cookie-btn-accept {
-            padding: 0.6rem 1.6rem;
-            background: linear-gradient(135deg, #B5A89A, #3f3632);
-            color: #fff; border: none; border-radius: 50px;
-            font-family: 'Jost', sans-serif; font-size: 0.75rem; font-weight: 500;
-            letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.3); white-space: nowrap;
-        }
-        .cookie-btn-accept:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
-        .cookie-btn-decline {
-            padding: 0.6rem 1.4rem; background: transparent;
-            color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 50px; font-family: 'Jost', sans-serif; font-size: 0.75rem;
-            font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase;
-            cursor: pointer; transition: border-color 0.2s, color 0.2s; white-space: nowrap;
-        }
-        .cookie-btn-decline:hover { border-color: rgba(255,255,255,0.5); color: rgba(255,255,255,0.8); }
-        .map-blocked {
-            width: 100%; min-height: 340px;
-            background: rgba(44,36,32,0.06); border-radius: 16px;
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; gap: 1rem;
-            border: 1px dashed rgba(181,168,154,0.4);
-            font-family: 'Jost', sans-serif; text-align: center; padding: 2rem;
-        }
-        .map-blocked p { font-size: 0.82rem; color: var(--greige); line-height: 1.7; max-width: 280px; }
-        .map-blocked-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--espresso); }
-        .map-enable-btn {
-            padding: 0.55rem 1.4rem;
-            background: linear-gradient(135deg, #B5A89A, #3f3632);
-            color: #fff; border: none; border-radius: 50px;
-            font-family: 'Jost', sans-serif; font-size: 0.75rem; font-weight: 500;
-            letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: transform 0.2s;
-        }
-        .map-enable-btn:hover { transform: translateY(-2px); }
-        @media (max-width: 600px) {
-            #cookie-banner { padding: 1.2rem; }
-            .cookie-btns { width: 100%; }
-            .cookie-btn-accept, .cookie-btn-decline { flex: 1; text-align: center; }
-        }
-
-        /* ── COOKIE BANNER ── */
-        #cookie-banner {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999;
             background: rgba(28, 22, 18, 0.97); backdrop-filter: blur(12px);
             border-top: 1px solid rgba(181,168,154,0.25);
@@ -589,6 +497,34 @@
             .cookie-btns { width: 100%; }
             .cookie-btn-accept, .cookie-btn-decline { flex: 1; text-align: center; }
         }
+
+        /* ── NAV EMAIL LINK ── */
+        .nav-email-link {
+            font-size: 0.7rem !important;
+            letter-spacing: 0.2em !important;
+            text-transform: uppercase !important;
+            white-space: nowrap;
+            opacity: 0.85;
+        }
+        .nav-email-link:hover { opacity: 1; }
+        /* Mid desktop (900px–1299px) — tighter gap */
+        @media (max-width: 1299px) and (min-width: 901px) {
+            .nav-links { gap: 1.2rem !important; }
+            .nav-links a { font-size: 0.62rem !important; }
+            .nav-email-link { font-size: 0.62rem !important; }
+        }
+        /* Tablet & mobile — nav-links hidden, sub-nav + hamburger takes over */
+        @media (max-width: 900px) {
+            .nav-links { display: none !important; }
+        }
+        /* Mobile menu email styling */
+        .mobile-menu .nav-email-link {
+            font-size: 0.85rem !important;
+            letter-spacing: 0.08em !important;
+            text-transform: uppercase !important;
+            color: var(--taupe, #B5A89A) !important;
+            opacity: 1;
+        }
     </style>
     <!-- Only preload the single most critical above-fold image -->
     <link rel="preload" as="image" href="./html/Pics/Team/Hasan.jpg" fetchpriority="high">
@@ -601,7 +537,7 @@
         <div class="cookie-text">
             <strong>🍪 We use cookies</strong>
             This site uses Google Maps and Google Fonts, which may set cookies and send data to Google servers. By accepting, you consent to this. Declining means the map will not load.
-            &nbsp;<a href="/privacy-policy.html">Privacy Policy</a> &nbsp;·&nbsp;
+            &nbsp;<a href="./privacy-policy.html">Privacy Policy</a> &nbsp;·&nbsp;
             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy</a>
         </div>
         <div class="cookie-btns">
@@ -642,21 +578,15 @@
         <div class="pre-line"></div>
         <div class="pre-sub">Hair Studio</div>
     </div>
-
-    <!-- ── TOP BAR ── -->
-    <div id="top-bar">
-        <span><i class="fa-regular fa-envelope"></i> <a href="mailto:info@studioserena.no">info@studioserena.no</a></span>
-        <span><i class="fa-regular fa-clock"></i> <span data-en="Mon–Fri 11:00–17:30" data-no="Man–Fre 11:00–17:30">Mon–Fri 11:00–17:30</span></span>
-    </div>
-
     <nav id="navbar">
         <div id="scroll-progress" style="position:absolute;bottom:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,#B5A89A,#C9A96E);transition:width 0.1s linear;pointer-events:none;z-index:1;"></div>
-        <a href="#hero" class="nav-logo">Studio Serena</a>
+        <a href="javascript:void(0)" onclick="smoothTo('hero')" class="nav-logo">Studio Serena</a>
         <ul class="nav-links" id="navLinks">
-            <li><a href="#gallery" data-en="Gallery" data-no="Galleri">Gallery</a></li>
-            <li><a href="#team" data-en="Team" data-no="Team">Team</a></li>
-            <li><a href="#testimonials" data-en="Reviews" data-no="Anmeldelser">Reviews</a></li>
-            <li><a href="#location" data-en="Location" data-no="Lokasjon">Location</a></li>
+            <li><a href="javascript:void(0)" onclick="smoothTo('gallery')" data-en="Gallery" data-no="Galleri">Gallery</a></li>
+            <li><a href="javascript:void(0)" onclick="smoothTo('team')" data-en="Team" data-no="Team">Team</a></li>
+            <li><a href="javascript:void(0)" onclick="smoothTo('testimonials')" data-en="Reviews" data-no="Anmeldelser">Reviews</a></li>
+            <li><a href="javascript:void(0)" onclick="smoothTo('location')" data-en="Location" data-no="Lokasjon">Location</a></li>
+            <li><a href="mailto:info@studioserena.no" class="nav-email-link">Email</a></li>
         </ul>
         <div class="nav-controls">
             <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="btn-book-now" target="_blank" rel="noopener noreferrer">
@@ -675,10 +605,11 @@
 
     <div class="mobile-menu" id="mobileMenu">
         <button class="close-menu" id="closeMenu" aria-label="Close menu">✕</button>
-        <a href="#gallery" onclick="closeMob()" data-en="Gallery" data-no="Galleri">Gallery</a>
-        <a href="#team" onclick="closeMob()" data-en="Team" data-no="Team">Team</a>
-        <a href="#testimonials" onclick="closeMob()" data-en="Reviews" data-no="Anmeldelser">Reviews</a>
-        <a href="#location" onclick="closeMob()" data-en="Location" data-no="Lokasjon">Location</a>
+        <a href="javascript:void(0)" onclick="smoothTo('gallery');closeMob()" data-en="Gallery" data-no="Galleri">Gallery</a>
+        <a href="javascript:void(0)" onclick="smoothTo('team');closeMob()" data-en="Team" data-no="Team">Team</a>
+        <a href="javascript:void(0)" onclick="smoothTo('testimonials');closeMob()" data-en="Reviews" data-no="Anmeldelser">Reviews</a>
+        <a href="javascript:void(0)" onclick="smoothTo('location');closeMob()" data-en="Location" data-no="Lokasjon">Location</a>
+        <a href="mailto:info@studioserena.no" onclick="closeMob()" class="nav-email-link">Email</a>
         <div class="mobile-menu-controls">
             <button class="lang-toggle" id="langToggleMob">No | En</button>
             <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="mobile-menu-book btn-book-now" target="_blank" rel="noopener noreferrer" onclick="closeMob()">
@@ -706,7 +637,7 @@
                 <a href="https://www.instagram.com/saloncoiff1rst?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" class="btn-book-now" target="_blank" rel="noopener noreferrer">
                     <i class="fa-brands fa-instagram"></i> <span data-en="Book on Instagram" data-no="Bestill på Instagram">Book on Instagram</span>
                 </a>
-                <a href="#gallery" class="btn-outline" data-en="View Portfolio" data-no="Se Portefølje">View Portfolio</a>
+                <a href="javascript:void(0)" onclick="smoothTo('gallery')" class="btn-outline" data-en="View Portfolio" data-no="Se Portefølje">View Portfolio</a>
             </div>
         </div>
         <div class="hero-scroll"><span data-en="Scroll" data-no="Scroll">Scroll</span></div>
@@ -1535,28 +1466,28 @@
                 <div>
                     <p class="footer-col-title" data-en="Services" data-no="Tjenester">Services</p>
                     <ul class="footer-links">
-                        <li><a href="#services" data-en="Balayage" data-no="Balayage">Balayage</a></li>
-                        <li><a href="#services" data-en="Keratin Treatment" data-no="Keratinbehandling">Keratin Treatment</a></li>
-                        <li><a href="#services" data-en="Extensions" data-no="Extensions">Extensions</a></li>
-                        <li><a href="#services" data-en="Bridal Hair" data-no="Brudehår">Bridal Hair</a></li>
-                        <li><a href="#services" data-en="Hijabi Section" data-no="Hijabi Seksjon">Hijabi Section</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('services')" data-en="Balayage" data-no="Balayage">Balayage</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('services')" data-en="Keratin Treatment" data-no="Keratinbehandling">Keratin Treatment</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('services')" data-en="Extensions" data-no="Extensions">Extensions</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('services')" data-en="Bridal Hair" data-no="Brudehår">Bridal Hair</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('services')" data-en="Hijabi Section" data-no="Hijabi Seksjon">Hijabi Section</a></li>
                     </ul>
                 </div>
                 <div>
                     <p class="footer-col-title" data-en="Studio" data-no="Studio">Studio</p>
                     <ul class="footer-links">
-                        <li><a href="#team" data-en="Our Team" data-no="Vårt Team">Our Team</a></li>
-                        <li><a href="#gallery" data-en="Portfolio" data-no="Portefølje">Portfolio</a></li>
-                        <li><a href="#testimonials" data-en="Reviews" data-no="Anmeldelser">Reviews</a></li>
-                        <li><a href="#faq" data-en="FAQ" data-no="Spørsmål">FAQ</a></li>
-                        <li><a href="/privacy-policy.html" data-en="Privacy Policy" data-no="Personvernerklæring">Privacy Policy</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('team')" data-en="Our Team" data-no="Vårt Team">Our Team</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('gallery')" data-en="Portfolio" data-no="Portefølje">Portfolio</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('testimonials')" data-en="Reviews" data-no="Anmeldelser">Reviews</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('faq')" data-en="FAQ" data-no="Spørsmål">FAQ</a></li>
+                        <li><a href="./privacy-policy.html" data-en="Privacy Policy" data-no="Personvernerklæring">Privacy Policy</a></li>
                     </ul>
                 </div>
                 <div>
                     <p class="footer-col-title" data-en="Contact" data-no="Kontakt">Contact</p>
                     <ul class="footer-links">
                         <li><a href="mailto:info@studioserena.no">info@studioserena.no</a></li>
-                        <li><a href="#location">Torshovgata 5, Oslo</a></li>
+                        <li><a href="javascript:void(0)" onclick="smoothTo('location')">Torshovgata 5, Oslo</a></li>
                     </ul>
                 </div>
             </div>
@@ -1617,13 +1548,14 @@
 
         <!-- MOBILE SUB-NAV -->
         <nav class="mobile-bottom-nav" id="mobileBottomNav">
-            <a href="#gallery" class="mob-nav-item" data-en="Gallery" data-no="Galleri">Gallery</a>
-            <a href="#team" class="mob-nav-item" data-en="Team" data-no="Team">Team</a>
-            <a href="#testimonials" class="mob-nav-item" data-en="Reviews" data-no="Anmeldelser">Reviews</a>
-            <a href="#location" class="mob-nav-item" data-en="Location" data-no="Lokasjon">Location</a>
+            <a href="javascript:void(0)" onclick="smoothTo('gallery')" class="mob-nav-item" data-en="Gallery" data-no="Galleri">Gallery</a>
+            <a href="javascript:void(0)" onclick="smoothTo('team')" class="mob-nav-item" data-en="Team" data-no="Team">Team</a>
+            <a href="javascript:void(0)" onclick="smoothTo('testimonials')" class="mob-nav-item" data-en="Reviews" data-no="Anmeldelser">Reviews</a>
+            <a href="javascript:void(0)" onclick="smoothTo('location')" class="mob-nav-item" data-en="Location" data-no="Lokasjon">Location</a>
+            <a href="mailto:info@studioserena.no" class="mob-nav-item">Email</a>
         </nav>
 
-        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
           function positionSubNav() {
             var navbar = document.getElementById('navbar');
             var subNav = document.getElementById('mobileBottomNav');
@@ -1656,23 +1588,25 @@
         <script>
         (function() {
             var banner  = document.getElementById('cookie-banner');
-            var consent = localStorage.getItem('ss_cookie_consent');
-            if (!consent) {
-                setTimeout(function() { if(banner) banner.classList.add('visible'); }, 1400);
-            } else if (consent === 'accepted') {
+            var consent = null;
+            try { consent = localStorage.getItem('ss_cookie_consent'); } catch(e) {}
+            // Always show banner on every visit
+            setTimeout(function() { if(banner) banner.classList.add('visible'); }, 1400);
+            // But still restore map state if already consented
+            if (consent === 'accepted') {
                 loadMap();
-            } else {
+            } else if (consent === 'declined') {
                 showMapBlocked();
             }
             var btnAccept  = document.getElementById('cookieAccept');
             var btnDecline = document.getElementById('cookieDecline');
             if (btnAccept) btnAccept.addEventListener('click', function() {
-                localStorage.setItem('ss_cookie_consent', 'accepted');
+                try { localStorage.setItem('ss_cookie_consent', 'accepted'); } catch(e) {}
                 if(banner) banner.classList.remove('visible');
                 loadMap();
             });
             if (btnDecline) btnDecline.addEventListener('click', function() {
-                localStorage.setItem('ss_cookie_consent', 'declined');
+                try { localStorage.setItem('ss_cookie_consent', 'declined'); } catch(e) {}
                 if(banner) banner.classList.remove('visible');
                 showMapBlocked();
             });
@@ -1697,10 +1631,25 @@
                 iframe.parentNode.insertBefore(ph, iframe);
             }
             window.enableMapConsent = function() {
-                localStorage.setItem('ss_cookie_consent', 'accepted');
+                try { localStorage.setItem('ss_cookie_consent', 'accepted'); } catch(e) {}
                 loadMap();
             };
         })();
+        </script>
+
+        <!-- ── SMOOTH SCROLL (no # in URL) ── -->
+        <script>
+          function smoothTo(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            var offset = 80; // navbar height
+            var top = el.getBoundingClientRect().top + window.pageYOffset - offset;
+            window.scrollTo({ top: top, behavior: 'smooth' });
+            // Keep URL clean — no hash
+            if (history.replaceState) {
+              history.replaceState(null, null, window.location.pathname);
+            }
+          }
         </script>
 
         <!-- ── SERVICE WORKER REGISTRATION ── -->
