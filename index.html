@@ -103,6 +103,29 @@
     <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#2C2420" />
     <style>
+        /* ── TOP BAR ── */
+        #top-bar {
+            background: var(--espresso, #3f3632);
+            color: rgba(255,255,255,0.65);
+            font-family: 'Jost', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 400;
+            letter-spacing: 0.07em;
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            padding: 0.45rem 1.5rem;
+            flex-wrap: wrap;
+        }
+        #top-bar a {
+            color: var(--taupe, #B5A89A);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        #top-bar a:hover { color: #fff; }
+        #top-bar i { margin-right: 0.3rem; font-size: 0.7rem; }
+        @media (max-width: 480px) { #top-bar { display: none; } }
+
         /* ── BOOK NOW BUTTON ── */
         .btn-book-now {
             display: inline-flex;
@@ -620,6 +643,12 @@
         <div class="pre-sub">Hair Studio</div>
     </div>
 
+    <!-- ── TOP BAR ── -->
+    <div id="top-bar">
+        <span><i class="fa-regular fa-envelope"></i> <a href="mailto:info@studioserena.no">info@studioserena.no</a></span>
+        <span><i class="fa-regular fa-clock"></i> <span data-en="Mon–Fri 11:00–17:30" data-no="Man–Fre 11:00–17:30">Mon–Fri 11:00–17:30</span></span>
+    </div>
+
     <nav id="navbar">
         <div id="scroll-progress" style="position:absolute;bottom:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,#B5A89A,#C9A96E);transition:width 0.1s linear;pointer-events:none;z-index:1;"></div>
         <a href="#hero" class="nav-logo">Studio Serena</a>
@@ -930,7 +959,7 @@
                     <iframe class="map-frame" title="Studio Serena location map"
                         data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1"
                         allowfullscreen="" loading="lazy"></iframe>
-                    <p style="margin-top:1rem;font-size:0.8rem;color:var(--greige);">Torshovgata 5, Oslo · </p>
+                    <p style="margin-top:1rem;font-size:0.8rem;color:var(--greige);">Torshovgata 5, Oslo · <a href="mailto:info@studioserena.no" style="color:var(--taupe);text-decoration:none;">info@studioserena.no</a></p>
                 </div>
             </div>
         </section>
@@ -1526,7 +1555,7 @@
                 <div>
                     <p class="footer-col-title" data-en="Contact" data-no="Kontakt">Contact</p>
                     <ul class="footer-links">
-                        <li><a href="/cdn-cgi/l/email-protection#aac3c4ccc5ead9dedfcec3c5d9cfd8cfc4cb84c4c5"><span class="__cf_email__" data-cfemail="c3aaada5ac83b0b7b6a7aaacb0a6b1a6ada2edadac">[email&#160;protected]</span></a></li>
+                        <li><a href="mailto:info@studioserena.no">info@studioserena.no</a></li>
                         <li><a href="#location">Torshovgata 5, Oslo</a></li>
                     </ul>
                 </div>
