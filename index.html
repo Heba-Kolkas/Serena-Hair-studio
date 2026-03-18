@@ -1555,7 +1555,7 @@
             <a href="mailto:info@studioserena.no" class="mob-nav-item">Email</a>
         </nav>
 
-        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
           function positionSubNav() {
             var navbar = document.getElementById('navbar');
             var subNav = document.getElementById('mobileBottomNav');
@@ -1590,10 +1590,10 @@
             var banner  = document.getElementById('cookie-banner');
             var consent = null;
             try { consent = localStorage.getItem('ss_cookie_consent'); } catch(e) {}
-            // Always show banner on every visit
-            setTimeout(function() { if(banner) banner.classList.add('visible'); }, 1400);
-            // But still restore map state if already consented
-            if (consent === 'accepted') {
+            // Show banner only if user hasn't chosen yet
+            if (!consent) {
+                setTimeout(function() { if(banner) banner.classList.add('visible'); }, 1400);
+            } else if (consent === 'accepted') {
                 loadMap();
             } else if (consent === 'declined') {
                 showMapBlocked();
