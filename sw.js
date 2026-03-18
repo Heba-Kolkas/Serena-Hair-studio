@@ -7,8 +7,8 @@ const CACHE_NAME = 'studio-serena-v1';
 const CORE_ASSETS = [
   './',
   './index.html',
-  './css/style.css',
-  './js/script.js',
+  './style.css',
+  './script.js',
   './manifest.json',
 ];
 

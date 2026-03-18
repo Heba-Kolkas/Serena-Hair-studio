@@ -561,11 +561,7 @@ document.querySelectorAll('.faq-q').forEach(btn => {
   });
 });
 
-// ── BACK TO TOP ──
-const backTopBtn = document.getElementById('back-top');
-if (backTopBtn) {
-  backTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-}
+// ── BACK TO TOP — handled via onclick in HTML ──
 
 // ── WORKING HOURS STATUS BADGE ──
 function updateStatus() {
@@ -876,7 +872,7 @@ if (!window._studioSerenaChatInit) {
       ]
     },
     {
-      keys: ['absolutely', 'sure', 'yep', 'yeah', 'yep', 'yup'],
+      keys: ['absolutely', 'sure', 'yep', 'yeah', 'yup'],
       replies: [
         "Great! ✦ Feel free to ask anything else.",
         "Perfect! ✦ What else can I help you with?",

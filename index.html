@@ -735,8 +735,9 @@
                 <div class="ribbon-item"><span class="ribbon-cat" data-en="Smooth" data-no="Glatt">Smooth</span><span class="ribbon-name" data-en="Keratin" data-no="Hår Keratin">Keratin</span></div>
             </div>
         </div>
+    </section>
 
-        <section id="transformation-section">
+    <section id="transformation-section">
             <div class="slider-container" id="sc">
                 <img class="img-after" src="./html/Pics/Balayage/After.jpeg" alt="After" loading="eager" fetchpriority="high">
                 <div class="before-wrap" id="bw">
@@ -752,7 +753,7 @@
             <p class="ba-title reveal" data-en="Drag to reveal the transformation" data-no="Dra for å se transformasjonen"><br><br><em>Drag to reveal the transformation</em></p>
         </section>
 
-        <section id="gallery">
+    <section id="gallery">
             <p class="section-eyebrow reveal" data-en="Our Work" data-no="Vårt Arbeid">Our Work</p>
             <h2 class="section-title reveal">Browse the <em>Gallery</em></h2>
             <div class="divider reveal"></div>
@@ -926,8 +927,8 @@
                     <div id="statusBadge" class="status-badge reveal"></div>
                 </div>
                 <div class="reveal">
-                    <iframe class="map-frame" title="Studio Serena location map" title="Studio Serena location map"
-                        data-data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1"
+                    <iframe class="map-frame" title="Studio Serena location map"
+                        data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1"
                         allowfullscreen="" loading="lazy"></iframe>
                     <p style="margin-top:1rem;font-size:0.8rem;color:var(--greige);">Torshovgata 5, Oslo · </p>
                 </div>
@@ -1519,14 +1520,13 @@
                         <li><a href="#gallery" data-en="Portfolio" data-no="Portefølje">Portfolio</a></li>
                         <li><a href="#testimonials" data-en="Reviews" data-no="Anmeldelser">Reviews</a></li>
                         <li><a href="#faq" data-en="FAQ" data-no="Spørsmål">FAQ</a></li>
-                        <li><a href="/privacypolicy.html" data-en="Privacy Policy" data-no="Personvernerklæring">Privacy Policy</a></li>
                         <li><a href="/privacy-policy.html" data-en="Privacy Policy" data-no="Personvernerklæring">Privacy Policy</a></li>
                     </ul>
                 </div>
                 <div>
                     <p class="footer-col-title" data-en="Contact" data-no="Kontakt">Contact</p>
                     <ul class="footer-links">
-                        <li><a href="mailto:info@studioserena.no">info@studioserena.no</a></li>
+                        <li><a href="/cdn-cgi/l/email-protection#aac3c4ccc5ead9dedfcec3c5d9cfd8cfc4cb84c4c5"><span class="__cf_email__" data-cfemail="c3aaada5ac83b0b7b6a7aaacb0a6b1a6ada2edadac">[email&#160;protected]</span></a></li>
                         <li><a href="#location">Torshovgata 5, Oslo</a></li>
                     </ul>
                 </div>
@@ -1626,7 +1626,6 @@
         <!-- ── GDPR COOKIE CONSENT LOGIC ── -->
         <script>
         (function() {
-            var MAP_SRC = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1';
             var banner  = document.getElementById('cookie-banner');
             var consent = localStorage.getItem('ss_cookie_consent');
             if (!consent) {
@@ -1675,66 +1674,15 @@
         })();
         </script>
 
-        
-        <!-- ── GDPR COOKIE CONSENT LOGIC ── -->
-        <script>
-        (function() {
-            var MAP_SRC = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1';
-            var banner  = document.getElementById('cookie-banner');
-            var consent = localStorage.getItem('ss_cookie_consent');
-            if (!consent) {
-                setTimeout(function() { if(banner) banner.classList.add('visible'); }, 1400);
-            } else if (consent === 'accepted') {
-                loadMap();
-            } else {
-                showMapBlocked();
-            }
-            var btnAccept  = document.getElementById('cookieAccept');
-            var btnDecline = document.getElementById('cookieDecline');
-            if (btnAccept) btnAccept.addEventListener('click', function() {
-                localStorage.setItem('ss_cookie_consent', 'accepted');
-                if(banner) banner.classList.remove('visible');
-                loadMap();
-            });
-            if (btnDecline) btnDecline.addEventListener('click', function() {
-                localStorage.setItem('ss_cookie_consent', 'declined');
-                if(banner) banner.classList.remove('visible');
-                showMapBlocked();
-            });
-            function loadMap() {
-                var iframe = document.querySelector('.map-frame');
-                if (iframe && !iframe.src && iframe.dataset.src) { iframe.src = iframe.dataset.src; }
-                var ph = document.getElementById('map-blocked-placeholder');
-                if (ph) ph.remove();
-                if (iframe) iframe.style.display = '';
-            }
-            function showMapBlocked() {
-                var iframe = document.querySelector('.map-frame');
-                if (!iframe) return;
-                iframe.style.display = 'none';
-                if (document.getElementById('map-blocked-placeholder')) return;
-                var ph = document.createElement('div');
-                ph.id = 'map-blocked-placeholder';
-                ph.className = 'map-blocked';
-                ph.innerHTML = '<div class="map-blocked-title">Map not loaded</div>' +
-                    '<p>You declined cookies. Google Maps requires consent to load.</p>' +
-                    '<button class="map-enable-btn" onclick="enableMapConsent()">Enable Map</button>';
-                iframe.parentNode.insertBefore(ph, iframe);
-            }
-            window.enableMapConsent = function() {
-                localStorage.setItem('ss_cookie_consent', 'accepted');
-                loadMap();
-            };
-        })();
-        </script>
-
-        <!-- Service Worker -->
+        <!-- ── SERVICE WORKER REGISTRATION ── -->
         <script>
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-              navigator.serviceWorker.register('./sw.js').catch(function() {});
+              navigator.serviceWorker.register('./sw.js')
+                .catch(function(err) { console.warn('SW registration failed:', err); });
             });
           }
         </script>
+
     </body>
 </html>
