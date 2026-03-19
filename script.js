@@ -63,9 +63,9 @@ if (hamburger && mobileMenu) {
 if (closeMenu && mobileMenu) {
   closeMenu.addEventListener('click', () => mobileMenu.classList.remove('open'));
 }
-function closeMob() {
+window.closeMob = function closeMob() {
   if (mobileMenu) mobileMenu.classList.remove('open');
-}
+};
 
 // ── THEME TOGGLE ──
 const themeBtn = document.getElementById('themeToggle');
@@ -428,7 +428,7 @@ document.querySelectorAll('.gallery-cat-card').forEach(card => {
   card.addEventListener('touchstart', prefetch, { passive: true });
 });
 
-function openLightbox(category) {
+window.openLightbox = function openLightbox(category) {
   const overlay = document.getElementById('lightboxOverlay');
   const grid    = document.getElementById('lightboxGrid');
   const title   = document.getElementById('lightboxTitle');
@@ -494,7 +494,7 @@ function openLightbox(category) {
   });
 }
 
-function closeLightbox() {
+window.closeLightbox = function closeLightbox() {
   const overlay = document.getElementById('lightboxOverlay');
   if (!overlay) return;
 
@@ -1076,7 +1076,7 @@ if (!window._studioSerenaChatInit) {
   }, 2000);
 })();
 
-function langBannerPick(l) {
+window.langBannerPick = function langBannerPick(l) {
   const banner = document.getElementById('langBanner');
   if (banner) banner.style.display = 'none';
   sessionStorage.setItem('langBannerDismissed', '1');
@@ -1183,7 +1183,7 @@ const quizAnswers = {
   hijabi:  { en: 'Private Hijabi Service',  no: 'Privat Hijabi-tjeneste', descEn: 'We have a fully private room exclusively for hijabi clients. Complete privacy, complete respect, complete artistry. Book in advance to secure your private appointment.', descNo: 'Vi har et fullt privat rom eksklusivt for hijabi-klienter. Komplett personvern, komplett respekt, komplett håndverk.' },
 };
 
-function quizPick(answer) {
+window.quizPick = function quizPick(answer) {
   const result = quizAnswers[answer];
   if (!result) return;
   document.getElementById('quizStep1').style.display = 'none';
@@ -1193,9 +1193,9 @@ function quizPick(answer) {
   const descEl = document.getElementById('quizDesc');
   if (serviceEl) { serviceEl.textContent = lang === 'no' ? result.no : result.en; }
   if (descEl) { descEl.textContent = lang === 'no' ? result.descNo : result.descEn; }
-}
+};
 
-function quizRestart() {
+window.quizRestart = function quizRestart() {
   document.getElementById('quizStep1').style.display = 'block';
   document.getElementById('quizResult').style.display = 'none';
-}
+};
