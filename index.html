@@ -39,52 +39,63 @@
   
 
     <!-- ── SCHEMA.ORG LOCAL BUSINESS (Google reads this directly) ── -->
-    <script type="application/ld+json">
+   <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HairSalon",
+  "name": "Studio Serena",
+  "description": "Oslos fremste hårsalong – spesialister på balayage, extensions, keratin, og brudestyling.",
+  "url": "https://studioserena.no/",
+  "telephone": "+4745397631",
+  "email": "info@studioserena.no",
+  "image": "https://studioserena.no/og-image.jpg",
+  "priceRange": "$$",
+  "currenciesAccepted": "NOK",
+  "paymentAccepted": "Cash, Credit Card",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Torshovgata 5",
+    "addressLocality": "Oslo",
+    "postalCode": "0476",
+    "addressCountry": "NO"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 59.9308,
+    "longitude": 10.769
+  },
+  "openingHoursSpecification": [
     {
-      "@context": "https://schema.org",
-      "@type": "HairSalon",
-      "name": "Studio Serena",
-      "description": "Oslos fremste hårsalong – spesialister på balayage, extensions, keratin, og brudestyling.",
-      "url": "https://studioserena.no/",
-      "email": "info@studioserena.no",
-      "image": "https://studioserena.no/og-image.jpg",
-      "priceRange": "$$",
-      "currenciesAccepted": "NOK",
-      "paymentAccepted": "Cash, Credit Card",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Torshovgata 5",
-        "addressLocality": "Oslo",
-        "postalCode": "0476",
-        "addressCountry": "NO"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": 59.9308,
-        "longitude": 10.7690
-      },
-      "openingHoursSpecification": [
-        { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "11:00", "closes": "17:30" }
-      ],
-      "sameAs": [
-        "https://www.instagram.com/saloncoiff1rst",
-        "https://www.facebook.com/share/18Y3VKWAMN/",
-        "https://www.tiktok.com/@saloncoiff1rst"
-      ],
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "Hair Services",
-        "itemListElement": [
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Balayage" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Hair Extensions" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Keratin Treatment" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Bridal Hair" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Hair Colouring" } }
-        ]
-      }
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      "opens": "11:00",
+      "closes": "17:30"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Saturday", "Sunday"],
+      "opens": "00:00",
+      "closes": "00:00"
     }
-    </script>
-
+  ],
+  "sameAs": [
+    "https://www.instagram.com/saloncoiff1rst",
+    "https://www.facebook.com/share/18Y3VKWAMN/",
+    "https://www.tiktok.com/@saloncoiff1rst"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Hair Services",
+    "itemListElement": [
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Balayage"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Hair Extensions"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Keratin Treatment"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Bridal Hair"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Hair Colouring"}}
+    ]
+  }
+}
+</script>
     <!-- DNS prefetch for external resources -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
@@ -1666,6 +1677,7 @@
             });
           }
         </script>
+        
 
     </body>
 </html>
