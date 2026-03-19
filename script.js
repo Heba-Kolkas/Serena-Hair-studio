@@ -718,7 +718,7 @@ if (!window._studioSerenaChatInit) {
     },
     {
       keys: ['price', 'prices', 'pricing', 'cost', 'how much', 'pris', 'priser', 'hva koster', 'fee'],
-      reply: "For pricing, DM us on Instagram @saloncoiff1rst ✦\nFor priser, send oss en DM på Instagram @saloncoiff1rst ✦"
+      reply: "For pricing, DM us on Instagram @studioserena.hair ✦\nFor priser, send oss en DM på Instagram @studioserena.hair ✦"
     },
     {
       keys: ['where are you', 'location', 'address', 'where is', 'find you', 'adresse', 'hvor er dere', 'lokasjon'],
@@ -732,12 +732,12 @@ if (!window._studioSerenaChatInit) {
     // CONTACT — email entry removed, contact reply updated
     {
       keys: ['instagram', 'insta'],
-      reply: "Find us on Instagram @saloncoiff1rst — we'd love to see you there! ✦"
+      reply: "Find us on Instagram @studiserena.hair — we'd love to see you there! ✦"
     },
     
     {
       keys: ['contact us', 'kontakt oss', 'reach you', 'get in touch', 'contact', 'kontakt'],
-      reply: "Reach us at / Kontakt oss:\n✦ Instagram: @saloncoiff1rst\n✦ Email: info@studioserena.no"
+      reply: "Reach us at / Kontakt oss:\n✦ Instagram: @studioserena.hair\n✦ Email: info@studioserena.no"
     },
 
     // SMALL TALK — Norwegian
@@ -897,10 +897,10 @@ if (!window._studioSerenaChatInit) {
   ];
 
   const fallbackReplies = [
-    "That's a great question! Reach out on Instagram @saloncoiff1rst ✦",
-    "We'd love to help! DM us on Instagram @saloncoiff1rst ✦",
+    "That's a great question! Reach out on Instagram @studioserena.hair✦",
+    "We'd love to help! DM us on Instagram @studioserena.hair✦",
     "Our team would be happy to assist — email us at info@studioserena.no ✦",
-    "Not sure about that one! DM us on Instagram @saloncoiff1rst and we'll get back to you ✦",
+    "Not sure about that one! DM us on Instagram @studioserena.hair and we'll get back to you ✦",
     "Best way to get a precise answer is to email us at info@studioserena.no ✦",
   ];
 
