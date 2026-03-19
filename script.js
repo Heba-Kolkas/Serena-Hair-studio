@@ -1109,8 +1109,9 @@ window._showToast = function() {};
 
   // Load saved data
   const savedName = localStorage.getItem('bcName') || '';
-  const visits = parseInt(localStorage.getItem('ssVisitCount') || '1');
-
+ // Increment visit count on each page load
+let visitCount = parseInt(localStorage.getItem('ssVisitCount') || '0') + 1;
+localStorage.setItem('ssVisitCount', visitCount);
   if (savedName) {
     holderName.textContent = savedName.toUpperCase();
     if (nameInput) nameInput.value = savedName;
