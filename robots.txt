@@ -1,8 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /Serena-Hair-studio/
 
 Sitemap: https://studioserena.no/sitemap.xml
-
-# Block GitHub Pages URL from being indexed
-User-agent: *
-Disallow: /Serena-Hair-studio/
