@@ -357,19 +357,23 @@ const _videoCache = {};
 function _buildVideoWrapper(src) {
   const wrapper = document.createElement('div');
   wrapper.className = 'video-wrap';
+  // Force portrait 4:5 via inline styles — cannot be overridden by video natural dimensions
+  wrapper.style.cssText = 'position:relative;width:100%;padding-bottom:125%;height:0;overflow:hidden;border-radius:10px;background:#1a1715;display:block;';
 
   const shimmer = document.createElement('div');
   shimmer.className = 'video-shimmer';
   wrapper.appendChild(shimmer);
 
   const video = document.createElement('video');
+  // Force video to fill wrapper absolutely
+  video.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;pointer-events:none;';
   // Guarantee muted — set both property AND attributes
   video.muted       = true;
   video.defaultMuted = true;
   video.loop        = true;
   video.playsInline = true;
   video.autoplay    = true;
-  video.preload     = 'auto'; // Always preload everything
+  video.preload     = 'auto';
   video.setAttribute('muted', '');
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
@@ -506,7 +510,10 @@ window.openLightbox = function openLightbox(category) {
     } else {
       const wrap = document.createElement('div');
       wrap.className = 'media-wrap';
+      // Force portrait 4:5 — same as video-wrap
+      wrap.style.cssText = 'position:relative;width:100%;padding-bottom:125%;height:0;overflow:hidden;border-radius:10px;display:block;background:#1a1715;';
       const img = document.createElement('img');
+      img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center top;display:block;pointer-events:none;border-radius:0;';
       img.src      = src;
       img.alt      = category;
       img.loading  = 'eager';
