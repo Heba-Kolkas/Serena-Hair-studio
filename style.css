@@ -916,10 +916,11 @@ section {
 }
 
 /* ── GRID ── */
+/* Base: 3 columns, row height scales with viewport width for perfect portraits */
 .lightbox-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 360px;
+  grid-auto-rows: 28vw;
   gap: 10px;
   overflow-y: auto;
   flex: 1;
@@ -927,9 +928,19 @@ section {
   padding-bottom: 4px;
 }
 
-.lightbox-grid::-webkit-scrollbar { width: 5px; }
+/* Cap row height on very large screens */
+@media (min-width: 960px) {
+  .lightbox-grid {
+    grid-auto-rows: 300px;
+  }
+}
+
+.lightbox-grid::-webkit-scrollbar { width: 4px; }
 .lightbox-grid::-webkit-scrollbar-track { background: transparent; }
-.lightbox-grid::-webkit-scrollbar-thumb { background: var(--warmgrey, #ccc); border-radius: 10px; }
+.lightbox-grid::-webkit-scrollbar-thumb {
+  background: rgba(181,168,154,0.4);
+  border-radius: 10px;
+}
 
 /* ── IMAGES ── */
 .lightbox-grid img {
@@ -940,11 +951,11 @@ section {
   border-radius: 10px;
   display: block;
   cursor: zoom-in;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .lightbox-grid img:hover {
-  transform: scale(1.03);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transform: scale(1.04);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
   z-index: 1;
   position: relative;
 }
@@ -958,6 +969,10 @@ section {
   background: #1a1715;
   position: relative;
   cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+.lightbox-grid .video-wrap:hover {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
 }
 .lightbox-grid .video-wrap video {
   position: absolute;
@@ -994,75 +1009,163 @@ section {
   100% { background-position: -200% 0; }
 }
 
-/* ── RESPONSIVE ── */
+/* ══════════════════════════════════════
+   RESPONSIVE LIGHTBOX — ALL DEVICES
+   ══════════════════════════════════════ */
 
-/* Large desktop (1200px+): wider box, taller cells */
+/* ── Large desktop 1200px+ ── */
 @media (min-width: 1200px) {
   .lightbox-box {
-    max-width: 1100px;
-  }
-  .lightbox-grid {
-    grid-auto-rows: 360px;
-    gap: 12px;
-  }
-}
-
-/* Tablet landscape (900px–1199px): default 3-col, 320px rows — already set above */
-
-/* Tablet portrait (600px–899px): 3 columns, slightly shorter */
-@media (max-width: 899px) {
-  .lightbox-box {
-    padding: 56px 20px 20px;
-    max-height: 93vh;
+    max-width: 1080px;
+    padding: 64px 32px 32px;
   }
   .lightbox-grid {
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 240px;
-    gap: 9px;
-  }
-}
-
-/* Mobile landscape + small tablet (480px–699px): 2 columns */
-@media (max-width: 699px) {
-  .lightbox-box {
-    padding: 52px 12px 16px;
-    border-radius: 16px;
-    max-height: 95vh;
-  }
-  .lightbox-grid {
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 260px;
-    gap: 8px;
+    grid-auto-rows: 320px;
+    gap: 12px;
   }
   .lightbox-title {
-    font-size: 1.5rem;
-    margin-bottom: 14px;
+    font-size: 2rem;
   }
 }
 
-/* Mobile portrait (up to 479px): 2 columns, tall portrait cells like screenshot */
-@media (max-width: 479px) {
+/* ── Desktop 900px–1199px (default, already set above) ── */
+
+/* ── Tablet landscape 700px–899px ── */
+@media (max-width: 899px) {
   .lightbox-box {
-    padding: 50px 10px 14px;
-    border-radius: 14px;
+    padding: 56px 20px 20px;
+    max-height: 94vh;
+    border-radius: 18px;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 30vw;
+    gap: 9px;
+  }
+  .lightbox-title {
+    font-size: 1.6rem;
+  }
+}
+
+/* ── Tablet portrait / large mobile 600px–699px ── */
+@media (max-width: 699px) {
+  .lightbox-overlay {
+    padding: 10px;
+  }
+  .lightbox-box {
+    padding: 54px 14px 18px;
+    border-radius: 16px;
     max-height: 96vh;
   }
   .lightbox-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 240px;
-    gap: 7px;
+    grid-auto-rows: 42vw;
+    gap: 8px;
+    padding-right: 3px;
   }
   .lightbox-title {
-    font-size: 1.4rem;
+    font-size: 1.55rem;
+    margin-bottom: 14px;
+  }
+  .lightbox-close {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+}
+
+/* ── Mobile portrait 480px–599px ── */
+@media (max-width: 599px) {
+  .lightbox-overlay {
+    padding: 8px;
+  }
+  .lightbox-box {
+    padding: 52px 10px 14px;
+    border-radius: 16px;
+    max-height: 96vh;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 44vw;
+    gap: 7px;
+    padding-right: 2px;
+  }
+  .lightbox-title {
+    font-size: 1.5rem;
     margin-bottom: 12px;
   }
 }
 
-/* Very small phones (up to 360px) */
-@media (max-width: 360px) {
+/* ── Small mobile up to 479px (iPhone SE, standard iPhones) ── */
+@media (max-width: 479px) {
+  .lightbox-overlay {
+    padding: 6px;
+  }
+  .lightbox-box {
+    padding: 50px 8px 12px;
+    border-radius: 14px;
+    max-height: 97vh;
+  }
   .lightbox-grid {
-    grid-auto-rows: 200px;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 46vw;
     gap: 6px;
+    padding-right: 2px;
+  }
+  .lightbox-title {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+  .lightbox-close {
+    width: 36px;
+    height: 36px;
+    top: 10px;
+    right: 10px;
+    font-size: 0.95rem;
+  }
+}
+
+/* ── Very small phones up to 360px (Galaxy A series, iPhone SE 1st gen) ── */
+@media (max-width: 360px) {
+  .lightbox-box {
+    padding: 48px 7px 10px;
+  }
+  .lightbox-grid {
+    grid-auto-rows: 44vw;
+    gap: 5px;
+  }
+  .lightbox-title {
+    font-size: 1.25rem;
+    margin-bottom: 9px;
+  }
+}
+
+/* ── Landscape orientation on phones ── */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  .lightbox-overlay {
+    padding: 6px;
+  }
+  .lightbox-box {
+    padding: 44px 12px 12px;
+    max-height: 98vh;
+    border-radius: 12px;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 35vw;
+    gap: 6px;
+  }
+  .lightbox-title {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  .lightbox-close {
+    width: 32px;
+    height: 32px;
+    top: 8px;
+    right: 8px;
+    font-size: 0.85rem;
   }
 }
 
