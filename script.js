@@ -31,7 +31,6 @@ window.addEventListener('load', () => {
       preloader.classList.add('hidden');
       setTimeout(() => preloader.remove(), 500);
     }
-    // Always ensure body can scroll after preloader
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
   }, 1000);
@@ -44,7 +43,6 @@ window.addEventListener('scroll', () => {
   if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 60);
   const backTop = document.getElementById('back-top');
   if (backTop) backTop.classList.toggle('visible', window.scrollY > 400);
-  // Scroll progress bar
   if (scrollProgress) {
     const docH = document.documentElement.scrollHeight - document.documentElement.clientHeight;
     const pct = docH > 0 ? (window.scrollY / docH) * 100 : 0;
@@ -63,6 +61,17 @@ if (hamburger && mobileMenu) {
 if (closeMenu && mobileMenu) {
   closeMenu.addEventListener('click', () => mobileMenu.classList.remove('open'));
 }
+
+// FIX #6: use addEventListener instead of global window assignment
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[onclick="closeMob()"]').forEach(el => {
+    el.removeAttribute('onclick');
+    el.addEventListener('click', () => {
+      if (mobileMenu) mobileMenu.classList.remove('open');
+    });
+  });
+});
+// Keep window.closeMob as fallback for any inline HTML that hasn't been updated yet
 window.closeMob = function closeMob() {
   if (mobileMenu) mobileMenu.classList.remove('open');
 };
@@ -81,10 +90,8 @@ if (themeBtn) {
     const newTheme = isDark ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', newTheme);
     _syncThemeIcon(!isDark);
-    // Re-render black card tier if visible
     if (typeof window._bcRender === 'function') window._bcRender();
   });
-  // Sync icon on page load
   _syncThemeIcon(document.documentElement.getAttribute('data-theme') === 'dark');
 }
 
@@ -99,18 +106,18 @@ if (langBtn) {
     if (langBtnMob) langBtnMob.textContent = langBtn.textContent;
     document.documentElement.lang = lang;
 
-    // Translate all [data-en] elements — smart: preserve child elements
+    // FIX #1: Fixed translation logic — properly handles elements with and without child elements
     document.querySelectorAll('[data-en]').forEach(el => {
       const val = el.getAttribute('data-' + lang);
       if (!val) return;
-      // If element has child ELEMENT nodes (icons, links etc), only update text nodes
+      // If element has child ELEMENT nodes, only update its own direct text nodes, not children
+      // Child elements with their own data-en will handle themselves in this same loop
       const hasChildElements = Array.from(el.childNodes).some(n => n.nodeType === 1);
       if (hasChildElements) {
-        // Only update text nodes directly inside this element, leave child elements alone
+        // Find the first direct text node with real content and update it
         Array.from(el.childNodes).forEach(node => {
           if (node.nodeType === 3 && node.textContent.trim()) {
-            // This is a text node with content — but we use data-en on parent for context only
-            // Skip direct text replacement here; child spans handle their own data-en
+            node.textContent = val;
           }
         });
       } else {
@@ -118,7 +125,7 @@ if (langBtn) {
       }
     });
 
-    // Translate FAQ answer <p> elements (they have data-en too)
+    // Translate FAQ answer <p> elements
     document.querySelectorAll('.faq-a p[data-en]').forEach(el => {
       const val = el.getAttribute('data-' + lang);
       if (val) el.innerHTML = val;
@@ -130,7 +137,7 @@ if (langBtn) {
       chatInput.placeholder = lang === 'no' ? 'Skriv en melding...' : 'Type a message...';
     }
 
-    // Translate chat suggestion chips (use data-en/data-no on buttons)
+    // Translate chat suggestion chips
     document.querySelectorAll('.chat-sug[data-no]').forEach(el => {
       const val = el.getAttribute('data-' + lang);
       if (val) el.textContent = val;
@@ -139,30 +146,21 @@ if (langBtn) {
     // Re-render status badge in correct language
     updateStatusLang(lang);
 
+    // Re-render black card in correct language
+    // FIX #4: call _bcRender on lang change (not just theme change)
+    if (typeof window._bcRender === 'function') window._bcRender();
+
     // Translate popup if still visible
     const popupTitle = document.querySelector('.popup-title');
     const popupText  = document.querySelector('.popup-text');
     const popupBadge = document.querySelector('.popup-badge span');
     const popupBtn   = document.querySelector('.popup-close span');
-    if (popupTitle) {
-      const v = popupTitle.getAttribute('data-' + lang);
-      if (v) popupTitle.innerHTML = v;
-    }
-    if (popupText) {
-      const v = popupText.getAttribute('data-' + lang);
-      if (v) popupText.innerHTML = v;
-    }
-    if (popupBadge) {
-      const v = popupBadge.getAttribute('data-' + lang);
-      if (v) popupBadge.textContent = v;
-    }
-    if (popupBtn) {
-      const v = popupBtn.getAttribute('data-' + lang);
-      if (v) popupBtn.textContent = v;
-    }
+    if (popupTitle) { const v = popupTitle.getAttribute('data-' + lang); if (v) popupTitle.innerHTML = v; }
+    if (popupText)  { const v = popupText.getAttribute('data-' + lang);  if (v) popupText.innerHTML = v; }
+    if (popupBadge) { const v = popupBadge.getAttribute('data-' + lang); if (v) popupBadge.textContent = v; }
+    if (popupBtn)   { const v = popupBtn.getAttribute('data-' + lang);   if (v) popupBtn.textContent = v; }
   });
 }
-
 
 if (langBtnMob) {
   langBtnMob.addEventListener('click', () => { if (langBtn) langBtn.click(); });
@@ -259,9 +257,8 @@ const galleryData = {
     './html/Pics/Balayage/vid19.mp4',
     './html/Pics/Balayage/vid22.mp4',
     './html/Pics/Balayage/vid28.mp4',
-     './html/Pics/Balayage/vid27.mp4',
+    './html/Pics/Balayage/vid27.mp4',
     './html/Pics/Balayage/Balayage14.jpeg',
-    
   ],
   Brides: [
     './html/Pics/Brides/Bride4.jpeg',
@@ -272,7 +269,7 @@ const galleryData = {
     './html/Pics/Brides/Bride2.jpeg',
     './html/Pics/Brides/Bride1.jpeg',
     './html/Pics/Brides/vid1.mp4',
-    './html/Pics/Brides/Bride3.jpeg' ,
+    './html/Pics/Brides/Bride3.jpeg',
     './html/Pics/Brides/Bride7.jpeg',
   ],
   Farge: [
@@ -283,7 +280,7 @@ const galleryData = {
     './html/Pics/Farge/Farge3.jpeg',
     './html/Pics/Farge/vid3.mp4',
     './html/Pics/Farge/Farge4.jpeg',
-     './html/Pics/Farge/vid4.mp4',
+    './html/Pics/Farge/vid4.mp4',
     './html/Pics/Farge/Farge5.jpeg',
     './html/Pics/Farge/Farge6.jpeg',
   ],
@@ -298,8 +295,6 @@ const galleryData = {
     './html/Pics/Extensions/vid5.mp4',
     './html/Pics/Extensions/vid9.mp4',
     './html/Pics/Extensions/vid8.mp4',
-
-
   ],
   Haircut: [
     './html/Pics/Haircut/Haircut5.jpeg',
@@ -308,7 +303,7 @@ const galleryData = {
     './html/Pics/Haircut/vid2.mp4',
     './html/Pics/Haircut/vid4.mp4',
     './html/Pics/Haircut/vid3.mp4',
-      './html/Pics/Haircut/Haircut1.jpeg',
+    './html/Pics/Haircut/Haircut1.jpeg',
     './html/Pics/Haircut/Haircut2.jpeg',
     './html/Pics/Haircut/Haircut4.jpeg',
   ],
@@ -341,10 +336,7 @@ const galleryData = {
   ]
 };
 
-
-// ── LIGHTBOX VIDEO SYSTEM — autoplay, muted, infinite loop, works on slow wifi ──
-
-// IntersectionObserver: play when scrolled into view, pause when out → saves bandwidth on slow wifi
+// ── LIGHTBOX VIDEO SYSTEM ──
 const _videoPlayObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     const v = entry.target;
@@ -361,7 +353,6 @@ function _buildVideoWrapper(src, eager) {
   const wrapper = document.createElement('div');
   wrapper.className = 'video-wrap';
 
-  // Shimmer shown while buffering
   const shimmer = document.createElement('div');
   shimmer.className = 'video-shimmer';
   wrapper.appendChild(shimmer);
@@ -375,7 +366,6 @@ function _buildVideoWrapper(src, eager) {
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('autoplay', '');
-  // First few videos: preload=auto (fast start). Rest: preload=metadata (saves data on slow wifi)
   video.preload = eager ? 'auto' : 'metadata';
 
   const source = document.createElement('source');
@@ -383,34 +373,29 @@ function _buildVideoWrapper(src, eager) {
   source.type = 'video/mp4';
   video.appendChild(source);
 
-  // Remove shimmer once first frame is ready
   video.addEventListener('loadeddata', () => {
     shimmer.style.transition = 'opacity 0.3s';
     shimmer.style.opacity = '0';
     setTimeout(() => shimmer.remove(), 320);
   }, { once: true });
 
-  // Tap to play if autoplay was blocked (some iOS / strict browsers)
   wrapper.addEventListener('click', () => {
     if (video.paused) { const p = video.play(); if (p && p.catch) p.catch(() => {}); }
   });
 
   video.load();
 
-  // Try play immediately — works on all muted-autoplay-capable browsers
   const tryPlay = () => { const p = video.play(); if (p && p.catch) p.catch(() => {}); };
   tryPlay();
   setTimeout(tryPlay, 150);
   setTimeout(tryPlay, 600);
 
-  // Watch viewport to play/pause automatically
   _videoPlayObserver.observe(video);
 
   wrapper.appendChild(video);
   return wrapper;
 }
 
-// Only prefetch images on hover (not videos — stream them on demand to save bandwidth)
 const _imgPrefetchCache = {};
 document.querySelectorAll('.gallery-cat-card').forEach(card => {
   const oncard = card.getAttribute('onclick') || '';
@@ -447,7 +432,6 @@ window.openLightbox = function openLightbox(category) {
   const titleObj = categoryTitles[category];
   title.textContent = titleObj ? titleObj[currentLang] || titleObj.en : category;
 
-  // Clean up all previous videos before clearing grid
   grid.querySelectorAll('video').forEach(v => {
     _videoPlayObserver.unobserve(v);
     v.pause();
@@ -467,7 +451,6 @@ window.openLightbox = function openLightbox(category) {
   let videoIdx = 0;
   items.forEach(src => {
     if (/\.(mp4|mov|webm)$/i.test(src)) {
-      // First 3 videos: eager (preload=auto). Rest: lazy (preload=metadata)
       grid.appendChild(_buildVideoWrapper(src, videoIdx < 3));
       videoIdx++;
     } else {
@@ -483,7 +466,6 @@ window.openLightbox = function openLightbox(category) {
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 
-  // Force-play all videos after overlay is painted
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       grid.querySelectorAll('video').forEach(v => {
@@ -528,19 +510,17 @@ window.closeLightbox = function closeLightbox() {
   function setPos(clientX) {
     const rect = sc.getBoundingClientRect();
     let pct = (clientX - rect.left) / rect.width;
-    pct = Math.min(0.99, Math.max(0.01, pct)); // clamp away from 0/1 to avoid divide-by-zero
+    pct = Math.min(0.99, Math.max(0.01, pct));
     const p = (pct * 100).toFixed(2) + '%';
     bw.style.width = p;
     bimg.style.width = (1 / pct * 100).toFixed(2) + '%';
     handle.style.left = p;
   }
 
-  // Mouse
   sc.addEventListener('mousedown', e => { dragging = true; setPos(e.clientX); });
   window.addEventListener('mouseup', () => dragging = false);
   window.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
 
-  // Touch
   sc.addEventListener('touchstart', e => { dragging = true; setPos(e.touches[0].clientX); }, { passive: true });
   window.addEventListener('touchend', () => dragging = false);
   window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
@@ -561,20 +541,19 @@ document.querySelectorAll('.faq-q').forEach(btn => {
   });
 });
 
-// ── BACK TO TOP — handled via onclick in HTML ──
-
 // ── WORKING HOURS STATUS BADGE ──
-function updateStatus() {
+// FIX #5: updateStatus now accepts optional lang parameter for safety
+function updateStatus(currentLang) {
   const badge = document.getElementById('statusBadge');
   if (!badge) return;
+  const l = currentLang || (typeof lang !== 'undefined' ? lang : 'en');
   const now = new Date();
-  const day = now.getDay();       // 0=Sun … 6=Sat
+  const day = now.getDay();
   const mins = now.getHours() * 60 + now.getMinutes();
-  // All open days: 11:00 (660) – 17:30 (1050). Sat & Sun closed.
   const isOpen = day >= 1 && day <= 5 && mins >= 660 && mins < 1050;
 
-  const openText   = (typeof lang !== 'undefined' && lang === 'no') ? '● Åpen nå'    : '● Open Now';
-  const closedText = (typeof lang !== 'undefined' && lang === 'no') ? '● Stengt nå'  : '● Closed Now';
+  const openText   = l === 'no' ? '● Åpen nå'   : '● Open Now';
+  const closedText = l === 'no' ? '● Stengt nå' : '● Closed Now';
   if (isOpen) {
     badge.textContent = openText;
     badge.className = 'status-badge status-open';
@@ -587,26 +566,28 @@ function updateStatusLang(l) {
   const badge = document.getElementById('statusBadge');
   if (!badge) return;
   const isOpen = badge.classList.contains('status-open');
-  if (isOpen) {
-    badge.textContent = l === 'no' ? '● Åpen nå'   : '● Open Now';
-  } else {
-    badge.textContent = l === 'no' ? '● Stengt nå' : '● Closed Now';
-  }
+  badge.textContent = isOpen
+    ? (l === 'no' ? '● Åpen nå'   : '● Open Now')
+    : (l === 'no' ? '● Stengt nå' : '● Closed Now');
 }
 updateStatus();
+
 // ── CHATBOT ──
 if (!window._studioSerenaChatInit) {
   window._studioSerenaChatInit = true;
 
-  const chatBubble = document.getElementById('chatBubble');
-  const chatWindow = document.getElementById('chatWindow');
-  const chatClose = document.getElementById('chatClose');
-  const chatInput = document.getElementById('chatInput');
+  const chatBubble   = document.getElementById('chatBubble');
+  const chatWindow   = document.getElementById('chatWindow');
+  const chatClose    = document.getElementById('chatClose');
+  const chatInput    = document.getElementById('chatInput');
   const chatMessages = document.getElementById('chatMessages');
-  const chatSendBtn = document.getElementById('chatSendBtn');
-  const chatSugs = document.getElementById('chatSugs');
+  const chatSendBtn  = document.getElementById('chatSendBtn');
+  const chatSugs     = document.getElementById('chatSugs');
 
-  // ── Whole-word / whole-phrase matcher ──
+  // FIX #2: Unified Instagram handle — @studioserena.hair used everywhere
+  const INSTAGRAM = '@studioserena.hair';
+  const EMAIL     = 'info@studioserena.no';
+
   function matchesAny(keys, text) {
     return keys.some(key => {
       const escaped = key.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -614,69 +595,57 @@ if (!window._studioSerenaChatInit) {
     });
   }
 
-  // ── Response map (most-specific first) ──
   const responses = [
-
     // BOOKING
     {
       keys: ['book', 'appointment', 'reserve', 'schedule', 'bestille', 'bestill', 'avtale'],
-      reply: "To book an appointment, DM us on Instagram @saloncoiff1rst ✦\nFor å bestille time, kontakt oss på Instagram @saloncoiff1rst ✦"
+      reply: `To book an appointment, DM us on Instagram ${INSTAGRAM} ✦\nFor å bestille time, kontakt oss på Instagram ${INSTAGRAM} ✦`
     },
 
-    // SERVICES — specific with descriptions
+    // SERVICES
     {
       keys: ['balayage'],
-      reply: "Balayage is one of our specialties! ✦\n\nIt's a freehand hair colouring technique that creates soft, natural-looking highlights — no harsh lines, just a beautiful sun-kissed gradient tailored to your hair. Perfect for all hair types and colours.\n\nBook via Instagram @saloncoiff1rst "
+      reply: `Balayage is one of our specialties! ✦\n\nIt's a freehand hair colouring technique that creates soft, natural-looking highlights — no harsh lines, just a beautiful sun-kissed gradient tailored to your hair. Perfect for all hair types and colours.\n\nBook via Instagram ${INSTAGRAM}`
     },
-
     {
       keys: ['keratin'],
-      reply: "Our Keratin Treatment is a professional smoothing service that eliminates frizz, reduces styling time, and leaves your hair glossy and manageable for weeks. ✦\n\nThe treatment infuses keratin protein deep into the hair shaft, repairing damage and sealing the cuticle for a sleek, healthy finish.\n\nReach out on Instagram @saloncoiff1rst "
+      reply: `Our Keratin Treatment is a professional smoothing service that eliminates frizz, reduces styling time, and leaves your hair glossy and manageable for weeks. ✦\n\nThe treatment infuses keratin protein deep into the hair shaft, repairing damage and sealing the cuticle for a sleek, healthy finish.\n\nReach out on Instagram ${INSTAGRAM}`
     },
-
     {
       keys: ['extensions', 'hair extensions'],
-      reply: "We offer high-quality hair extensions that seamlessly blend with your natural hair for added length, volume, or both. ✦\n\nOur extensions are carefully applied to match your colour and texture, giving you a natural, full look that you can style just like your own hair.\n\nDM us on Instagram @saloncoiff1rst or WhatsApp to discuss your look."
+      reply: `We offer high-quality hair extensions that seamlessly blend with your natural hair for added length, volume, or both. ✦\n\nOur extensions are carefully applied to match your colour and texture, giving you a natural, full look that you can style just like your own hair.\n\nDM us on Instagram ${INSTAGRAM} to discuss your look.`
     },
-
     {
       keys: ['bridal', 'bride', 'brud', 'bryllup', 'wedding'],
-      reply: "Our bridal packages are tailored to make you shine on your most special day. ✦\n\nWe offer full bridal hair styling and makeup artistry — from elegant updos and soft waves to flawless, long-lasting bridal makeup. We also accommodate trial sessions so you feel completely confident before the big day.\n\nContact us to book a consultation."
+      reply: `Our bridal packages are tailored to make you shine on your most special day. ✦\n\nWe offer full bridal hair styling and makeup artistry — from elegant updos and soft waves to flawless, long-lasting bridal makeup. We also accommodate trial sessions so you feel completely confident before the big day.\n\nContact us to book a consultation.`
     },
-
     {
       keys: ['hijab', 'hijabi', 'privat'],
-      reply: "We offer a fully private, respectful space exclusively for our hijabi clients. ✦\n\nOur salon ensures complete privacy throughout your appointment — you can relax and enjoy your service comfortably and confidently.\n\nBook via Instagram @saloncoiff1rst "
+      reply: `We offer a fully private, respectful space exclusively for our hijabi clients. ✦\n\nOur salon ensures complete privacy throughout your appointment — you can relax and enjoy your service comfortably and confidently.\n\nBook via Instagram ${INSTAGRAM}`
     },
-
     {
       keys: ['botox hair', 'botox behandling'],
-      reply: "Our Botox Hair Treatment is an intensive nourishing service that deeply conditions and smooths the hair. ✦\n\nUnlike medical Botox, this is a cosmetic hair treatment that fills in damaged, porous areas of the hair fibre — reducing frizz, restoring shine, and making hair feel soft and rejuvenated. Great for dry or over-processed hair.\n\nDM us on Instagram @saloncoiff1rst for more info."
+      reply: `Our Botox Hair Treatment is an intensive nourishing service that deeply conditions and smooths the hair. ✦\n\nUnlike medical Botox, this is a cosmetic hair treatment that fills in damaged, porous areas of the hair fibre — reducing frizz, restoring shine, and making hair feel soft and rejuvenated.\n\nDM us on Instagram ${INSTAGRAM} for more info.`
     },
-
     {
       keys: ['botox'],
-      reply: "Our Botox Hair Treatment is an intensive nourishing service that deeply conditions and smooths the hair. ✦\n\nUnlike medical Botox, this is a cosmetic hair treatment that fills in damaged, porous areas of the hair fibre — reducing frizz, restoring shine, and making hair feel soft and rejuvenated. Great for dry or over-processed hair.\n\nDM us on Instagram @saloncoiff1rst for more info."
+      reply: `Our Botox Hair Treatment is an intensive nourishing service that deeply conditions and smooths the hair. ✦\n\nUnlike medical Botox, this is a cosmetic hair treatment that fills in damaged, porous areas of the hair fibre — reducing frizz, restoring shine, and making hair feel soft and rejuvenated.\n\nDM us on Instagram ${INSTAGRAM} for more info.`
     },
-
     {
       keys: ['protein treatment', 'protein'],
-      reply: "Our Protein Treatment is designed to restore strength, elasticity, and shine to weakened or damaged hair. ✦\n\nIt works by replenishing the protein bonds inside the hair shaft that are broken down by heat, colour, or chemical processing — leaving hair noticeably healthier, fuller, and more resilient.\n\nContact us on Instagram @saloncoiff1rst or WhatsApp to learn more."
+      reply: `Our Protein Treatment is designed to restore strength, elasticity, and shine to weakened or damaged hair. ✦\n\nIt works by replenishing the protein bonds inside the hair shaft that are broken down by heat, colour, or chemical processing — leaving hair noticeably healthier, fuller, and more resilient.\n\nContact us on Instagram ${INSTAGRAM} to learn more.`
     },
-
     {
       keys: ['anti-frizz', 'frizz'],
-      reply: "Our Anti-Frizz Treatment tames unruly hair and leaves it smooth, manageable, and humidity-resistant. ✦\n\nIt works by sealing the hair cuticle and neutralising the moisture imbalance that causes frizz — giving you sleek, polished results that last. Ideal for naturally curly, wavy, or coarse hair types.\n\nBook via Instagram @saloncoiff1rst or WhatsApp."
+      reply: `Our Anti-Frizz Treatment tames unruly hair and leaves it smooth, manageable, and humidity-resistant. ✦\n\nBook via Instagram ${INSTAGRAM} or WhatsApp.`
     },
-
     {
       keys: ['haircut', 'trim', 'klipp'],
-      reply: "We offer precision haircuts tailored to your face shape, hair type, and personal style. ✦\n\nWhether you're after a classic trim, a fresh new cut, or a full style transformation, our stylists take the time to understand exactly what you're looking for.\n\nBook via Instagram @saloncoiff1rst "
+      reply: `We offer precision haircuts tailored to your face shape, hair type, and personal style. ✦\n\nBook via Instagram ${INSTAGRAM}`
     },
-
     {
       keys: ['highlights', 'one color', 'colour', 'color', 'farge'],
-      reply: "We offer a full range of colour services — from classic one-colour applications to multi-dimensional highlights and creative toning. ✦\n\nOur colourists work with both permanent and semi-permanent colour to achieve your ideal shade, whether you want a subtle refresh or a bold transformation.\n\nDM us on Instagram @saloncoiff1rst to discuss what's right for you."
+      reply: `We offer a full range of colour services — from classic one-colour applications to multi-dimensional highlights and creative toning. ✦\n\nDM us on Instagram ${INSTAGRAM} to discuss what's right for you.`
     },
 
     // SERVICES — general
@@ -718,7 +687,7 @@ if (!window._studioSerenaChatInit) {
     },
     {
       keys: ['price', 'prices', 'pricing', 'cost', 'how much', 'pris', 'priser', 'hva koster', 'fee'],
-      reply: "For pricing, DM us on Instagram @studioserena.hair ✦\nFor priser, send oss en DM på Instagram @studioserena.hair ✦"
+      reply: `For pricing, DM us on Instagram ${INSTAGRAM} ✦\nFor priser, send oss en DM på Instagram ${INSTAGRAM} ✦`
     },
     {
       keys: ['where are you', 'location', 'address', 'where is', 'find you', 'adresse', 'hvor er dere', 'lokasjon'],
@@ -729,42 +698,26 @@ if (!window._studioSerenaChatInit) {
       reply: "Street parking is available on Torshovgata ✦\nGateparkering er tilgjengelig på Torshovgata ✦"
     },
 
-    // CONTACT — email entry removed, contact reply updated
+    // CONTACT
     {
       keys: ['instagram', 'insta'],
-      reply: "Find us on Instagram @studiserena.hair — we'd love to see you there! ✦"
+      reply: `Find us on Instagram ${INSTAGRAM} — we'd love to see you there! ✦`
     },
-    
     {
       keys: ['contact us', 'kontakt oss', 'reach you', 'get in touch', 'contact', 'kontakt'],
-      reply: "Reach us at / Kontakt oss:\n✦ Instagram: @studioserena.hair\n✦ Email: info@studioserena.no"
+      reply: `Reach us at / Kontakt oss:\n✦ Instagram: ${INSTAGRAM}\n✦ Email: ${EMAIL}`
     },
 
     // SMALL TALK — Norwegian
-    {
-      keys: ['god morgen'],
-      reply: "God morgen! ☀ Håper du har en fantastisk dag — hva kan jeg hjelpe deg med?"
-    },
-    {
-      keys: ['god kveld'],
-      reply: "God kveld! 🌙 Velkommen til Studio Serena — hva kan jeg gjøre for deg?"
-    },
-    {
-      keys: ['god dag'],
-      reply: "God dag! ✦ Velkommen til Studio Serena — hva kan jeg hjelpe med?"
-    },
+    { keys: ['god morgen'], reply: "God morgen! ☀ Håper du har en fantastisk dag — hva kan jeg hjelpe deg med?" },
+    { keys: ['god kveld'],  reply: "God kveld! 🌙 Velkommen til Studio Serena — hva kan jeg gjøre for deg?" },
+    { keys: ['god dag'],    reply: "God dag! ✦ Velkommen til Studio Serena — hva kan jeg hjelpe med?" },
     {
       keys: ['hvordan går', 'hvordan har du', 'hva skjer', 'alt bra'],
       reply: "Det går kjempebra, takk! ✦ Klar til å hjelpe deg med å se fantastisk ut. Hva lurer du på?"
     },
-    {
-      keys: ['tusen takk', 'mange takk'],
-      reply: "Bare hyggelig! Vi er alltid her for deg ✦ Er det noe annet du vil vite?"
-    },
-    {
-      keys: ['ha det bra', 'ha det', 'adjø'],
-      reply: "Ha det så bra! Håper vi ses på Studio Serena snart ✦"
-    },
+    { keys: ['tusen takk', 'mange takk'], reply: "Bare hyggelig! Vi er alltid her for deg ✦ Er det noe annet du vil vite?" },
+    { keys: ['ha det bra', 'ha det', 'adjø'], reply: "Ha det så bra! Håper vi ses på Studio Serena snart ✦" },
     {
       keys: ['hei', 'hej', 'heisann', 'halla', 'heyyy', 'heiiii'],
       replies: [
@@ -776,18 +729,9 @@ if (!window._studioSerenaChatInit) {
     },
 
     // SMALL TALK — English
-    {
-      keys: ['good morning'],
-      reply: "Good morning! ☀ Hope your day is off to a great start — how can I help?"
-    },
-    {
-      keys: ['good afternoon'],
-      reply: "Good afternoon! ✦ Welcome to Studio Serena — what can I do for you?"
-    },
-    {
-      keys: ['good evening'],
-      reply: "Good evening! 🌙 Welcome to Studio Serena — how can I help you tonight?"
-    },
+    { keys: ['good morning'],   reply: "Good morning! ☀ Hope your day is off to a great start — how can I help?" },
+    { keys: ['good afternoon'], reply: "Good afternoon! ✦ Welcome to Studio Serena — what can I do for you?" },
+    { keys: ['good evening'],   reply: "Good evening! 🌙 Welcome to Studio Serena — how can I help you tonight?" },
     {
       keys: ['how are you', 'how are u', 'how r u', 'hows it going', 'you ok', 'all good'],
       replies: [
@@ -858,12 +802,9 @@ if (!window._studioSerenaChatInit) {
         "Haha, we love that reaction! ✦ Anything else you'd like to know?",
       ]
     },
-    {
-      keys: ['cool', 'sick', 'fire', 'lit', 'dope', 'clean'],
-      reply: "Thanks! ✦ We try to keep things sharp around here. Anything else I can help with?"
-    },
+    { keys: ['cool', 'sick', 'fire', 'lit', 'dope', 'clean'], reply: "Thanks! ✦ We try to keep things sharp around here. Anything else I can help with?" },
 
-    // SHORT AFFIRMATIONS — keep last
+    // SHORT AFFIRMATIONS
     {
       keys: ['jep', 'jada', 'jo', 'ja'],
       replies: [
@@ -897,14 +838,13 @@ if (!window._studioSerenaChatInit) {
   ];
 
   const fallbackReplies = [
-    "That's a great question! Reach out on Instagram @studioserena.hair✦",
-    "We'd love to help! DM us on Instagram @studioserena.hair✦",
-    "Our team would be happy to assist — email us at info@studioserena.no ✦",
-    "Not sure about that one! DM us on Instagram @studioserena.hair and we'll get back to you ✦",
-    "Best way to get a precise answer is to email us at info@studioserena.no ✦",
+    `That's a great question! Reach out on Instagram ${INSTAGRAM} ✦`,
+    `We'd love to help! DM us on Instagram ${INSTAGRAM} ✦`,
+    `Our team would be happy to assist — email us at ${EMAIL} ✦`,
+    `Not sure about that one! DM us on Instagram ${INSTAGRAM} and we'll get back to you ✦`,
+    `Best way to get a precise answer is to email us at ${EMAIL} ✦`,
   ];
 
-  // ── UI helpers ──
   function addMessage(text, type) {
     if (!chatMessages) return;
     const msg = document.createElement('div');
@@ -929,18 +869,16 @@ if (!window._studioSerenaChatInit) {
     const now = new Date();
     const day = now.getDay();
     const time = now.getHours() * 60 + now.getMinutes();
-    if (day === 0 || day === 6) return false;   // Sat & Sun closed
-    return time >= 660 && time < 1050;           // 11:00–17:30 Mon–Fri
+    if (day === 0 || day === 6) return false;
+    return time >= 660 && time < 1050;
   }
 
-  // ── Main handler ──
   function handleChat(input) {
     const text = input.trim();
     if (!text) return;
     const lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
     addMessage(text, 'user');
 
-    // Real-time open check
     const openPhrases = ['open now', 'åpen nå', 'are you open', 'er dere åpne', 'is the salon open'];
     if (openPhrases.some(p => lower.includes(p))) {
       const answer = isOpenNow()
@@ -951,15 +889,10 @@ if (!window._studioSerenaChatInit) {
       return;
     }
 
-    // Keyword matching
     let reply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
     for (const r of responses) {
       if (matchesAny(r.keys, lower)) {
-        if (r.replies) {
-          reply = r.replies[Math.floor(Math.random() * r.replies.length)];
-        } else {
-          reply = r.reply;
-        }
+        reply = r.replies ? r.replies[Math.floor(Math.random() * r.replies.length)] : r.reply;
         break;
       }
     }
@@ -968,7 +901,6 @@ if (!window._studioSerenaChatInit) {
     setTimeout(() => { t.remove(); addMessage(reply, 'bot'); }, 600 + Math.random() * 400);
   }
 
-  // ── Open / Close ──
   if (chatBubble && chatWindow) {
     chatBubble.addEventListener('click', () => {
       chatWindow.classList.toggle('open');
@@ -988,18 +920,13 @@ if (!window._studioSerenaChatInit) {
     chatClose.addEventListener('click', () => chatWindow.classList.remove('open'));
   }
 
-  // ── Send / Enter ──
   if (chatSendBtn && chatInput) {
-    chatSendBtn.addEventListener('click', () => {
-      handleChat(chatInput.value);
-      chatInput.value = '';
-    });
+    chatSendBtn.addEventListener('click', () => { handleChat(chatInput.value); chatInput.value = ''; });
     chatInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') { handleChat(chatInput.value); chatInput.value = ''; }
     });
   }
 
-  // ── Suggestion chips ──
   if (chatSugs) {
     chatSugs.addEventListener('click', e => {
       const chip = e.target.closest('.chat-sug');
@@ -1009,11 +936,7 @@ if (!window._studioSerenaChatInit) {
       }
     });
   }
-
-} // end guard
-// ═══════════════════════════════════════════════════════════════
-// NEW FEATURES
-// ═══════════════════════════════════════════════════════════════
+}
 
 // ── HERO TIME-OF-DAY GREETING ──
 (function() {
@@ -1021,28 +944,21 @@ if (!window._studioSerenaChatInit) {
   if (!el) return;
   const h = new Date().getHours();
   const day = new Date().getDay();
-  const msgs = {
-    en: [
-      h < 6  ? 'Up late? We\'re here.' :
-      h < 12 ? 'Good morning. Look great.' :
-      h < 17 ? 'Good afternoon. Treat yourself.' :
-      h < 21 ? 'Good evening. Glow up.' :
-               'Late night. DM us.',
-    ],
-    no: [
-      h < 6  ? 'Seint ute? DM oss.' :
-      h < 12 ? 'God morgen. Se bra.' :
-      h < 17 ? 'God ettermiddag. Unne deg.' :
-      h < 21 ? 'God kveld. Glow up.' :
-               'Sent ute. Send DM.',
-    ]
-  };
-  // Weekend special
-  let msgEn = msgs.en[0];
-  let msgNo = msgs.no[0];
+  let msgEn, msgNo;
   if (day === 0 || day === 6) {
     msgEn = 'Happy weekend. Book now.';
     msgNo = 'God helg. Bestill nå.';
+  } else {
+    msgEn = h < 6  ? "Up late? We're here." :
+            h < 12 ? 'Good morning. Look great.' :
+            h < 17 ? 'Good afternoon. Treat yourself.' :
+            h < 21 ? 'Good evening. Glow up.' :
+                     'Late night. DM us.';
+    msgNo = h < 6  ? 'Seint ute? DM oss.' :
+            h < 12 ? 'God morgen. Se bra.' :
+            h < 17 ? 'God ettermiddag. Unne deg.' :
+            h < 21 ? 'God kveld. Glow up.' :
+                     'Sent ute. Send DM.';
   }
   el.setAttribute('data-en', msgEn);
   el.setAttribute('data-no', msgNo);
@@ -1054,23 +970,22 @@ if (!window._studioSerenaChatInit) {
   const banner = document.getElementById('langBanner');
   const bannerText = document.getElementById('langBannerText');
   if (!banner || !bannerText) return;
-
-  // Only show once per session
   if (sessionStorage.getItem('langBannerDismissed')) return;
 
   const browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
   const isNorwegian = browserLang.startsWith('nb') || browserLang.startsWith('nn') || browserLang.startsWith('no');
   const isEnglish = browserLang.startsWith('en');
 
-  // Only show if browser language differs from current lang variable
   setTimeout(() => {
     if (isNorwegian && lang === 'en') {
       bannerText.textContent = 'Vi ser at du er norsk — vil du bytte til norsk?';
-      document.getElementById('langBannerNO').classList.add('active');
+      const btn = document.getElementById('langBannerNO');
+      if (btn) btn.classList.add('active');
       banner.style.display = 'flex';
     } else if (isEnglish && lang === 'no') {
       bannerText.textContent = 'We detected English — switch language?';
-      document.getElementById('langBannerEN').classList.add('active');
+      const btn = document.getElementById('langBannerEN');
+      if (btn) btn.classList.add('active');
       banner.style.display = 'flex';
     }
   }, 2000);
@@ -1080,45 +995,48 @@ window.langBannerPick = function langBannerPick(l) {
   const banner = document.getElementById('langBanner');
   if (banner) banner.style.display = 'none';
   sessionStorage.setItem('langBannerDismissed', '1');
-  // Trigger the same lang toggle logic
   if (l !== lang) {
     const langBtn = document.getElementById('langToggle');
     if (langBtn) langBtn.click();
   }
-}
+};
 
-// ── APPOINTMENT REMINDER TOAST REMOVED ──
 window._showToast = function() {};
 
 // ── BLACK CARD ──
 (function() {
-  const card = document.getElementById('bcCard');
+  const card      = document.getElementById('bcCard');
   const nameInput = document.getElementById('bcNameInput');
   const holderName = document.getElementById('bcHolderName');
   const tierBadge = document.getElementById('bcTierBadge');
-  const tierInfo = document.getElementById('bcTierInfo');
-  const dotsEl = document.getElementById('bcDots');
+  const tierInfo  = document.getElementById('bcTierInfo');
+  const dotsEl    = document.getElementById('bcDots');
   if (!card) return;
 
   const tiers = [
-    { name: 'New Client',    nameNo: 'Ny Klient',       min: 0, color: 'rgba(181,168,154,0.7)' },
-    { name: 'Silver Client', nameNo: 'Sølv Klient',     min: 2, color: '#c0c0c0' },
-    { name: 'Gold Client',   nameNo: 'Gull Klient',     min: 4, color: '#C9A96E' },
-    { name: 'VIP ✦',         nameNo: 'VIP ✦',           min: 6, color: '#fff' },
+    { name: 'New Client',    nameNo: 'Ny Klient',   min: 0, color: 'rgba(181,168,154,0.7)' },
+    { name: 'Silver Client', nameNo: 'Sølv Klient', min: 2, color: '#c0c0c0' },
+    { name: 'Gold Client',   nameNo: 'Gull Klient', min: 4, color: '#C9A96E' },
+    { name: 'VIP ✦',         nameNo: 'VIP ✦',       min: 6, color: '#fff' },
   ];
 
-  // Load saved data
   const savedName = localStorage.getItem('bcName') || '';
-  // Increment visit count on each page load
-  let visits = parseInt(localStorage.getItem('ssVisitCount') || '0') + 1;
-  localStorage.setItem('ssVisitCount', visits);
-  if (savedName) {
+
+  // FIX #3: Visit count no longer auto-increments on page load.
+  // It now only increments when the user explicitly clicks a "Check In" button
+  // (add id="bcCheckIn" to a button in your HTML, or remove this comment and
+  // manage visits from your booking confirmation flow instead).
+  let visits = parseInt(localStorage.getItem('ssVisitCount') || '0');
+
+  if (savedName && holderName) {
     holderName.textContent = savedName.toUpperCase();
     if (nameInput) nameInput.value = savedName;
   }
 
   function renderCard() {
-    // Dots — 1 per visit, max 7
+    // Read lang at render time so it always reflects current language (FIX #4)
+    const currentLang = (typeof lang !== 'undefined') ? lang : 'en';
+
     if (dotsEl) {
       dotsEl.innerHTML = '';
       for (let i = 0; i < 7; i++) {
@@ -1127,36 +1045,43 @@ window._showToast = function() {};
         dotsEl.appendChild(d);
       }
     }
-    // Tier
     const currentTier = [...tiers].reverse().find(t => visits >= t.min) || tiers[0];
     if (tierBadge) {
-      tierBadge.textContent = lang === 'no' ? currentTier.nameNo : currentTier.name;
+      tierBadge.textContent = currentLang === 'no' ? currentTier.nameNo : currentTier.name;
       tierBadge.style.color = currentTier.color;
     }
-    // Next tier info
     const nextTier = tiers.find(t => t.min > visits);
     if (tierInfo && nextTier) {
       const visitsNeeded = nextTier.min - visits;
-      tierInfo.textContent = lang === 'no'
+      tierInfo.textContent = currentLang === 'no'
         ? `${visitsNeeded} besøk til ${nextTier.nameNo}`
         : `${visitsNeeded} more visit${visitsNeeded !== 1 ? 's' : ''} until ${nextTier.name}`;
     } else if (tierInfo) {
-      tierInfo.textContent = lang === 'no' ? 'Du er VIP ✦' : 'You\'ve reached VIP status ✦';
+      tierInfo.textContent = currentLang === 'no' ? 'Du er VIP ✦' : "You've reached VIP status ✦";
     }
   }
 
   renderCard();
 
-  // Name input
+  // Optional check-in button — add <button id="bcCheckIn"> to your HTML to enable manual visit tracking
+  const checkInBtn = document.getElementById('bcCheckIn');
+  if (checkInBtn) {
+    checkInBtn.addEventListener('click', () => {
+      visits++;
+      localStorage.setItem('ssVisitCount', visits);
+      renderCard();
+    });
+  }
+
   if (nameInput) {
     nameInput.addEventListener('input', () => {
       const v = nameInput.value.trim();
-      if (holderName) holderName.textContent = v ? v.toUpperCase() : (lang === 'no' ? 'DITT NAVN' : 'YOUR NAME');
+      const currentLang = (typeof lang !== 'undefined') ? lang : 'en';
+      if (holderName) holderName.textContent = v ? v.toUpperCase() : (currentLang === 'no' ? 'DITT NAVN' : 'YOUR NAME');
       if (v) localStorage.setItem('bcName', v);
     });
   }
 
-  // 3D tilt on hover
   card.addEventListener('mousemove', e => {
     const r = card.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width - 0.5;
@@ -1169,17 +1094,16 @@ window._showToast = function() {};
     card.style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
   });
 
-  // Re-render when lang changes
   window._bcRender = renderCard;
 })();
 
 // ── STYLE QUIZ ──
 const quizAnswers = {
-  frizz:   { en: 'Keratin Treatment',       no: 'Keratinbehandling',     descEn: 'Your hair is crying out for a Keratin Treatment. It will eliminate frizz, restore shine, and last up to 6 months. Taniya S. is our specialist — she will transform it completely.', descNo: 'Håret ditt ber om en Keratinbehandling. Den eliminerer krøll, gjenoppretter glans og varer opptil 6 måneder. Taniya S. er vår spesialist.' },
-  colour:  { en: 'Balayage',                no: 'Balayage',              descEn: 'You need Balayage. Our signature freehand colouring technique creates natural-looking sun-kissed dimension with zero harsh lines. Hassan K. is the master of this craft.', descNo: 'Du trenger Balayage. Vår signatur frihand-fargeteknikk skaper naturlig solkysset dimensjon uten harde linjer. Hassan K. er mester i dette.' },
-  length:  { en: 'Hair Extensions',         no: 'Hårextensions',         descEn: 'Extensions are your answer. We apply high-quality extensions that blend seamlessly with your natural hair — nobody will ever know. Hassan specialises in making them look and feel completely real.', descNo: 'Extensions er svaret ditt. Vi applicerer høykvalitetsextensions som blender sømløst med naturlig hår — ingen vil vite det.' },
-  special: { en: 'Bridal & Event Package',  no: 'Brudie- og Eventpakke', descEn: 'For a special occasion, you deserve the full bridal experience — hair and makeup by Kani M., our Senior Stylist and Makeup Artist. Every detail, perfected.', descNo: 'For en spesiell anledning fortjener du den fulle brudeopplevelsen — hår og sminke av Kani M.' },
-  health:  { en: 'Protein Treatment',       no: 'Proteinbehandling',     descEn: 'A Protein Treatment will rebuild your hair from the inside. It replenishes broken protein bonds caused by heat and chemical processing — leaving hair noticeably stronger and fuller.', descNo: 'En proteinbehandling vil gjenoppbygge håret ditt innenfra. Den fyller ødelagte proteinbindinger forårsaket av varme og kjemisk behandling.' },
+  frizz:   { en: 'Keratin Treatment',       no: 'Keratinbehandling',      descEn: 'Your hair is crying out for a Keratin Treatment. It will eliminate frizz, restore shine, and last up to 6 months. Taniya S. is our specialist — she will transform it completely.', descNo: 'Håret ditt ber om en Keratinbehandling. Den eliminerer krøll, gjenoppretter glans og varer opptil 6 måneder. Taniya S. er vår spesialist.' },
+  colour:  { en: 'Balayage',                no: 'Balayage',               descEn: 'You need Balayage. Our signature freehand colouring technique creates natural-looking sun-kissed dimension with zero harsh lines. Hassan K. is the master of this craft.', descNo: 'Du trenger Balayage. Vår signatur frihand-fargeteknikk skaper naturlig solkysset dimensjon uten harde linjer. Hassan K. er mester i dette.' },
+  length:  { en: 'Hair Extensions',         no: 'Hårextensions',          descEn: 'Extensions are your answer. We apply high-quality extensions that blend seamlessly with your natural hair — nobody will ever know. Hassan specialises in making them look and feel completely real.', descNo: 'Extensions er svaret ditt. Vi applicerer høykvalitetsextensions som blender sømløst med naturlig hår — ingen vil vite det.' },
+  special: { en: 'Bridal & Event Package',  no: 'Brudie- og Eventpakke',  descEn: 'For a special occasion, you deserve the full bridal experience — hair and makeup by Kani M., our Senior Stylist and Makeup Artist. Every detail, perfected.', descNo: 'For en spesiell anledning fortjener du den fulle brudeopplevelsen — hår og sminke av Kani M.' },
+  health:  { en: 'Protein Treatment',       no: 'Proteinbehandling',      descEn: 'A Protein Treatment will rebuild your hair from the inside. It replenishes broken protein bonds caused by heat and chemical processing — leaving hair noticeably stronger and fuller.', descNo: 'En proteinbehandling vil gjenoppbygge håret ditt innenfra. Den fyller ødelagte proteinbindinger forårsaket av varme og kjemisk behandling.' },
   hijabi:  { en: 'Private Hijabi Service',  no: 'Privat Hijabi-tjeneste', descEn: 'We have a fully private room exclusively for hijabi clients. Complete privacy, complete respect, complete artistry. Book in advance to secure your private appointment.', descNo: 'Vi har et fullt privat rom eksklusivt for hijabi-klienter. Komplett personvern, komplett respekt, komplett håndverk.' },
 };
 
@@ -1190,9 +1114,10 @@ window.quizPick = function quizPick(answer) {
   const wrap = document.getElementById('quizResult');
   wrap.style.display = 'block';
   const serviceEl = document.getElementById('quizService');
-  const descEl = document.getElementById('quizDesc');
-  if (serviceEl) { serviceEl.textContent = lang === 'no' ? result.no : result.en; }
-  if (descEl) { descEl.textContent = lang === 'no' ? result.descNo : result.descEn; }
+  const descEl    = document.getElementById('quizDesc');
+  const currentLang = (typeof lang !== 'undefined') ? lang : 'en';
+  if (serviceEl) serviceEl.textContent = currentLang === 'no' ? result.no : result.en;
+  if (descEl)    descEl.textContent    = currentLang === 'no' ? result.descNo : result.descEn;
 };
 
 window.quizRestart = function quizRestart() {
