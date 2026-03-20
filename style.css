@@ -924,16 +924,8 @@ section {
   padding: 4px 6px 8px 2px;
   align-items: start;
 }
-.lightbox-grid img {
-  width: 100%;
-  aspect-ratio: 4/5;
-  object-fit: cover;
-  border-radius: 8px;
-  cursor: default;
-  pointer-events: none;
-  display: block;
-}
-/* Video items — same 4/5 ratio as images for uniform grid */
+/* All media items — images and videos — share identical container */
+.lightbox-grid .media-wrap,
 .lightbox-grid .video-wrap {
   width: 100%;
   aspect-ratio: 4/5;
@@ -943,6 +935,16 @@ section {
   position: relative;
   cursor: default;
 }
+.lightbox-grid .media-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: default;
+  pointer-events: none;
+  display: block;
+}
+/* Video items */
 .lightbox-grid .video-wrap video {
   width: 100%;
   height: 100%;
@@ -966,7 +968,7 @@ section {
   .lightbox-grid.all-video {
     grid-template-columns: repeat(2, 1fr);
   }
-  .lightbox-grid img,
+  .lightbox-grid .media-wrap,
   .lightbox-grid .video-wrap,
   .lightbox-grid.all-video .video-wrap {
     aspect-ratio: 4/5;
@@ -2060,7 +2062,7 @@ section {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .lightbox-grid img,
+  .lightbox-grid .media-wrap,
   .lightbox-grid .video-wrap,
   .lightbox-grid.all-video .video-wrap {
     aspect-ratio: 4/5;
