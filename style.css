@@ -788,201 +788,296 @@ section {
 
 /* Responsive Grid Logic */
 /* ── Gallery Category Cards ── */
+/* ══════════════════════════════════════════════════════
+   GALLERY — CATEGORY CARDS
+   4:5 ratio · blurred cover look · no interactions
+   Desktop: 2 cols · Tablet: 2 cols · Mobile: 2→1 cols
+   ══════════════════════════════════════════════════════ */
+
+#gallery {
+  padding-left: clamp(16px, 4vw, 60px);
+  padding-right: clamp(16px, 4vw, 60px);
+}
+
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 10px 20px 40px;
-  max-width: 1100px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding: 10px 0 48px;
+  max-width: 860px;
   margin: 0 auto;
 }
 
-/* First card (Balayage) — hero span across all 3 columns */
-.gallery-cat-card:first-child {
-  grid-column: 1 / -1;
-}
-
-/* First card gets a landscape aspect ratio since it's wide */
-.gallery-cat-card:first-child .gallery-cat-img-wrap {
-  aspect-ratio: 16/7;
-}
-
-/* Last card centered when it's alone on its row (odd total after first spans full) */
+/* ── Last card alone on a row: center it ── */
 .gallery-cat-card:last-child:nth-child(odd) {
-  grid-column: unset;
-  max-width: unset;
-  justify-self: unset;
+  grid-column: 1 / -1;
+  max-width: calc(50% - 7px);
+  justify-self: center;
   width: 100%;
 }
 
+/* ── Card — no interactions, no hover, no pointer ── */
 .gallery-cat-card {
   position: relative;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: 0 4px 24px rgba(44, 36, 32, 0.12);
+  transition: none;
 }
 
+/* ── Image wrapper — enforces 4:5 ratio ── */
 .gallery-cat-img-wrap {
   width: 100%;
-  aspect-ratio: 3/4;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
+  display: block;
 }
 
+/* ── Image — blurred cover, static, no interactions ── */
 .gallery-cat-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(3px) brightness(0.75);
-  transform: scale(1.05);
-  transition: filter 0.4s ease, transform 0.4s ease;
+  object-position: center top;
+  display: block;
+  filter: blur(2.5px) brightness(0.75);
+  transform: scale(1.06);
+  transition: none;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-.gallery-cat-card:hover .gallery-cat-img-wrap img {
-  filter: blur(0px) brightness(0.85);
-  transform: scale(1.08);
-}
+/* ── No hover states at all ── */
+.gallery-cat-card:hover { transform: none; box-shadow: 0 4px 24px rgba(44, 36, 32, 0.12); }
+.gallery-cat-card:hover .gallery-cat-img-wrap img { filter: blur(2.5px) brightness(0.75); transform: scale(1.06); }
 
+/* ── Label — always visible, pointer-events enabled so clicking label opens gallery ── */
 .gallery-cat-label {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   text-align: center;
-  padding: 20px 10px;
+  padding: 48px 12px 22px;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-style: italic;
+  font-weight: 300;
   color: #fff;
-  letter-spacing: 0.05em;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  letter-spacing: 0.07em;
+  background: linear-gradient(
+    to top,
+    rgba(28, 20, 16, 0.78) 0%,
+    rgba(28, 20, 16, 0.22) 55%,
+    transparent 100%
+  );
+  pointer-events: auto;
+  cursor: pointer;
+  transition: none;
+}
+
+/* Re-enable click only on the card when label is clicked */
+.gallery-cat-card {
+  pointer-events: none;
+}
+.gallery-cat-label {
+  pointer-events: auto;
+}
+
+/* ── Tablet: 2 columns ── */
+@media (max-width: 899px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 8px 0 36px;
+    max-width: 680px;
+  }
+  .gallery-cat-card:last-child:nth-child(odd) {
+    max-width: calc(50% - 6px);
+  }
+  .gallery-cat-label {
+    font-size: 1.4rem;
+  }
+}
+
+/* ── Mobile: 2 columns ── */
+@media (max-width: 599px) {
+  #gallery {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 9px;
+    padding: 6px 0 28px;
+    max-width: 100%;
+  }
+  .gallery-cat-card:last-child:nth-child(odd) {
+    max-width: calc(50% - 4px);
+  }
+  .gallery-cat-label {
+    font-size: 1.2rem;
+    padding: 36px 8px 16px;
+  }
+  .gallery-cat-card {
+    border-radius: 12px;
+  }
+}
+
+/* ── Very small phones: 1 column ── */
+@media (max-width: 359px) {
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .gallery-cat-card:last-child:nth-child(odd) {
+    grid-column: auto;
+    max-width: 100%;
+    justify-self: auto;
+  }
 }
 
 /* ── Lightbox ── */
+/* ── LIGHTBOX ── */
 .lightbox-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.88);
   z-index: 9600;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
+  box-sizing: border-box;
 }
-
-.lightbox-box {
-  min-height: 300px;
-}
-
 .lightbox-overlay.active {
   display: flex;
 }
 
 .lightbox-box {
   background: var(--cream, #FAF8F5);
-  border-radius: 16px;
+  border-radius: 20px;
   width: 100%;
-  max-width: 900px;
-  max-height: 90vh;
+  max-width: 960px;
+  max-height: 92vh;
   overflow: hidden;
-  padding: 56px 24px 24px;
+  padding: 60px 28px 28px;
   position: relative;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  box-sizing: border-box;
 }
 
 .lightbox-close {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: var(--espresso);
+  background: var(--espresso, #3f3632);
   border: none;
-  font-size: 1rem;
+  font-size: 1.1rem;
   cursor: pointer;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  box-shadow: 0 2px 12px rgba(44,36,32,0.3);
+  box-shadow: 0 2px 12px rgba(44,36,32,0.35);
   transition: background 0.2s, transform 0.2s;
-  flex-shrink: 0;
   pointer-events: all;
 }
 .lightbox-close:hover {
-  background: var(--taupe);
-  transform: scale(1.1);
+  background: var(--taupe, #B5A89A);
+  transform: scale(1.08);
 }
 
 .lightbox-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   font-style: italic;
-  margin-bottom: 20px;
-  color: var(--charcoal, #2C2420);
+  font-weight: 300;
+  margin-bottom: 18px;
+  color: var(--espresso, #3f3632);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
 
+/* ── GRID ── */
+/* 4:5 aspect ratio enforced on every cell — same as Instagram, perfect for hair/beauty */
+/* 3 columns → each cell is (container_width - gaps) / 3 wide               */
+/* aspect-ratio: 4/5 means height = width × 1.25 — always perfect portrait   */
 .lightbox-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
   flex: 1;
-  max-height: calc(90vh - 120px);
-  padding: 4px 2px 16px 2px;
-  align-items: start;
+  padding-right: 6px;
+  padding-bottom: 4px;
 }
 
-/* Every cell — image or video — same wrapper, same locked size */
-.lightbox-grid .media-wrap,
+.lightbox-grid::-webkit-scrollbar { width: 4px; }
+.lightbox-grid::-webkit-scrollbar-track { background: transparent; }
+.lightbox-grid::-webkit-scrollbar-thumb {
+  background: rgba(181,168,154,0.4);
+  border-radius: 10px;
+}
+
+/* ── IMAGES — 4:5 ratio, same as Instagram ── */
+.lightbox-grid img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 10px;
+  display: block;
+  cursor: zoom-in;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.lightbox-grid img:hover {
+  transform: scale(1.04);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  z-index: 1;
+  position: relative;
+}
+
+/* ── VIDEO WRAPPER — 4:5 ratio, matches images exactly ── */
 .lightbox-grid .video-wrap {
   width: 100%;
-  aspect-ratio: 4/5;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
-  border-radius: 8px;
-  background: #111;
+  border-radius: 10px;
+  background: #1a1715;
   position: relative;
-  cursor: default;
-  display: block;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
 }
-
-.lightbox-grid .media-wrap img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  cursor: default;
-  pointer-events: none;
-  display: block;
+.lightbox-grid .video-wrap:hover {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
 }
-
 .lightbox-grid .video-wrap video {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
-  pointer-events: none;
 }
 
-@media (max-width: 600px) {
-  .lightbox-grid,
-  .lightbox-grid.all-video {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-}
-
-/* Shimmer skeleton shown while video buffers — visible on slow wifi */
+/* ── SHIMMER ── */
 .video-shimmer {
   position: absolute;
   inset: 0;
   z-index: 2;
-  border-radius: 8px;
+  border-radius: 10px;
   background: linear-gradient(
     90deg,
     #1a1715 0%,
@@ -996,10 +1091,117 @@ section {
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
-
 @keyframes videoShimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE LIGHTBOX — ALL DEVICES
+   aspect-ratio: 4/5 handles cell height automatically.
+   Breakpoints only adjust columns, gaps & box padding.
+   ══════════════════════════════════════════════════════ */
+
+/* ── Large desktop 1200px+ ── */
+@media (min-width: 1200px) {
+  .lightbox-box {
+    max-width: 1080px;
+    padding: 64px 32px 32px;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .lightbox-title { font-size: 2rem; }
+}
+
+/* ── Desktop 900px–1199px — default styles apply ── */
+
+/* ── Tablet landscape 700px–899px ── */
+@media (max-width: 899px) {
+  .lightbox-box {
+    padding: 56px 20px 20px;
+    max-height: 94vh;
+    border-radius: 18px;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+  }
+  .lightbox-title { font-size: 1.6rem; }
+}
+
+/* ── Tablet portrait / large mobile 600px–699px ── */
+@media (max-width: 699px) {
+  .lightbox-overlay { padding: 10px; }
+  .lightbox-box {
+    padding: 54px 14px 18px;
+    border-radius: 16px;
+    max-height: 96vh;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding-right: 3px;
+  }
+  .lightbox-title { font-size: 1.55rem; margin-bottom: 14px; }
+  .lightbox-close { width: 38px; height: 38px; font-size: 1rem; }
+}
+
+/* ── Mobile portrait up to 599px ── */
+@media (max-width: 599px) {
+  .lightbox-overlay { padding: 8px; }
+  .lightbox-box {
+    padding: 52px 10px 14px;
+    border-radius: 16px;
+    max-height: 96vh;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    padding-right: 2px;
+  }
+  .lightbox-title { font-size: 1.5rem; margin-bottom: 12px; }
+}
+
+/* ── Small mobile up to 479px (iPhone SE, standard iPhones) ── */
+@media (max-width: 479px) {
+  .lightbox-overlay { padding: 6px; }
+  .lightbox-box {
+    padding: 50px 8px 12px;
+    border-radius: 14px;
+    max-height: 97vh;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding-right: 2px;
+  }
+  .lightbox-title { font-size: 1.4rem; margin-bottom: 10px; }
+  .lightbox-close { width: 36px; height: 36px; top: 10px; right: 10px; font-size: 0.95rem; }
+}
+
+/* ── Very small phones up to 360px ── */
+@media (max-width: 360px) {
+  .lightbox-box { padding: 48px 7px 10px; }
+  .lightbox-grid { gap: 5px; }
+  .lightbox-title { font-size: 1.25rem; margin-bottom: 9px; }
+}
+
+/* ── Phone landscape ── */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  .lightbox-overlay { padding: 6px; }
+  .lightbox-box {
+    padding: 44px 12px 12px;
+    max-height: 98vh;
+    border-radius: 12px;
+  }
+  .lightbox-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .lightbox-title { font-size: 1.1rem; margin-bottom: 8px; }
+  .lightbox-close { width: 32px; height: 32px; top: 8px; right: 8px; font-size: 0.85rem; }
 }
 
 /* Animation States */
@@ -1880,27 +2082,6 @@ section {
     max-width: 380px;
   }
 
-  /* Gallery */
-  .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    padding: 10px 12px 30px;
-  }
-
-  .gallery-cat-card:first-child {
-    grid-column: 1 / -1;
-  }
-
-  .gallery-cat-card:first-child .gallery-cat-img-wrap {
-    aspect-ratio: 16/7;
-  }
-
-  .gallery-cat-card:last-child:nth-child(odd) {
-    grid-column: unset;
-    max-width: unset;
-    justify-self: unset;
-  }
-
   /* Location */
   .location-inner {
     grid-template-columns: 1fr;
@@ -2042,32 +2223,6 @@ section {
     border-radius: 14px;
   }
 
-  /* Gallery */
-  .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    padding: 10px 12px 30px;
-  }
-
-  .gallery-cat-card:last-child:nth-child(odd) {
-    grid-column: unset;
-    max-width: unset;
-    justify-self: unset;
-  }
-
-  .gallery-cat-label {
-    font-size: 1.1rem;
-  }
-
-  /* Lightbox */
-  .lightbox-box {
-    padding: 56px 16px 20px;
-  }
-
-  .lightbox-grid {
-    gap: 8px;
-  }
-
   /* Brands */
   #brands {
     padding: 2rem 0;
@@ -2189,19 +2344,6 @@ section {
 
   .team-role {
     font-size: 0.55rem;
-  }
-
-  .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .gallery-cat-card:first-child {
-    grid-column: unset;
-  }
-
-  .gallery-cat-card:first-child .gallery-cat-img-wrap {
-    aspect-ratio: 3/4;
   }
 
   #stats {
