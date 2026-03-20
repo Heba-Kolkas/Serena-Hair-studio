@@ -775,7 +775,7 @@
         <!-- LIGHTBOX -->
         <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
             <div class="lightbox-box" onclick="event.stopPropagation()">
-                <button class="lightbox-close" onclick="event.stopPropagation(); closeLightbox()" aria-label="Close">✕</button>
+                <button class="lightbox-close" id="lightboxCloseBtn" aria-label="Close">✕</button>
                 <h3 class="lightbox-title" id="lightboxTitle"></h3>
                 <div class="lightbox-grid" id="lightboxGrid"></div>
             </div>
@@ -1657,16 +1657,9 @@
         <script>
           function smoothTo(id) {
             var el = document.getElementById(id);
-            if (!el) return;
-            var offset = 80; // navbar height
-            var top = el.getBoundingClientRect().top + window.pageYOffset - offset;
-            window.scrollTo({ top: top, behavior: 'smooth' });
-            // Keep URL clean — no hash
-            if (history.replaceState) {
-              history.replaceState('', document.title, window.location.pathname);
-            }
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         </script>
 
-    </body>
+</body>
 </html>
