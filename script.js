@@ -1109,9 +1109,9 @@ window._showToast = function() {};
 
   // Load saved data
   const savedName = localStorage.getItem('bcName') || '';
- // Increment visit count on each page load
-let visitCount = parseInt(localStorage.getItem('ssVisitCount') || '0') + 1;
-localStorage.setItem('ssVisitCount', visitCount);
+  // Increment visit count on each page load
+  let visits = parseInt(localStorage.getItem('ssVisitCount') || '0') + 1;
+  localStorage.setItem('ssVisitCount', visits);
   if (savedName) {
     holderName.textContent = savedName.toUpperCase();
     if (nameInput) nameInput.value = savedName;
