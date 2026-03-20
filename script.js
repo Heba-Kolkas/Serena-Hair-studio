@@ -1,3 +1,14 @@
+// ── SMOOTH SCROLL TO SECTION ──
+window.smoothTo = function smoothTo(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const navH = document.getElementById('navbar')
+    ? document.getElementById('navbar').getBoundingClientRect().height
+    : 70;
+  const top = el.getBoundingClientRect().top + window.scrollY - navH - 8;
+  window.scrollTo({ top: top, behavior: 'smooth' });
+};
+
 // ── WELCOME POPUP ──
 (function() {
   function closePopup() {
