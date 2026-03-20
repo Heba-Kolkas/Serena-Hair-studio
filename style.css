@@ -1014,16 +1014,18 @@ section {
   letter-spacing: 0.02em;
 }
 
-/* ── GRID ── */
-/* 4:5 aspect ratio enforced on every cell — same as Instagram, perfect for hair/beauty */
-/* 3 columns on desktop → 2 columns on mobile                                          */
+/* ══════════════════════════════════════
+   LIGHTBOX GRID — Option A
+   3-column portrait, uniform 4:5 cells
+══════════════════════════════════════ */
 .lightbox-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto;
   flex: 1;
-  padding-right: 6px;
+  align-items: start;
+  padding-right: 4px;
   padding-bottom: 4px;
 }
 
@@ -1034,70 +1036,61 @@ section {
   border-radius: 10px;
 }
 
-/* ── IMAGES — 4:5 ratio, no interactions inside lightbox ── */
-.lightbox-grid img {
+/* Every cell — same 4:5 size */
+.lightbox-grid .media-wrap,
+.lightbox-grid .video-wrap {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 10px;
+  position: relative;
+  display: block;
+  background: #1a1715;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Images inside media-wrap */
+.lightbox-grid .media-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  border-radius: 0;
+  aspect-ratio: unset;
+  transform: none;
+}
+
+/* Bare img tags */
+.lightbox-grid > img {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
   object-position: center top;
   border-radius: 10px;
   display: block;
-  cursor: default;
   pointer-events: none;
   user-select: none;
-  -webkit-user-drag: none;
-}
-.lightbox-grid img:hover {
-  transform: none;
-  box-shadow: none;
 }
 
-/* ── media-wrap — wraps images, must match video-wrap exactly ── */
-.lightbox-grid .media-wrap {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  border-radius: 10px;
-  display: block;
-  position: relative;
-}
-.lightbox-grid .media-wrap img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: unset;
-  border-radius: 0;
-}
-
-/* ── VIDEO WRAPPER — 4:5 ratio, fixed in place while scrolling ── */
-.lightbox-grid .video-wrap {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  border-radius: 10px;
-  background: #1a1715;
-  position: relative;
-  cursor: default;
-  pointer-events: none;
-  will-change: transform;
-  transform: translateZ(0);
-}
-.lightbox-grid .video-wrap:hover {
-  box-shadow: none;
-}
+/* Videos inside video-wrap */
 .lightbox-grid .video-wrap video {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
   pointer-events: none;
-  will-change: transform;
   transform: translateZ(0);
+  will-change: transform;
 }
 
 /* ── SHIMMER ── */
