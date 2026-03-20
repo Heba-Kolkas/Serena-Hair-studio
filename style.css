@@ -1071,7 +1071,19 @@ section {
   object-fit: cover;
   object-position: center;
   display: block;
+  /* Disable browser native controls overlay (PiP button, translate, etc.) */
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
+
+/* Hide all browser-injected pseudo-elements on video */
+.lightbox-grid .video-wrap video::-webkit-media-controls             { display: none !important; }
+.lightbox-grid .video-wrap video::-webkit-media-controls-enclosure   { display: none !important; }
+.lightbox-grid .video-wrap video::-webkit-media-controls-panel       { display: none !important; }
+.lightbox-grid .video-wrap video::-webkit-media-controls-play-button { display: none !important; }
+.lightbox-grid .video-wrap video::--webkit-media-controls-overlay-play-button { display: none !important; }
+.lightbox-grid .video-wrap video::-webkit-media-controls-start-playback-button { display: none !important; }
 
 /* ── SHIMMER ── */
 .video-shimmer {
