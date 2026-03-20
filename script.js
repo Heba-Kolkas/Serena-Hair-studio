@@ -367,12 +367,7 @@ function _buildVideoWrapper(src, eager) {
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('autoplay', '');
   video.preload = eager ? 'auto' : 'metadata';
-  // Absolutely position video inside wrapper so wrapper aspect-ratio always holds
-  video.style.position = 'absolute';
-  video.style.inset    = '0';
-  video.style.width    = '100%';
-  video.style.height   = '100%';
-  video.style.objectFit = 'cover';
+  // No inline styles — CSS handles all sizing via .video-wrap and .video-wrap video rules
 
   const source = document.createElement('source');
   source.src  = src;
