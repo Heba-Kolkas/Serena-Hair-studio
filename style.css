@@ -935,7 +935,7 @@ section {
 /* Video items match image sizing exactly */
 .lightbox-grid .video-wrap {
   width: 100%;
-  aspect-ratio: 4/5;
+  aspect-ratio: 9/16;
   overflow: hidden;
   border-radius: 8px;
   background: #111;
@@ -950,9 +950,16 @@ section {
   pointer-events: none;
 }
 
-/* All-video galleries (Extensions, HairTreatment) — 3 even columns */
+/* All-video galleries (Extensions, HairTreatment) — 3 even columns, locked cell size */
 .lightbox-grid.all-video {
   grid-template-columns: repeat(3, 1fr);
+  align-items: start;
+  grid-auto-rows: auto;
+}
+.lightbox-grid.all-video .video-wrap {
+  width: 100%;
+  aspect-ratio: 9/16;
+  height: auto;
 }
 @media (max-width: 600px) {
   .lightbox-grid.all-video {
