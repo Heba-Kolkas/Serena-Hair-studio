@@ -497,6 +497,24 @@ window.closeLightbox = function closeLightbox() {
   }, 300);
 }
 
+// Wire up close button via addEventListener (avoids stopPropagation conflict)
+document.addEventListener('DOMContentLoaded', () => {
+  const closeBtn = document.getElementById('lightboxCloseBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.closeLightbox();
+    });
+  }
+  // Also close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('lightboxOverlay');
+      if (overlay && overlay.classList.contains('active')) window.closeLightbox();
+    }
+  });
+});
+
 // ── BEFORE & AFTER SLIDER ──
 (function () {
   const sc = document.getElementById('sc');
