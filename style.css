@@ -874,7 +874,7 @@ section {
   max-width: 900px;
   max-height: 90vh;
   overflow: hidden;
-  padding: 56px 30px 30px;
+  padding: 56px 24px 24px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -917,11 +917,11 @@ section {
 .lightbox-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 12px;
   overflow-y: auto;
   flex: 1;
   max-height: calc(90vh - 120px);
-  padding: 4px 4px 8px 4px;
+  padding: 4px 2px 16px 2px;
   align-items: start;
 }
 
