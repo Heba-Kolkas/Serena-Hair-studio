@@ -873,15 +873,17 @@ section {
   width: 100%;
   max-width: 900px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 56px 30px 30px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .lightbox-close {
-  position: fixed;
-  top: 18px;
-  right: 18px;
+  position: absolute;
+  top: 14px;
+  right: 14px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -893,10 +895,11 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9900;
+  z-index: 10;
   box-shadow: 0 2px 12px rgba(44,36,32,0.3);
   transition: background 0.2s, transform 0.2s;
   flex-shrink: 0;
+  pointer-events: all;
 }
 .lightbox-close:hover {
   background: var(--taupe);
@@ -915,6 +918,10 @@ section {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(90vh - 120px);
+  padding-right: 4px;
 }
 .lightbox-grid img {
   width: 100%;
