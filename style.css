@@ -1005,6 +1005,9 @@ section {
   z-index: 9700;
   box-shadow: 0 2px 10px rgba(0,0,0,0.3);
   transition: background 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .lightbox-close:hover {
   background: var(--taupe, #B5A89A);

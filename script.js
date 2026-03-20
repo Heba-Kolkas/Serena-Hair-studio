@@ -559,12 +559,20 @@ window.closeLightbox = function closeLightbox() {
   }, 300);
 }
 
-// Wire up close button via addEventListener (avoids stopPropagation conflict)
+// Wire up close button — fires instantly on first tap/click
 document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('lightboxCloseBtn');
   if (closeBtn) {
+    // pointerdown fires immediately on both mouse and touch, no 300ms delay
+    closeBtn.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      window.closeLightbox();
+    });
+    // Fallback for older browsers
     closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.preventDefault();
       window.closeLightbox();
     });
   }
