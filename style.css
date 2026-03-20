@@ -935,7 +935,7 @@ section {
 /* Video items match image sizing exactly */
 .lightbox-grid .video-wrap {
   width: 100%;
-  aspect-ratio: 9/16;
+  aspect-ratio: 4/5;
   overflow: hidden;
   border-radius: 8px;
   background: #111;
@@ -958,7 +958,7 @@ section {
 }
 .lightbox-grid.all-video .video-wrap {
   width: 100%;
-  aspect-ratio: 9/16;
+  aspect-ratio: 4/5;
   height: auto;
 }
 @media (max-width: 600px) {
