@@ -847,14 +847,13 @@ section {
   object-fit: cover;
   object-position: center top;
   display: block;
-  filter: brightness(0.8);
-  transform: scale(1.04);
+  filter: blur(3px) brightness(0.78);
+  transform: scale(1.06);
   transition: filter 0.45s ease, transform 0.45s ease;
-  /* Prevent layout shift */
   vertical-align: middle;
 }
 .gallery-cat-card:hover .gallery-cat-img-wrap img {
-  filter: brightness(0.92);
+  filter: blur(0px) brightness(0.9);
   transform: scale(1.09);
 }
 
