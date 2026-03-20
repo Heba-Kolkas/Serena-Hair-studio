@@ -1015,16 +1015,15 @@ section {
 }
 
 /* ══════════════════════════════════════
-   LIGHTBOX GRID — Option A
-   3-column portrait, uniform 4:5 cells
+   LIGHTBOX GRID — 3-col uniform portrait
 ══════════════════════════════════════ */
 .lightbox-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 0;
   gap: 8px;
   overflow-y: auto;
   flex: 1;
-  align-items: start;
   padding-right: 4px;
   padding-bottom: 4px;
 }
@@ -1036,24 +1035,25 @@ section {
   border-radius: 10px;
 }
 
-/* Every cell — same 4:5 size */
+/* ── Shared cell wrapper — enforces 4:5 via padding hack ── */
 .lightbox-grid .media-wrap,
 .lightbox-grid .video-wrap {
+  position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  padding-bottom: 125%; /* 4:5 = 125% */
+  height: 0;
   overflow: hidden;
   border-radius: 10px;
-  position: relative;
-  display: block;
   background: #1a1715;
-  transform: translateZ(0);
-  will-change: transform;
+  display: block;
 }
 
-/* Images inside media-wrap */
-.lightbox-grid .media-wrap img {
+/* ── All media fills wrapper absolutely ── */
+.lightbox-grid .media-wrap img,
+.lightbox-grid .video-wrap video {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1063,11 +1063,15 @@ section {
   user-select: none;
   -webkit-user-drag: none;
   border-radius: 0;
-  aspect-ratio: unset;
-  transform: none;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
-/* Bare img tags */
+.lightbox-grid .video-wrap video {
+  object-position: center;
+}
+
+/* ── Bare img fallback ── */
 .lightbox-grid > img {
   width: 100%;
   aspect-ratio: 4 / 5;
@@ -1077,20 +1081,6 @@ section {
   display: block;
   pointer-events: none;
   user-select: none;
-}
-
-/* Videos inside video-wrap */
-.lightbox-grid .video-wrap video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  pointer-events: none;
-  transform: translateZ(0);
-  will-change: transform;
 }
 
 /* ── SHIMMER ── */
