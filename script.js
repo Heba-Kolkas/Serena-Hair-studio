@@ -387,6 +387,9 @@ function _buildVideoWrapper(src) {
     setTimeout(() => { if (shimmer.parentNode) shimmer.remove(); }, 320);
   }, { once: true });
 
+  // Mark wrapper as playing so CSS can hide the play icon overlay
+  video.addEventListener('playing', () => wrapper.classList.add('playing'), { once: true });
+
   // Tap to play if autoplay was blocked
   wrapper.addEventListener('click', () => {
     video.muted = true;
