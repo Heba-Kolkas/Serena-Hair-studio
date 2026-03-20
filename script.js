@@ -390,12 +390,6 @@ function _buildVideoWrapper(src) {
   // Mark wrapper as playing so CSS can hide the play icon overlay
   video.addEventListener('playing', () => wrapper.classList.add('playing'), { once: true });
 
-  // Tap to play if autoplay was blocked
-  wrapper.addEventListener('click', () => {
-    video.muted = true;
-    if (video.paused) { const p = video.play(); if (p && p.catch) p.catch(() => {}); }
-  });
-
   video.load();
 
   // Attempt play immediately and retry — handles strict autoplay browsers
@@ -489,6 +483,10 @@ window.openLightbox = function openLightbox(category) {
   }
 
   // Build grid from cache — reuse pre-built wrappers where available
+  const allVideos = items.every(src => /\.(mp4|mov|webm)$/i.test(src));
+  if (allVideos) grid.classList.add('all-video');
+  else grid.classList.remove('all-video');
+
   items.forEach(src => {
     if (/\.(mp4|mov|webm)$/i.test(src)) {
       const cached = _videoCache[src];
@@ -544,7 +542,7 @@ window.closeLightbox = function closeLightbox() {
   // Clear grid DOM after transition — cached wrappers are detached but preserved
   setTimeout(() => {
     const grid = document.getElementById('lightboxGrid');
-    if (grid) grid.innerHTML = '';
+    if (grid) { grid.innerHTML = ''; grid.classList.remove('all-video'); }
   }, 300);
 }
 
