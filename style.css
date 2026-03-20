@@ -788,11 +788,13 @@ section {
 
 /* Responsive Grid Logic */
 /* ── Gallery Category Cards ── */
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════
    GALLERY — CATEGORY CARDS
-   4:5 ratio · blurred cover look · no interactions
-   Desktop: 2 cols · Tablet: 2 cols · Mobile: 2→1 cols
-   ══════════════════════════════════════════════════════ */
+   ── Blur lives on ::before overlay, NOT on img/video ──
+   ── Images/videos are completely static, no transitions ──
+   ── Hover targets the card container only ──
+   Desktop: 2 cols · Tablet: 2 cols · Mobile: 2 → 1 cols
+   ══════════════════════════════════════════════════════════════════ */
 
 #gallery {
   padding-left: clamp(16px, 4vw, 60px);
@@ -808,7 +810,7 @@ section {
   margin: 0 auto;
 }
 
-/* ── Last card alone on a row: center it ── */
+/* ── Last card alone on its row: center it ── */
 .gallery-cat-card:last-child:nth-child(odd) {
   grid-column: 1 / -1;
   max-width: calc(50% - 7px);
@@ -816,15 +818,44 @@ section {
   width: 100%;
 }
 
-/* ── Card — no interactions, no hover, no pointer ── */
+/* ─────────────────────────────────────────────
+   CARD — blur applied via ::before pseudo-element
+   so img/video are NEVER touched by filter
+   ───────────────────────────────────────────── */
 .gallery-cat-card {
   position: relative;
   border-radius: 14px;
   overflow: hidden;
-  cursor: default;
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: 0 6px 24px rgba(44, 36, 32, 0.13);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.4s ease;
+}
+
+/* Blur overlay — covers the whole card, sits above img, below label */
+.gallery-cat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  backdrop-filter: blur(4px) brightness(0.82);
+  -webkit-backdrop-filter: blur(4px) brightness(0.82);
+  transition: backdrop-filter 0.45s ease,
+              -webkit-backdrop-filter 0.45s ease,
+              opacity 0.45s ease;
+  border-radius: inherit;
   pointer-events: none;
-  box-shadow: 0 4px 24px rgba(44, 36, 32, 0.12);
-  transition: none;
+}
+
+/* On hover: lift card, remove blur overlay */
+.gallery-cat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 48px rgba(44, 36, 32, 0.24);
+}
+.gallery-cat-card:hover::before {
+  backdrop-filter: blur(0px) brightness(1);
+  -webkit-backdrop-filter: blur(0px) brightness(1);
 }
 
 /* ── Image wrapper — enforces 4:5 ratio ── */
@@ -833,58 +864,45 @@ section {
   aspect-ratio: 4 / 5;
   overflow: hidden;
   display: block;
+  position: relative;
+  z-index: 0;
 }
 
-/* ── Image — blurred cover, static, no interactions ── */
+/* ── Image — completely static, no hover, no transitions ── */
 .gallery-cat-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center top;
   display: block;
-  filter: blur(2.5px) brightness(0.75);
-  transform: scale(1.06);
-  transition: none;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
+  /* No filter, no transform, no transition — image never moves */
 }
 
-/* ── No hover states at all ── */
-.gallery-cat-card:hover { transform: none; box-shadow: 0 4px 24px rgba(44, 36, 32, 0.12); }
-.gallery-cat-card:hover .gallery-cat-img-wrap img { filter: blur(2.5px) brightness(0.75); transform: scale(1.06); }
-
-/* ── Label — always visible, pointer-events enabled so clicking label opens gallery ── */
+/* ── Label — sits above the blur overlay ── */
 .gallery-cat-label {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
+  z-index: 2;
   text-align: center;
-  padding: 48px 12px 22px;
+  padding: 52px 12px 20px;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   font-style: italic;
   font-weight: 300;
   color: #fff;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   background: linear-gradient(
     to top,
-    rgba(28, 20, 16, 0.78) 0%,
-    rgba(28, 20, 16, 0.22) 55%,
+    rgba(20, 14, 10, 0.75) 0%,
+    rgba(20, 14, 10, 0.15) 55%,
     transparent 100%
   );
-  pointer-events: auto;
-  cursor: pointer;
-  transition: none;
-}
-
-/* Re-enable click only on the card when label is clicked */
-.gallery-cat-card {
   pointer-events: none;
-}
-.gallery-cat-label {
-  pointer-events: auto;
 }
 
 /* ── Tablet: 2 columns ── */
@@ -898,9 +916,7 @@ section {
   .gallery-cat-card:last-child:nth-child(odd) {
     max-width: calc(50% - 6px);
   }
-  .gallery-cat-label {
-    font-size: 1.4rem;
-  }
+  .gallery-cat-label { font-size: 1.4rem; }
 }
 
 /* ── Mobile: 2 columns ── */
@@ -922,9 +938,7 @@ section {
     font-size: 1.2rem;
     padding: 36px 8px 16px;
   }
-  .gallery-cat-card {
-    border-radius: 12px;
-  }
+  .gallery-cat-card { border-radius: 12px; }
 }
 
 /* ── Very small phones: 1 column ── */
