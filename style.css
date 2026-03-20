@@ -794,12 +794,14 @@ section {
    Desktop: 2 cols · Tablet: 2 cols · Mobile: 2→1 cols
    ══════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════
+   GALLERY
+═══════════════════════════ */
 #gallery {
   padding-left: clamp(16px, 4vw, 60px);
   padding-right: clamp(16px, 4vw, 60px);
 }
 
-/* ── GALLERY GRID — always 2 columns on all devices ── */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -809,7 +811,7 @@ section {
   margin: 0 auto;
 }
 
-/* ── Last card alone on a row: center it ── */
+/* Last card alone: center it */
 .gallery-cat-card:last-child:nth-child(odd) {
   grid-column: 1 / -1;
   max-width: calc(50% - 7px);
@@ -817,7 +819,6 @@ section {
   width: 100%;
 }
 
-/* ── Card — pointer-events enabled for touch unblur ── */
 .gallery-cat-card {
   position: relative;
   border-radius: 16px;
@@ -829,7 +830,11 @@ section {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── Image wrapper — enforces 4:5 ratio ── */
+.gallery-cat-card:hover {
+  box-shadow: 0 8px 36px rgba(44, 36, 32, 0.22);
+}
+
+/* Image wrapper — 4:5 ratio */
 .gallery-cat-img-wrap {
   width: 100%;
   aspect-ratio: 4 / 5;
@@ -837,7 +842,7 @@ section {
   display: block;
 }
 
-/* ── Image — blurred by default ── */
+/* Image — blurred by default, unblurs on hover */
 .gallery-cat-img-wrap img {
   width: 100%;
   height: 100%;
@@ -852,7 +857,6 @@ section {
   -webkit-user-drag: none;
 }
 
-/* ── Unblur on hover/touch ── */
 .gallery-cat-card:hover .gallery-cat-img-wrap img,
 .gallery-cat-card:focus .gallery-cat-img-wrap img,
 .gallery-cat-card.touched .gallery-cat-img-wrap img {
@@ -860,11 +864,7 @@ section {
   transform: scale(1.04);
 }
 
-.gallery-cat-card:hover {
-  box-shadow: 0 8px 36px rgba(44, 36, 32, 0.22);
-}
-
-/* ── Label — always visible ── */
+/* Label at bottom */
 .gallery-cat-label {
   position: absolute;
   bottom: 0;
@@ -886,13 +886,19 @@ section {
   );
   pointer-events: none;
   cursor: pointer;
-  transition: none;
 }
 
-/* ── Tablet: 2 columns ── */
+/* Instagram link inside label */
+.gallery-ig-link {
+  pointer-events: auto;
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+/* Tablet */
 @media (max-width: 899px) {
   .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     padding: 8px 0 36px;
     max-width: 680px;
@@ -905,14 +911,13 @@ section {
   }
 }
 
-/* ── Mobile: 2 columns ── */
+/* Mobile */
 @media (max-width: 599px) {
   #gallery {
     padding-left: 12px;
     padding-right: 12px;
   }
   .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     padding: 6px 0 28px;
     max-width: 100%;
@@ -929,10 +934,9 @@ section {
   }
 }
 
-/* ── Very small phones: still 2 columns ── */
+/* Very small phones */
 @media (max-width: 359px) {
   .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
   .gallery-cat-card:last-child:nth-child(odd) {
