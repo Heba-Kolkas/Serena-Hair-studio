@@ -922,6 +922,7 @@ section {
   flex: 1;
   max-height: calc(90vh - 120px);
   padding: 4px 6px 8px 2px;
+  align-items: start;
 }
 .lightbox-grid img {
   width: 100%;
@@ -932,7 +933,7 @@ section {
   pointer-events: none;
   display: block;
 }
-/* Video items match image sizing exactly */
+/* Video items — same 4/5 ratio as images for uniform grid */
 .lightbox-grid .video-wrap {
   width: 100%;
   aspect-ratio: 4/5;
@@ -950,7 +951,7 @@ section {
   pointer-events: none;
 }
 
-/* All-video galleries (Extensions, HairTreatment) — 3 even columns, locked cell size */
+/* All-video galleries (Extensions, HairTreatment) — 3 even columns */
 .lightbox-grid.all-video {
   grid-template-columns: repeat(3, 1fr);
   align-items: start;
@@ -964,6 +965,13 @@ section {
 @media (max-width: 600px) {
   .lightbox-grid.all-video {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .lightbox-grid img,
+  .lightbox-grid .video-wrap,
+  .lightbox-grid.all-video .video-wrap {
+    aspect-ratio: 4/5;
+    width: 100%;
+    height: auto;
   }
 }
 
@@ -2044,7 +2052,20 @@ section {
 
   .lightbox-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 10px;
+    align-items: start;
+  }
+
+  .lightbox-grid.all-video {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lightbox-grid img,
+  .lightbox-grid .video-wrap,
+  .lightbox-grid.all-video .video-wrap {
+    aspect-ratio: 4/5;
+    width: 100%;
+    height: auto;
   }
 
   /* Brands */
