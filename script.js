@@ -337,19 +337,24 @@ const galleryData = {
 };
 
 // ── LIGHTBOX VIDEO SYSTEM ──
+// IntersectionObserver only used for videos scrolled out of view (bandwidth saving)
 const _videoPlayObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     const v = entry.target;
     if (entry.isIntersecting) {
+      v.muted = true;
       const p = v.play();
       if (p && p.catch) p.catch(() => {});
     } else {
       v.pause();
     }
   });
-}, { threshold: 0.2 });
+}, { threshold: 0.1 });
 
-function _buildVideoWrapper(src, eager) {
+// Pre-built video cache: key = src, value = { wrapper, video } — built on card hover
+const _videoCache = {};
+
+function _buildVideoWrapper(src) {
   const wrapper = document.createElement('div');
   wrapper.className = 'video-wrap';
 
@@ -358,58 +363,78 @@ function _buildVideoWrapper(src, eager) {
   wrapper.appendChild(shimmer);
 
   const video = document.createElement('video');
+  // Guarantee muted — set both property AND attributes
   video.muted       = true;
+  video.defaultMuted = true;
   video.loop        = true;
   video.playsInline = true;
   video.autoplay    = true;
+  video.preload     = 'auto'; // Always preload everything
   video.setAttribute('muted', '');
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('autoplay', '');
-  video.preload = eager ? 'auto' : 'metadata';
-  // No inline styles — CSS handles all sizing via .video-wrap and .video-wrap video rules
 
   const source = document.createElement('source');
   source.src  = src;
   source.type = 'video/mp4';
   video.appendChild(source);
 
+  // Hide shimmer once first frame is decoded
   video.addEventListener('loadeddata', () => {
     shimmer.style.transition = 'opacity 0.3s';
     shimmer.style.opacity = '0';
-    setTimeout(() => shimmer.remove(), 320);
+    setTimeout(() => { if (shimmer.parentNode) shimmer.remove(); }, 320);
   }, { once: true });
 
+  // Tap to play if autoplay was blocked
   wrapper.addEventListener('click', () => {
+    video.muted = true;
     if (video.paused) { const p = video.play(); if (p && p.catch) p.catch(() => {}); }
   });
 
   video.load();
 
-  const tryPlay = () => { const p = video.play(); if (p && p.catch) p.catch(() => {}); };
+  // Attempt play immediately and retry — handles strict autoplay browsers
+  const tryPlay = () => {
+    video.muted = true;
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {});
+  };
   tryPlay();
-  setTimeout(tryPlay, 150);
-  setTimeout(tryPlay, 600);
-
-  _videoPlayObserver.observe(video);
+  setTimeout(tryPlay, 100);
+  setTimeout(tryPlay, 400);
 
   wrapper.appendChild(video);
-  return wrapper;
+  return { wrapper, video };
 }
 
+// Pre-warm video cache on gallery card hover / touch
 const _imgPrefetchCache = {};
 document.querySelectorAll('.gallery-cat-card').forEach(card => {
   const oncard = card.getAttribute('onclick') || '';
   const match  = oncard.match(/openLightbox\('([^']+)'\)/);
   if (!match) return;
   const cat = match[1];
+
   const prefetch = () => {
     if (_imgPrefetchCache[cat]) return;
     _imgPrefetchCache[cat] = true;
+
     (galleryData[cat] || []).forEach(src => {
-      if (!/\.(mp4|mov|webm)$/i.test(src)) { const i = new Image(); i.src = src; }
+      if (/\.(mp4|mov|webm)$/i.test(src)) {
+        // Pre-build and pre-load every video in the background
+        if (!_videoCache[src]) {
+          _videoCache[src] = _buildVideoWrapper(src);
+        }
+      } else {
+        // Pre-fetch images
+        const i = new Image();
+        i.src = src;
+      }
     });
   };
+
   card.addEventListener('mouseenter', prefetch);
   card.addEventListener('touchstart', prefetch, { passive: true });
 });
@@ -433,11 +458,10 @@ window.openLightbox = function openLightbox(category) {
   const titleObj = categoryTitles[category];
   title.textContent = titleObj ? titleObj[currentLang] || titleObj.en : category;
 
+  // Clean up any previously active videos
   grid.querySelectorAll('video').forEach(v => {
     _videoPlayObserver.unobserve(v);
     v.pause();
-    v.src = '';
-    v.load();
   });
   grid.innerHTML = '';
 
@@ -449,16 +473,38 @@ window.openLightbox = function openLightbox(category) {
     return;
   }
 
-  let videoIdx = 0;
+  // Ensure all media for this category is pre-warming even if hover didn't trigger it
+  if (!_imgPrefetchCache[category]) {
+    _imgPrefetchCache[category] = true;
+    items.forEach(src => {
+      if (/\.(mp4|mov|webm)$/i.test(src)) {
+        if (!_videoCache[src]) _videoCache[src] = _buildVideoWrapper(src);
+      } else {
+        const i = new Image(); i.src = src;
+      }
+    });
+  }
+
+  // Build grid from cache — reuse pre-built wrappers where available
   items.forEach(src => {
     if (/\.(mp4|mov|webm)$/i.test(src)) {
-      grid.appendChild(_buildVideoWrapper(src, videoIdx < 3));
-      videoIdx++;
+      const cached = _videoCache[src];
+      if (cached) {
+        // Re-use the pre-built wrapper — guaranteed already loading
+        cached.video.muted = true;
+        grid.appendChild(cached.wrapper);
+        // Observe for play/pause on scroll
+        _videoPlayObserver.observe(cached.video);
+      } else {
+        const { wrapper, video } = _buildVideoWrapper(src);
+        grid.appendChild(wrapper);
+        _videoPlayObserver.observe(video);
+      }
     } else {
       const img = document.createElement('img');
       img.src      = src;
       img.alt      = category;
-      img.loading  = 'lazy';
+      img.loading  = 'eager';
       img.decoding = 'async';
       grid.appendChild(img);
     }
@@ -467,9 +513,11 @@ window.openLightbox = function openLightbox(category) {
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 
+  // Play all videos immediately on open
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       grid.querySelectorAll('video').forEach(v => {
+        v.muted = true;
         const p = v.play();
         if (p && p.catch) p.catch(() => {});
       });
@@ -481,17 +529,16 @@ window.closeLightbox = function closeLightbox() {
   const overlay = document.getElementById('lightboxOverlay');
   if (!overlay) return;
 
+  // Pause all videos but keep them in cache for next open
   overlay.querySelectorAll('video').forEach(v => {
     _videoPlayObserver.unobserve(v);
     v.pause();
-    v.src = '';
-    v.innerHTML = '';
-    v.load();
   });
 
   overlay.classList.remove('active');
   document.body.style.overflow = '';
 
+  // Clear grid DOM after transition — cached wrappers are detached but preserved
   setTimeout(() => {
     const grid = document.getElementById('lightboxGrid');
     if (grid) grid.innerHTML = '';
