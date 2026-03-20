@@ -524,6 +524,7 @@ window.openLightbox = function openLightbox(category) {
   });
 
   overlay.classList.add('active');
+  overlay.scrollTop = 0;
   document.body.style.overflow = 'hidden';
 
   // Play all videos immediately on open

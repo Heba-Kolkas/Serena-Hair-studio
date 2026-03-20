@@ -946,149 +946,127 @@ section {
   }
 }
 
-/* ── Lightbox ── */
-/* ── LIGHTBOX ── */
+/* ════════════════════════════════════════════════
+   LIGHTBOX
+   Full-page, cream bg, title top-left,
+   3-col 4:5 portrait grid, close top-right
+════════════════════════════════════════════════ */
+
+/* Overlay — full screen, scrollable */
 .lightbox-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.88);
+  background: var(--cream, #faf8f5);
   z-index: 9600;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
 .lightbox-overlay.active {
-  display: flex;
+  display: block;
 }
 
+/* Box — full width content wrapper */
 .lightbox-box {
-  background: var(--cream, #FAF8F5);
-  border-radius: 20px;
   width: 100%;
-  max-width: 960px;
-  max-height: 92vh;
-  overflow: hidden;
-  padding: 60px 28px 28px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  min-height: 100vh;
+  padding: 32px 16px 60px;
   box-sizing: border-box;
+  background: var(--cream, #faf8f5);
+  position: relative;
 }
 
+/* Close button — fixed top-right */
 .lightbox-close {
-  position: absolute;
+  position: fixed;
   top: 14px;
   right: 14px;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: var(--espresso, #3f3632);
+  background: #2c2420;
   border: none;
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
-  box-shadow: 0 2px 12px rgba(44,36,32,0.35);
-  transition: background 0.2s, transform 0.2s;
-  pointer-events: all;
+  z-index: 9700;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  transition: background 0.2s;
 }
 .lightbox-close:hover {
   background: var(--taupe, #B5A89A);
-  transform: scale(1.08);
 }
 
+/* Title — italic serif top-left */
 .lightbox-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.7rem;
+  font-size: 1.8rem;
   font-style: italic;
   font-weight: 300;
-  margin-bottom: 18px;
   color: var(--espresso, #3f3632);
-  flex-shrink: 0;
   letter-spacing: 0.02em;
+  margin: 0 0 16px 0;
+  padding-right: 50px;
+  display: block;
 }
 
-/* ══════════════════════════════════════
-   LIGHTBOX GRID — 3-col uniform portrait
-══════════════════════════════════════ */
+/* ── 3-column grid ── */
 .lightbox-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 0;
-  gap: 8px;
-  overflow-y: auto;
-  flex: 1;
-  padding-right: 4px;
-  padding-bottom: 4px;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.lightbox-grid::-webkit-scrollbar { width: 4px; }
-.lightbox-grid::-webkit-scrollbar-track { background: transparent; }
-.lightbox-grid::-webkit-scrollbar-thumb {
-  background: rgba(181,168,154,0.4);
-  border-radius: 10px;
-}
-
-/* ── Shared cell wrapper — enforces 4:5 via padding hack ── */
+/* ── Every cell — 4:5 portrait, bulletproof padding trick ── */
 .lightbox-grid .media-wrap,
 .lightbox-grid .video-wrap {
-  position: relative;
-  width: 100%;
-  padding-bottom: 125%; /* 4:5 = 125% */
-  height: 0;
-  overflow: hidden;
-  border-radius: 10px;
-  background: #1a1715;
-  display: block;
+  position: relative !important;
+  width: 100% !important;
+  padding-bottom: 125% !important; /* 4:5 ratio */
+  height: 0 !important;
+  overflow: hidden !important;
+  border-radius: 8px !important;
+  background: #1a1715 !important;
+  display: block !important;
+  box-sizing: border-box !important;
 }
 
-/* ── All media fills wrapper absolutely ── */
+/* ── All media fills its cell absolutely ── */
 .lightbox-grid .media-wrap img,
 .lightbox-grid .video-wrap video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  border-radius: 0;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  pointer-events: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.lightbox-grid .media-wrap img {
+  object-position: center top !important;
+}
+.lightbox-grid .video-wrap video {
+  object-position: center !important;
   transform: translateZ(0);
   will-change: transform;
 }
 
-.lightbox-grid .video-wrap video {
-  object-position: center;
-}
-
-/* ── Bare img fallback ── */
-.lightbox-grid > img {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  object-position: center top;
-  border-radius: 10px;
-  display: block;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* ── SHIMMER ── */
+/* ── Shimmer ── */
 .video-shimmer {
   position: absolute;
   inset: 0;
   z-index: 2;
-  border-radius: 10px;
   background: linear-gradient(
     90deg,
     #1a1715 0%,
@@ -1101,121 +1079,52 @@ section {
   animation: videoShimmer 1.6s ease-in-out infinite;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  border-radius: 8px;
 }
 @keyframes videoShimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-/* ══════════════════════════════════════════════════════
-   RESPONSIVE LIGHTBOX — ALL DEVICES
-   aspect-ratio: 4/5 handles cell height automatically.
-   Breakpoints only adjust columns, gaps & box padding.
-   ══════════════════════════════════════════════════════ */
-
-/* ── Large desktop 1200px+ ── */
-@media (min-width: 1200px) {
-  .lightbox-box {
-    max-width: 1080px;
-    padding: 64px 32px 32px;
-  }
-  .lightbox-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  .lightbox-title { font-size: 2rem; }
-}
-
-/* ── Desktop 900px–1199px — default styles apply (3 cols) ── */
-
-/* ── Tablet landscape 700px–899px — keep 3 cols ── */
+/* ── Tablet (600–899px) — 3 cols, slightly smaller gap ── */
 @media (max-width: 899px) {
-  .lightbox-box {
-    padding: 56px 20px 20px;
-    max-height: 94vh;
-    border-radius: 18px;
-  }
-  .lightbox-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 9px;
-  }
-  .lightbox-title { font-size: 1.6rem; }
+  .lightbox-box { padding: 28px 12px 48px; }
+  .lightbox-title { font-size: 1.5rem; }
+  .lightbox-grid { gap: 5px; }
 }
 
-/* ── Tablet portrait / large mobile 600px–699px — switch to 2 cols ── */
-@media (max-width: 699px) {
-  .lightbox-overlay { padding: 10px; }
-  .lightbox-box {
-    padding: 54px 14px 18px;
-    border-radius: 16px;
-    max-height: 96vh;
-  }
-  .lightbox-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    padding-right: 3px;
-  }
-  .lightbox-title { font-size: 1.55rem; margin-bottom: 14px; }
-  .lightbox-close { width: 38px; height: 38px; font-size: 1rem; }
-}
-
-/* ── Mobile portrait up to 599px — 2 cols ── */
+/* ── Mobile (up to 599px) — 2 cols ── */
 @media (max-width: 599px) {
-  .lightbox-overlay { padding: 8px; }
-  .lightbox-box {
-    padding: 52px 10px 14px;
-    border-radius: 16px;
-    max-height: 96vh;
-  }
+  .lightbox-box { padding: 24px 10px 40px; }
+  .lightbox-title { font-size: 1.3rem; margin-bottom: 12px; }
   .lightbox-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    padding-right: 2px;
+    gap: 4px;
   }
-  .lightbox-title { font-size: 1.5rem; margin-bottom: 12px; }
+  .lightbox-close {
+    width: 34px;
+    height: 34px;
+    top: 10px;
+    right: 10px;
+    font-size: 0.85rem;
+  }
 }
 
-/* ── Small mobile up to 479px (iPhone SE, standard iPhones) — 2 cols ── */
-@media (max-width: 479px) {
-  .lightbox-overlay { padding: 6px; }
-  .lightbox-box {
-    padding: 50px 8px 12px;
-    border-radius: 14px;
-    max-height: 97vh;
-  }
-  .lightbox-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 7px;
-    padding-right: 2px;
-  }
-  .lightbox-title { font-size: 1.4rem; margin-bottom: 10px; }
-  .lightbox-close { width: 36px; height: 36px; top: 10px; right: 10px; font-size: 0.95rem; }
-}
-
-/* ── Very small phones up to 360px — 2 cols ── */
+/* ── Very small phones (up to 360px) — 2 cols ── */
 @media (max-width: 360px) {
-  .lightbox-box { padding: 48px 7px 10px; }
-  .lightbox-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-  }
-  .lightbox-title { font-size: 1.25rem; margin-bottom: 9px; }
+  .lightbox-grid { gap: 3px; }
+  .lightbox-title { font-size: 1.1rem; }
+  .lightbox-box { padding: 20px 8px 36px; }
 }
 
-/* ── Phone landscape — 3 cols ── */
+/* ── Landscape phones — 3 cols ── */
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
-  .lightbox-overlay { padding: 6px; }
-  .lightbox-box {
-    padding: 44px 12px 12px;
-    max-height: 98vh;
-    border-radius: 12px;
-  }
   .lightbox-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    gap: 4px;
   }
-  .lightbox-title { font-size: 1.1rem; margin-bottom: 8px; }
-  .lightbox-close { width: 32px; height: 32px; top: 8px; right: 8px; font-size: 0.85rem; }
+  .lightbox-title { font-size: 1.1rem; }
+  .lightbox-box { padding: 20px 10px 32px; }
 }
 
 /* Animation States */
