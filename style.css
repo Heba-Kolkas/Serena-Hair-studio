@@ -790,19 +790,17 @@ section {
 /* ── Gallery Category Cards ── */
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   padding: 10px 20px 40px;
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
-/* Last card centered when it's alone on its row (odd total count) */
-.gallery-cat-card:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
-  max-width: calc(50% - 10px);
-  justify-self: center;
-  width: 100%;
+/* With 7 cards in a 3-col grid: row1=3, row2=3, row3=1.
+   Center the lone last card on its row. */
+.gallery-cat-card:last-child:nth-child(3n + 1) {
+  grid-column: 2 / 3;
 }
 
 .gallery-cat-card {
@@ -1862,8 +1860,12 @@ section {
     padding: 10px 12px 30px;
   }
 
-  .gallery-cat-card:last-child:nth-child(odd) {
+  /* 7 cards in 2-col grid: 7th is odd & last → center it */
+  .gallery-cat-card:last-child:nth-child(2n + 1) {
+    grid-column: 1 / -1;
     max-width: calc(50% - 5px);
+    justify-self: center;
+    width: 100%;
   }
 
   /* Location */
@@ -2014,8 +2016,11 @@ section {
     padding: 10px 12px 30px;
   }
 
-  .gallery-cat-card:last-child:nth-child(odd) {
+  .gallery-cat-card:last-child:nth-child(2n + 1) {
+    grid-column: 1 / -1;
     max-width: calc(50% - 5px);
+    justify-self: center;
+    width: 100%;
   }
 
   .gallery-cat-label {
@@ -2157,6 +2162,14 @@ section {
 
   .gallery-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Reset centering rule — all cards are full-width in single column */
+  .gallery-cat-card:last-child:nth-child(2n + 1),
+  .gallery-cat-card:last-child:nth-child(3n + 1) {
+    grid-column: auto;
+    max-width: 100%;
+    justify-self: stretch;
   }
 
   #stats {
