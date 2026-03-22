@@ -797,7 +797,7 @@
         <!-- LIGHTBOX -->
         <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
             <div class="lightbox-box" onclick="event.stopPropagation()">
-                <button class="lightbox-close" id="lightboxCloseBtn" aria-label="Close">✕</button>
+                <button class="lightbox-close" id="lightboxCloseBtn" aria-label="Close" onclick="event.stopPropagation();event.stopImmediatePropagation();">✕</button>
                 <h3 class="lightbox-title" id="lightboxTitle"></h3>
                 <div class="lightbox-grid" id="lightboxGrid"></div>
             </div>

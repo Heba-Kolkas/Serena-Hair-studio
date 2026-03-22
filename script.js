@@ -554,6 +554,9 @@ window.closeLightbox = function closeLightbox() {
   const overlay = document.getElementById('lightboxOverlay');
   if (!overlay) return;
 
+  // Immediately block all pointer events so nothing leaks through to the page below
+  overlay.style.pointerEvents = 'none';
+
   // Pause all videos but keep them in cache for next open
   overlay.querySelectorAll('video').forEach(v => {
     _videoPlayObserver.unobserve(v);
@@ -567,6 +570,7 @@ window.closeLightbox = function closeLightbox() {
   setTimeout(() => {
     const grid = document.getElementById('lightboxGrid');
     if (grid) grid.innerHTML = '';
+    overlay.style.pointerEvents = '';
   }, 300);
 }
 
@@ -574,18 +578,22 @@ window.closeLightbox = function closeLightbox() {
 document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('lightboxCloseBtn');
   if (closeBtn) {
-    // pointerdown fires immediately on both mouse and touch, no 300ms delay
+    // Stop ALL pointer/mouse/touch events from ever leaving the button
+    ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'click'].forEach(evtName => {
+      closeBtn.addEventListener(evtName, (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }, { capture: true });
+    });
+
+    // Trigger close on pointerdown for instant response
     closeBtn.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
+      e.stopImmediatePropagation();
       e.preventDefault();
       window.closeLightbox();
-    });
-    // Fallback for older browsers
-    closeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      window.closeLightbox();
-    });
+    }, { capture: true });
   }
   // Also close on Escape key
   document.addEventListener('keydown', (e) => {
