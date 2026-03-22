@@ -3292,8 +3292,3 @@ nav.scrolled #scroll-progress {
 input, textarea, select {
   font-size: 16px !important;
 }
-/* Hide navbar and subnav while mobile menu is open */
-body.menu-open #navbar,
-body.menu-open #mobileBottomNav {
-  display: none !important;
-}
