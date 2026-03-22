@@ -69,32 +69,24 @@ const closeMenu  = document.getElementById('closeMenu');
 function openMobileMenu() {
   if (!mobileMenu) return;
   mobileMenu.classList.add('open');
-  const subNav = document.getElementById('mobileBottomNav');
-  if (subNav) subNav.classList.add('menu-open-hidden');
+  document.body.classList.add('menu-open');
 }
 
 function closeMobileMenu() {
   if (!mobileMenu) return;
   mobileMenu.classList.remove('open');
-  const subNav = document.getElementById('mobileBottomNav');
-  if (subNav) subNav.classList.remove('menu-open-hidden');
+  document.body.classList.remove('menu-open');
 }
 
-if (hamburger && mobileMenu) {
-  hamburger.addEventListener('click', openMobileMenu);
-}
-if (closeMenu && mobileMenu) {
-  closeMenu.addEventListener('click', closeMobileMenu);
-}
+if (hamburger) hamburger.addEventListener('click', openMobileMenu);
+if (closeMenu)  closeMenu.addEventListener('click', closeMobileMenu);
 
-// FIX #6: use addEventListener instead of global window assignment
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[onclick="closeMob()"]').forEach(el => {
     el.removeAttribute('onclick');
     el.addEventListener('click', closeMobileMenu);
   });
 });
-// Keep window.closeMob as fallback for any inline HTML that hasn't been updated yet
 window.closeMob = closeMobileMenu;
 
 // ── THEME TOGGLE ──
