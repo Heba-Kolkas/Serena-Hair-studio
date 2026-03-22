@@ -928,7 +928,8 @@
                     <iframe class="map-frame" title="Studio Serena location map"
                         data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2000.0!2d10.7690!3d59.9308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46416dc1e41e0ebd%3A0x1!2sTorshovgata+5%2C+0476+Oslo!5e0!3m2!1sen!2sno!4v1"
                         allowfullscreen="" loading="lazy"></iframe>
-                      <p style="margin-top:1rem;font-size:0.8rem;color:var(--greige);">Torshovgata 5, Oslo · <a href="mailto:info@studioserena.no" style="color:var(--taupe);text-decoration:none;">info@studioserena.no</a></p>
+                    <p style="margin-top:1rem;font-size:0.8rem;color:var(--greige);">Torshovgata 5, Oslo · <a href="mailto:info@studioserena.no" style="color:var(--taupe);text-decoration:none;">info@studioserena.no</a></p>
+                </div>
             </div>
         </section>
 
@@ -1523,7 +1524,7 @@
                 <div>
                     <p class="footer-col-title" data-en="Contact" data-no="Kontakt">Contact</p>
                     <ul class="footer-links">
-                      <li><a href="mailto:info@studioserena.no" style="color:var(--taupe);text-decoration:none;">info@studioserena.no</a></li>
+                        <li><a href="mailto:info@studioserena.no" style="color:var(--taupe);text-decoration:none;">info@studioserena.no</a></li>
                         <li><a href="javascript:void(0)" onclick="smoothTo('location')">Torshovgata 5, Oslo</a></li>
                     </ul>
                 </div>
@@ -1589,10 +1590,11 @@
             <a href="javascript:void(0)" onclick="smoothTo('team')" class="mob-nav-item" data-en="Team" data-no="Team">Team</a>
             <a href="javascript:void(0)" onclick="smoothTo('testimonials')" class="mob-nav-item" data-en="Reviews" data-no="Anmeldelser">Reviews</a>
             <a href="javascript:void(0)" onclick="smoothTo('location')" class="mob-nav-item" data-en="Location" data-no="Lokasjon">Location</a>
-
+          
         </nav>
 
         <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+          function positionSubNav() {
             var navbar = document.getElementById('navbar');
             var subNav = document.getElementById('mobileBottomNav');
             if (!navbar || !subNav) return;
