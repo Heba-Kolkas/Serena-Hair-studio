@@ -333,6 +333,7 @@ nav.scrolled .hamburger span {
 
 .mobile-menu.open {
   display: flex;
+  pointer-events: all; /* Block touches/clicks from reaching elements behind the overlay */
 }
 
 .mobile-menu a {

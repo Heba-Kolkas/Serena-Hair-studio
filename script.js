@@ -66,26 +66,39 @@ const hamburger = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobileMenu');
 const closeMenu = document.getElementById('closeMenu');
 
+function openMobileMenu() {
+  if (!mobileMenu) return;
+  mobileMenu.classList.add('open');
+  // Prevent the mobile bottom sub-nav from receiving touch/click events
+  // while the menu overlay is open (fixes X button triggering Email link behind it)
+  const subNav = document.getElementById('mobileBottomNav');
+  if (subNav) subNav.style.pointerEvents = 'none';
+}
+
+function closeMobileMenu() {
+  if (!mobileMenu) return;
+  mobileMenu.classList.remove('open');
+  // Restore sub-nav pointer events
+  const subNav = document.getElementById('mobileBottomNav');
+  if (subNav) subNav.style.pointerEvents = '';
+}
+
 if (hamburger && mobileMenu) {
-  hamburger.addEventListener('click', () => mobileMenu.classList.add('open'));
+  hamburger.addEventListener('click', openMobileMenu);
 }
 if (closeMenu && mobileMenu) {
-  closeMenu.addEventListener('click', () => mobileMenu.classList.remove('open'));
+  closeMenu.addEventListener('click', closeMobileMenu);
 }
 
 // FIX #6: use addEventListener instead of global window assignment
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[onclick="closeMob()"]').forEach(el => {
     el.removeAttribute('onclick');
-    el.addEventListener('click', () => {
-      if (mobileMenu) mobileMenu.classList.remove('open');
-    });
+    el.addEventListener('click', closeMobileMenu);
   });
 });
 // Keep window.closeMob as fallback for any inline HTML that hasn't been updated yet
-window.closeMob = function closeMob() {
-  if (mobileMenu) mobileMenu.classList.remove('open');
-};
+window.closeMob = closeMobileMenu;
 
 // ── THEME TOGGLE ──
 const themeBtn = document.getElementById('themeToggle');
