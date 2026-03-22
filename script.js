@@ -64,23 +64,20 @@ window.addEventListener('scroll', () => {
 // ── MOBILE MENU ──
 const hamburger = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobileMenu');
-const closeMenu = document.getElementById('closeMenu');
+const closeMenu  = document.getElementById('closeMenu');
 
 function openMobileMenu() {
   if (!mobileMenu) return;
   mobileMenu.classList.add('open');
-  // Prevent the mobile bottom sub-nav from receiving touch/click events
-  // while the menu overlay is open (fixes X button triggering Email link behind it)
   const subNav = document.getElementById('mobileBottomNav');
-  if (subNav) subNav.style.pointerEvents = 'none';
+  if (subNav) subNav.classList.add('menu-open-hidden');
 }
 
 function closeMobileMenu() {
   if (!mobileMenu) return;
   mobileMenu.classList.remove('open');
-  // Restore sub-nav pointer events
   const subNav = document.getElementById('mobileBottomNav');
-  if (subNav) subNav.style.pointerEvents = '';
+  if (subNav) subNav.classList.remove('menu-open-hidden');
 }
 
 if (hamburger && mobileMenu) {

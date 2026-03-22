@@ -333,7 +333,12 @@ nav.scrolled .hamburger span {
 
 .mobile-menu.open {
   display: flex;
-  pointer-events: all; /* Block touches/clicks from reaching elements behind the overlay */
+}
+
+/* Hide sub-nav completely while mobile menu is open — prevents tap bleed-through */
+#mobileBottomNav.menu-open-hidden {
+  display: none !important;
+  pointer-events: none !important;
 }
 
 .mobile-menu a {
@@ -3246,7 +3251,7 @@ nav.scrolled #scroll-progress {
     position: fixed;
     left: 0;
     right: 0;
-    z-index: 9399;
+    z-index: 9000; /* must be BELOW mobile menu (9001) and close button (9002) */
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
