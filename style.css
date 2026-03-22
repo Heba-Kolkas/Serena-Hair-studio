@@ -324,7 +324,7 @@ nav.scrolled .hamburger span {
   position: fixed;
   inset: 0;
   background: #1e1612;
-  z-index: 9600;
+  z-index: 9001;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -365,7 +365,7 @@ nav.scrolled .hamburger span {
   align-items: center;
   justify-content: center;
   transition: background 0.2s, transform 0.2s;
-  z-index: 9601;
+  z-index: 9002;
 }
 .mobile-menu .close-menu:hover {
   background: rgba(255,255,255,0.18);
@@ -3292,10 +3292,8 @@ nav.scrolled #scroll-progress {
 input, textarea, select {
   font-size: 16px !important;
 }
-/* When mobile menu is open, hide navbar links and subnav so they cant intercept taps */
-body.menu-open #mobileBottomNav,
-body.menu-open .nav-links,
-body.menu-open .nav-controls {
-  visibility: hidden !important;
-  pointer-events: none !important;
+/* Hide navbar and subnav while mobile menu is open */
+body.menu-open #navbar,
+body.menu-open #mobileBottomNav {
+  display: none !important;
 }

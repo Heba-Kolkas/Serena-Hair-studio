@@ -64,14 +64,13 @@ window.addEventListener('scroll', () => {
 // ── MOBILE MENU ──
 const hamburger = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobileMenu');
-const closeMenu  = document.getElementById('closeMenu');
+const closeMenu = document.getElementById('closeMenu');
 
 function openMobileMenu() {
   if (!mobileMenu) return;
   mobileMenu.classList.add('open');
   document.body.classList.add('menu-open');
 }
-
 function closeMobileMenu() {
   if (!mobileMenu) return;
   mobileMenu.classList.remove('open');
