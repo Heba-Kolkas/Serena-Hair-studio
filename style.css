@@ -337,8 +337,9 @@ nav.scrolled .hamburger span {
 
 /* Hide sub-nav completely while mobile menu is open — prevents tap bleed-through */
 #mobileBottomNav.menu-open-hidden {
-  display: none !important;
+  visibility: hidden !important;
   pointer-events: none !important;
+  opacity: 0 !important;
 }
 
 .mobile-menu a {
