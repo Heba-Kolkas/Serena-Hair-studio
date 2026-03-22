@@ -578,22 +578,10 @@ window.closeLightbox = function closeLightbox() {
 document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('lightboxCloseBtn');
   if (closeBtn) {
-    // Stop ALL pointer/mouse/touch events from ever leaving the button
-    ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'click'].forEach(evtName => {
-      closeBtn.addEventListener(evtName, (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        e.preventDefault();
-      }, { capture: true });
-    });
-
-    // Trigger close on pointerdown for instant response
-    closeBtn.addEventListener('pointerdown', (e) => {
+    closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      e.stopImmediatePropagation();
-      e.preventDefault();
       window.closeLightbox();
-    }, { capture: true });
+    });
   }
   // Also close on Escape key
   document.addEventListener('keydown', (e) => {
