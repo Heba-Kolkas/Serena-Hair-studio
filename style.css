@@ -3036,6 +3036,25 @@ nav.scrolled #scroll-progress {
   letter-spacing: 0.08em;
   min-height: 1rem;
 }
+.bc-checkin-btn {
+  margin-top: 1.2rem;
+  padding: 0.6rem 1.4rem;
+  background: transparent;
+  border: 1px solid rgba(181,168,154,0.4);
+  color: var(--taupe, #b5a89a);
+  font-family: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.bc-checkin-btn:hover {
+  background: rgba(181,168,154,0.12);
+  border-color: rgba(181,168,154,0.7);
+  color: #fff;
+}
 @media (max-width: 599px) {
   #black-card-section { padding: 5rem 1.5rem; }
   .bc-card { width: 100%; max-width: 340px; height: 200px; padding: 22px; }
