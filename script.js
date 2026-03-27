@@ -293,6 +293,7 @@ const galleryData = {
     './html/Pics/Farge/Farge4.jpeg',
     './html/Pics/Farge/vid4.mp4',
     './html/Pics/Farge/Farge5.jpeg',
+     './html/Pics/Farge/vid5.mp4',
     './html/Pics/Farge/Farge6.jpeg',
   ],
   Extensions: [
@@ -317,6 +318,8 @@ const galleryData = {
     './html/Pics/Haircut/Haircut1.jpeg',
     './html/Pics/Haircut/Haircut2.jpeg',
     './html/Pics/Haircut/Haircut4.jpeg',
+      './html/Pics/Haircut/vid5.mp4',
+      
   ],
   Styling: [
     './html/Pics/Styling/styling1.jpeg',
