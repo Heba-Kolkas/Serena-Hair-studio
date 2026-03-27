@@ -96,20 +96,15 @@
   }
 }
 </script>
-    <!-- DNS prefetch for external resources -->
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+    <!-- ── EXTERNAL FONTS & ICONS ──
+         Google Fonts and Font Awesome are loaded here under Legitimate Interest (GDPR Art. 6(1)(f))
+         as they are strictly necessary for the site to display correctly.
+         Only Google Maps (third-party tracking embed) requires explicit consent.
+         This is consistent with the privacy policy and standard Norwegian practice. ── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <!-- Fonts — non-blocking -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" /></noscript>
-
-    <!-- Font Awesome — non-blocking -->
-    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" /></noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <link rel="stylesheet" href="./style.css">
     <link rel="manifest" href="./manifest.json" />
@@ -474,21 +469,23 @@
         .cookie-text strong { color: #fff; font-weight: 500; display: block; margin-bottom: 0.3rem; font-size: 0.85rem; }
         .cookie-text a { color: #B5A89A; text-decoration: underline; text-underline-offset: 2px; }
         .cookie-btns { display: flex; gap: 0.75rem; flex-shrink: 0; flex-wrap: wrap; }
-        /* Both buttons intentionally identical weight — required by Norwegian E-Com Act 2025 (equal prominence) */
+        /* ── COOKIE BUTTONS ──
+           CHANGED: Both buttons are now identical in style — same border, same background, same color.
+           WHY: The old design had Accept with a filled gradient and Decline as a faint outline.
+           Norwegian Datatilsynet classifies this as a "dark pattern" — making one option look
+           more appealing than the other to push users toward accepting. This violates GDPR
+           Recital 32 which requires consent to be freely given without manipulation.
+           Both buttons must look exactly the same so the user chooses freely. */
         .cookie-btn-accept, .cookie-btn-decline {
             padding: 0.6rem 1.5rem; border-radius: 50px; font-family: 'Jost', sans-serif;
             font-size: 0.75rem; font-weight: 500; letter-spacing: 0.10em; text-transform: uppercase;
-            cursor: pointer; white-space: nowrap; transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            cursor: pointer; white-space: nowrap; transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            background: transparent;
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.55);
         }
-        .cookie-btn-accept {
-            background: linear-gradient(135deg, #B5A89A, #3f3632); color: #fff; border: none;
-        }
-        .cookie-btn-decline {
-            background: transparent; color: rgba(255,255,255,0.85);
-            border: 1px solid rgba(255,255,255,0.5);
-        }
-        .cookie-btn-accept:hover, .cookie-btn-decline:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+        .cookie-btn-accept:hover, .cookie-btn-decline:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); background: rgba(255,255,255,0.08); }
         .cookie-manage-link {
             display: block; margin-top: 0.5rem; font-size: 0.72rem; color: rgba(255,255,255,0.45);
             text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
@@ -564,8 +561,11 @@
     <!-- ── GDPR COOKIE CONSENT BANNER (Norway E-Com Act §3-15 / GDPR Art. 7) ── -->
     <div id="cookie-banner" role="dialog" aria-modal="true" aria-label="Cookie consent" aria-describedby="cookieBannerDesc">
         <div class="cookie-text" id="cookieBannerDesc">
-            <strong>🍪 We use cookies</strong>
-            This site embeds <strong>Google Maps</strong> (shows our location) and loads <strong>Google Fonts</strong> and <strong>Font Awesome</strong> icons from external servers. These services may send your IP address to Google and Cloudflare. No analytics or advertising cookies are used.
+            <strong>🍪 We use cookies &amp; external services</strong>
+            <!-- CHANGED: Banner text is now more explicit.
+                 WHY: GDPR Art. 13 requires you to clearly tell users what data is collected,
+                 who receives it, and why — before they consent. The old text was too vague. -->
+            This site loads <strong>Google Fonts</strong> and <strong>Font Awesome icons</strong> from external servers (Google &amp; Cloudflare), and embeds <strong>Google Maps</strong> to show our location. These services may send your <strong>IP address</strong> to Google and Cloudflare. We use no analytics or advertising cookies. You can withdraw consent at any time via "Manage Cookies" in the footer.
             &nbsp;<a href="./privacy-policy.html">Privacy Policy</a> &nbsp;·&nbsp;
             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy</a>
         </div>
@@ -1608,9 +1608,12 @@
           
         </nav>
 
-        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        <!-- CHANGED: Removed Cloudflare email obfuscation script and replaced encoded email with plain text.
+             WHY: Cloudflare's email protection script was encoding info@studioserena.no into
+             [email protected] which looked broken and unprofessional. Plain mailto links
+             work perfectly and do not require any external script. -->
+        <script>
           function positionSubNav() {
-            var navbar = document.getElementById('navbar');
             var subNav = document.getElementById('mobileBottomNav');
             if (!navbar || !subNav) return;
             if (window.innerWidth > 900) {
@@ -1636,25 +1639,25 @@
 
         <script src="./script.js" defer></script>
 
-        
         <!-- ── GDPR COOKIE CONSENT LOGIC ──
              Norway E-Com Act §3-15 / GDPR Art. 4(11), 7 & Recital 32 compliance:
-             · Consent is freely given, specific, informed and unambiguous
-             · Accept and Decline are equal in visual prominence
-             · Consent timestamp is stored for audit purposes
-             · Users can withdraw consent at any time via "Manage Cookies" footer link
+             · Google Fonts & Font Awesome loaded under Legitimate Interest (site display)
+             · Google Maps blocked until explicit consent — it embeds third-party tracking
+             · Accept and Decline buttons are EQUAL in visual prominence (no dark patterns)
+             · Consent timestamp stored for audit purposes (GDPR Art. 7)
+             · Banner shown immediately on first visit
+             · Users can withdraw consent anytime via "Manage Cookies" footer link (GDPR Art. 7(3))
         ── -->
         <script>
         (function() {
-            var CONSENT_KEY = 'ss_cookie_consent';
+            var CONSENT_KEY    = 'ss_cookie_consent';
             var CONSENT_TS_KEY = 'ss_cookie_consent_ts';
             var banner  = document.getElementById('cookie-banner');
             var consent = null;
             try { consent = localStorage.getItem(CONSENT_KEY); } catch(e) {}
 
-            // Show banner only if user hasn't chosen yet
             if (!consent) {
-                setTimeout(function() { if (banner) banner.classList.add('visible'); }, 1400);
+                if (banner) banner.classList.add('visible');
             } else if (consent === 'accepted') {
                 loadMap();
             } else if (consent === 'declined') {
@@ -1667,7 +1670,7 @@
             if (btnAccept) btnAccept.addEventListener('click', function() {
                 try {
                     localStorage.setItem(CONSENT_KEY, 'accepted');
-                    localStorage.setItem(CONSENT_TS_KEY, new Date().toISOString()); // audit timestamp
+                    localStorage.setItem(CONSENT_TS_KEY, new Date().toISOString());
                 } catch(e) {}
                 if (banner) banner.classList.remove('visible');
                 loadMap();
@@ -1676,36 +1679,23 @@
             if (btnDecline) btnDecline.addEventListener('click', function() {
                 try {
                     localStorage.setItem(CONSENT_KEY, 'declined');
-                    localStorage.setItem(CONSENT_TS_KEY, new Date().toISOString()); // audit timestamp
+                    localStorage.setItem(CONSENT_TS_KEY, new Date().toISOString());
                 } catch(e) {}
                 if (banner) banner.classList.remove('visible');
                 showMapBlocked();
             });
 
-            // "Manage Cookies" footer button — allows withdrawal of consent at any time
-            // Required by GDPR Art. 7(3): withdrawal must be as easy as giving consent
+            // "Manage Cookies" footer — lets users withdraw consent at any time
+            // Required by GDPR Art. 7(3)
             document.addEventListener('DOMContentLoaded', function() {
                 var manageBtn = document.getElementById('manageCookiesFooter');
                 if (manageBtn) {
                     manageBtn.addEventListener('click', function() {
-                        // Clear stored choice so banner re-appears as a fresh decision
                         try {
                             localStorage.removeItem(CONSENT_KEY);
                             localStorage.removeItem(CONSENT_TS_KEY);
                         } catch(e) {}
-                        // If map was loaded, reload the page so the iframe is reset to data-src
-                        var iframe = document.querySelector('.map-frame');
-                        if (iframe && iframe.src && iframe.src !== '') {
-                            window.location.reload();
-                            return;
-                        }
-                        // Remove any blocked placeholder so it refreshes cleanly
-                        var ph = document.getElementById('map-blocked-placeholder');
-                        if (ph) ph.remove();
-                        // Re-show the consent banner
-                        if (banner) {
-                            setTimeout(function() { banner.classList.add('visible'); }, 100);
-                        }
+                        window.location.reload();
                     });
                 }
             });
@@ -1734,11 +1724,11 @@
                 var enableBtn = document.getElementById('mapEnableBtn');
                 if (enableBtn) {
                     enableBtn.addEventListener('click', function() {
-                        if (banner) {
-                            try { localStorage.removeItem(CONSENT_KEY); } catch(e) {}
-                            ph.remove();
-                            setTimeout(function() { banner.classList.add('visible'); }, 100);
-                        }
+                        try {
+                            localStorage.setItem(CONSENT_KEY, 'accepted');
+                            localStorage.setItem(CONSENT_TS_KEY, new Date().toISOString());
+                        } catch(e) {}
+                        loadMap();
                     });
                 }
             }
