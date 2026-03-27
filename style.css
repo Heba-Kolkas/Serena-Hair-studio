@@ -2943,7 +2943,7 @@ nav.scrolled #scroll-progress {
 .bc-logo-text {
   font-family: var(--font-display);
   font-size: 1.1rem;
-  color: rgba(250,248,245,0.88);
+  color: rgba(225, 222, 218, 0.88);
   letter-spacing: 0.18em;
 }
 .bc-chip-el {
@@ -3053,7 +3053,7 @@ nav.scrolled #scroll-progress {
 .bc-checkin-btn:hover {
   background: rgba(181,168,154,0.12);
   border-color: rgba(181,168,154,0.7);
-  color: #cbb5b5;
+  color: #c1a8a8;
 }
 @media (max-width: 599px) {
   #black-card-section { padding: 5rem 1.5rem; }
