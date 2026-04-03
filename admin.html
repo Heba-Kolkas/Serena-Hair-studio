@@ -629,6 +629,20 @@
 
       const total = stagedFiles.length;
       let done = 0;
+      const startTime = Date.now();
+
+      function updateProgress(done, total) {
+        const pct = ((done / total) * 100).toFixed(1);
+        progressBar.style.width = pct + '%';
+        if (done > 0) {
+          const elapsed = (Date.now() - startTime) / 1000;
+          const rate    = done / elapsed;
+          const remaining = Math.ceil((total - done) / rate);
+          progressLbl.textContent = `Uploading ${done + 1} of ${total} — ~${remaining}s left`;
+        } else {
+          progressLbl.textContent = `Uploading ${done + 1} of ${total}…`;
+        }
+      }
 
       try {
         for (const item of stagedFiles) {
@@ -636,8 +650,7 @@
           const ext       = isVid ? item.file.name.split('.').pop() : 'jpg';
           const safeName  = `${selectedCategory}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-          progressLbl.textContent  = `Uploading ${done + 1} of ${total}…`;
-          progressBar.style.width  = ((done / total) * 100).toFixed(1) + '%';
+          updateProgress(done, total);
 
           // Compress images before upload (videos uploaded as-is)
           const uploadFile = isVid ? item.file : await compressImage(item.file);
@@ -655,18 +668,20 @@
             .getPublicUrl(safeName);
 
           // Save record to database
-          const { error: dbErr } = await supabase
+          const { error: dbErr, data: dbData } = await supabase
             .from('gallery_media')
             .insert({
               category:     selectedCategory,
               url:          urlData.publicUrl,
               storage_path: safeName,
               type:         item.file.type.startsWith('video/') ? 'video' : 'image'
-            });
-          if (dbErr) throw new Error(dbErr.message);
+            })
+            .select();
+          if (dbErr) throw new Error('DB: ' + dbErr.message + ' | code: ' + dbErr.code);
 
           done++;
           progressBar.style.width = ((done / total) * 100).toFixed(1) + '%';
+          updateProgress(done, total);
         }
 
         progressBar.style.width  = '100%';
