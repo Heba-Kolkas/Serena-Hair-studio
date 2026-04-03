@@ -412,39 +412,53 @@ nav.scrolled .hamburger span {
 }
 
 .hero-eyebrow {
-  font-size: 0.65rem;
-  letter-spacing: 0.5em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.55em;
   text-transform: uppercase;
-  color: var(--taupe);
-  margin-bottom: 1.5rem;
+  color: var(--gold);
+  margin-bottom: 2rem;
   opacity: 0;
   animation: fadeUp 1s 2s forwards;
+}
+.hero-eyebrow::before,
+.hero-eyebrow::after {
+  content: '';
+  display: inline-block;
+  width: 36px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.7;
 }
 
 .hero-title {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 8vw, 9rem);
+  font-size: clamp(3.5rem, 9vw, 10rem);
   font-weight: 300;
-  line-height: 0.92;
-  letter-spacing: 0.02em;
-  margin-bottom: 0.3rem;
+  line-height: 0.88;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.5rem;
   opacity: 0;
   animation: fadeUp 1s 2.2s forwards;
+  text-shadow: 0 2px 40px rgba(44,36,32,0.3);
 }
 
 .hero-title em {
   font-style: italic;
-  color: var(--taupe);
+  color: var(--gold);
+  font-weight: 300;
 }
 
 .hero-sub {
   font-family: var(--font-display);
-  font-size: clamp(1.2rem, 3vw, 2.2rem);
+  font-size: clamp(1rem, 2.5vw, 1.7rem);
   font-weight: 300;
   font-style: italic;
-  letter-spacing: 0.15em;
-  color: var(--warmgrey);
-  margin-bottom: 2.5rem;
+  letter-spacing: 0.25em;
+  color: rgba(250,248,245,0.75);
+  margin-bottom: 3rem;
   opacity: 0;
   animation: fadeUp 1s 2.4s forwards;
 }
@@ -459,39 +473,45 @@ nav.scrolled .hamburger span {
 }
 
 .btn-primary {
-  padding: 1rem 2.5rem;
-  background: var(--taupe);
-  color: var(--cream);
+  padding: 0.9rem 2.4rem;
+  background: linear-gradient(135deg, var(--gold), #a8844e);
+  color: #fff;
   font-family: var(--font-body);
-  font-size: 0.7rem;
-  letter-spacing: 0.25em;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   text-decoration: none;
   border: none;
+  border-radius: 50px;
   cursor: pointer;
-  transition: all 0.4s ease;
+  transition: all 0.35s ease;
+  box-shadow: 0 4px 20px rgba(201,169,110,0.35);
 }
 
 .btn-primary:hover {
-  background: var(--espresso);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(201,169,110,0.5);
+  background: linear-gradient(135deg, #d4b87a, var(--gold));
 }
 
 .btn-outline {
-  padding: 1rem 2.5rem;
+  padding: 0.9rem 2.4rem;
   background: transparent;
   color: var(--cream);
   font-family: var(--font-body);
-  font-size: 0.7rem;
-  letter-spacing: 0.25em;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  transition: all 0.4s ease;
+  border: 1px solid rgba(201,169,110,0.6);
+  border-radius: 50px;
+  transition: all 0.35s ease;
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--cream);
+  background: rgba(201,169,110,0.12);
+  border-color: var(--gold);
+  transform: translateY(-2px);
 }
 
 .hero-scroll {
