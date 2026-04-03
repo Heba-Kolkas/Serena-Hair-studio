@@ -352,8 +352,8 @@ const galleryData = {
   ]
 };
 
-// ── CLOUD GALLERY MERGE (Supabase) ──
-// Fetches admin-uploaded media for every category and prepends URLs to galleryData.
+// ── CLOUD GALLERY MERGE (Supabase Storage) ──
+// Lists files directly from the storage bucket for each category.
 // Falls back silently if Supabase is not reachable.
 (async function loadCloudGallery() {
   try {
@@ -361,17 +361,24 @@ const galleryData = {
     const { SUPABASE_URL, SUPABASE_ANON } = await import('./supabase-config.js');
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    const { data } = await supabase
-      .from('gallery_media')
-      .select('category, url, type')
-      .order('uploaded_at', { ascending: false });
+    const CATEGORIES = ['Balayage','Farge','HairTreatment','Extensions','Haircut','Styling','Brides'];
 
-    if (!data || data.length === 0) return;
+    await Promise.all(CATEGORIES.map(async cat => {
+      const { data } = await supabase.storage
+        .from('gallery')
+        .list(cat, { sortBy: { column: 'created_at', order: 'desc' } });
 
-    data.forEach(row => {
-      if (!galleryData[row.category]) return;
-      galleryData[row.category].unshift(row.url);
-    });
+      if (!data || data.length === 0) return;
+
+      const urls = data.map(file => {
+        const { data: urlData } = supabase.storage
+          .from('gallery')
+          .getPublicUrl(`${cat}/${file.name}`);
+        return urlData.publicUrl;
+      });
+
+      galleryData[cat] = [...urls, ...(galleryData[cat] || [])];
+    }));
   } catch (_) { /* static gallery still works */ }
 })();
 

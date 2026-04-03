@@ -656,28 +656,11 @@
           const uploadFile = isVid ? item.file : await compressImage(item.file);
           const mimeType   = isVid ? item.file.type : 'image/jpeg';
 
-          // Upload file to Supabase Storage
+          // Upload file to Supabase Storage (no database needed)
           const { error: upErr } = await supabase.storage
             .from('gallery')
             .upload(safeName, uploadFile, { upsert: false, contentType: mimeType });
           if (upErr) throw new Error(upErr.message);
-
-          // Get public URL
-          const { data: urlData } = supabase.storage
-            .from('gallery')
-            .getPublicUrl(safeName);
-
-          // Save record to database
-          const { error: dbErr, data: dbData } = await supabase
-            .from('gallery_media')
-            .insert({
-              category:     selectedCategory,
-              url:          urlData.publicUrl,
-              storage_path: safeName,
-              type:         item.file.type.startsWith('video/') ? 'video' : 'image'
-            })
-            .select();
-          if (dbErr) throw new Error('DB: ' + dbErr.message + ' | code: ' + dbErr.code);
 
           done++;
           progressBar.style.width = ((done / total) * 100).toFixed(1) + '%';
@@ -701,11 +684,9 @@
     // ── LOAD EXISTING MEDIA ──
     async function loadExisting(cat) {
       existingGrid.innerHTML = '<p class="existing-empty">Loading…</p>';
-      const { data, error } = await supabase
-        .from('gallery_media')
-        .select('*')
-        .eq('category', cat)
-        .order('uploaded_at', { ascending: false });
+      const { data, error } = await supabase.storage
+        .from('gallery')
+        .list(cat, { sortBy: { column: 'created_at', order: 'desc' } });
 
       if (error) {
         existingGrid.innerHTML = `<p class="existing-empty" style="color:#c0392b">Error: ${error.message}</p>`;
@@ -717,13 +698,17 @@
       }
 
       existingGrid.innerHTML = '';
-      data.forEach(row => {
+      data.forEach(file => {
+        const storagePath = `${cat}/${file.name}`;
+        const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(storagePath);
+        const url   = urlData.publicUrl;
+        const isVid = /\.(mp4|mov|webm)$/i.test(file.name);
+
         const div   = document.createElement('div');
         div.className = 'existing-item';
 
-        const isVid = row.type === 'video';
         const media = document.createElement(isVid ? 'video' : 'img');
-        media.src   = row.url;
+        media.src   = url;
         if (isVid) { media.muted = true; media.loop = true; }
 
         const delBtn = document.createElement('button');
@@ -732,10 +717,7 @@
         delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
         delBtn.addEventListener('click', async () => {
           if (!confirm('Delete this item? This cannot be undone.')) return;
-          // Delete from storage
-          await supabase.storage.from('gallery').remove([row.storage_path]);
-          // Delete from database
-          await supabase.from('gallery_media').delete().eq('id', row.id);
+          await supabase.storage.from('gallery').remove([storagePath]);
           div.remove();
         });
 
