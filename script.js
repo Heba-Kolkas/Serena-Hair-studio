@@ -352,31 +352,33 @@ const galleryData = {
   ]
 };
 
-// ── CLOUD GALLERY MERGE (Supabase Storage) ──
-// Lists files directly from the storage bucket for each category.
-// Falls back silently if Supabase is not reachable.
+// ── CLOUD GALLERY MERGE (Supabase Storage REST API) ──
 (async function loadCloudGallery() {
   try {
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm');
-    const { SUPABASE_URL, SUPABASE_ANON } = await import('./supabase-config.js');
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
-
-    const CATEGORIES = ['Balayage','Farge','HairTreatment','Extensions','Haircut','Styling','Brides'];
+    const SUPABASE_URL  = 'https://drejwxijygwwhnfpgxvl.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyZWp3eGlqeWd3d2huZnBneHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMDg0MjIsImV4cCI6MjA5MDc4NDQyMn0.1MJxo7D2WlX9jcvuVzgYm-A1qKqh26o1tJ827rvUaro';
+    const CATEGORIES    = ['Balayage','Farge','HairTreatment','Extensions','Haircut','Styling','Brides'];
 
     await Promise.all(CATEGORIES.map(async cat => {
-      const { data } = await supabase.storage
-        .from('gallery')
-        .list(cat, { sortBy: { column: 'created_at', order: 'desc' } });
+      const res = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/list/gallery`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prefix: cat + '/', limit: 200, offset: 0 })
+        }
+      );
+      if (!res.ok) return;
+      const files = await res.json();
+      if (!Array.isArray(files) || files.length === 0) return;
 
-      if (!data || data.length === 0) return;
-
-      const urls = data.map(file => {
-        const { data: urlData } = supabase.storage
-          .from('gallery')
-          .getPublicUrl(`${cat}/${file.name}`);
-        return urlData.publicUrl;
-      });
-
+      const urls = files.map(f =>
+        `${SUPABASE_URL}/storage/v1/object/public/gallery/${cat}/${f.name}`
+      );
       galleryData[cat] = [...urls, ...(galleryData[cat] || [])];
     }));
   } catch (_) { /* static gallery still works */ }
