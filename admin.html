@@ -62,6 +62,7 @@
       border-radius: 50px;
       cursor: pointer;
       transition: background 0.2s;
+      display: none;
     }
     #btn-logout:hover { background: rgba(255,255,255,0.12); }
 
@@ -281,15 +282,8 @@
     #btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* ── PROGRESS ── */
-    #upload-progress-wrap {
-      margin-top: 1.2rem;
-      display: none;
-    }
-    #upload-progress-label {
-      font-size: 0.78rem;
-      color: var(--greige);
-      margin-bottom: 0.4rem;
-    }
+    #upload-progress-wrap { margin-top: 1.2rem; display: none; }
+    #upload-progress-label { font-size: 0.78rem; color: var(--greige); margin-bottom: 0.4rem; }
     #upload-progress-bar-track {
       height: 4px;
       background: var(--warmgrey);
@@ -304,12 +298,8 @@
       transition: width 0.3s;
     }
 
-    /* ── STATUS MESSAGE ── */
-    #upload-status {
-      margin-top: 1rem;
-      font-size: 0.82rem;
-      min-height: 1.2em;
-    }
+    /* ── STATUS ── */
+    #upload-status { margin-top: 1rem; font-size: 0.82rem; min-height: 1.2em; }
     #upload-status.success { color: #27ae60; }
     #upload-status.error   { color: #c0392b; }
 
@@ -360,15 +350,15 @@
       font-size: 0.85rem;
       text-align: center;
       padding: 2rem;
+      grid-column: 1/-1;
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP BAR -->
   <header class="admin-topbar">
     <div class="admin-topbar-logo">Studio <span>Serena</span> — Admin</div>
-    <button id="btn-logout" style="display:none"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+    <button id="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
   </header>
 
   <!-- AUTH SCREEN -->
@@ -389,12 +379,11 @@
     </div>
   </div>
 
-  <!-- ADMIN PANEL (shown after login) -->
+  <!-- ADMIN PANEL -->
   <div id="admin-panel">
     <h1 class="admin-title">Gallery Manager</h1>
     <p class="admin-subtitle">Upload photos &amp; videos to any category. Changes appear on the site immediately.</p>
 
-    <!-- CATEGORY TABS -->
     <div class="cat-tabs" id="cat-tabs">
       <button class="cat-tab active" data-cat="Balayage">Balayage</button>
       <button class="cat-tab" data-cat="Farge">Colour</button>
@@ -405,51 +394,32 @@
       <button class="cat-tab" data-cat="Brides">Bridal</button>
     </div>
 
-    <!-- UPLOAD CARD -->
     <div class="upload-card">
       <h2>Upload to <em id="active-cat-label">Balayage</em></h2>
-
       <div class="drop-zone" id="drop-zone">
         <i class="fa-solid fa-cloud-arrow-up"></i>
         <p><strong>Drag &amp; drop files here</strong><br>or click to browse<br><br>Accepted: JPG, PNG, WEBP, MP4, MOV</p>
       </div>
       <input type="file" id="file-input" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" />
-
       <div id="preview-grid"></div>
-
       <button id="btn-upload" disabled><i class="fa-solid fa-upload"></i> Upload Files</button>
-
       <div id="upload-progress-wrap">
         <div id="upload-progress-label">Uploading…</div>
-        <div id="upload-progress-bar-track">
-          <div id="upload-progress-bar"></div>
-        </div>
+        <div id="upload-progress-bar-track"><div id="upload-progress-bar"></div></div>
       </div>
       <div id="upload-status"></div>
     </div>
 
-    <!-- EXISTING MEDIA -->
     <div class="existing-card">
-      <h2>Existing Cloud Media — <em id="existing-cat-label">Balayage</em></h2>
+      <h2>Existing Media — <em id="existing-cat-label">Balayage</em></h2>
       <div id="existing-grid"><p class="existing-empty">Loading…</p></div>
     </div>
   </div>
 
-  <!-- FIREBASE (Auth + Firestore) + SUPABASE (Storage) -->
   <script type="module">
-    import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-                                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp }
-                                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-    import { createClient }                         from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-    import { firebaseConfig }                       from './firebase-config.js';
-    import { SUPABASE_URL, SUPABASE_ANON }          from './supabase-config.js';
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { SUPABASE_URL, SUPABASE_ANON } from './supabase-config.js';
 
-    // ── INIT ──
-    const app      = initializeApp(firebaseConfig);
-    const auth     = getAuth(app);
-    const db       = getFirestore(app);
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
     // ── ELEMENTS ──
@@ -473,26 +443,34 @@
     const existingLbl  = document.getElementById('existing-cat-label');
 
     let selectedCategory = 'Balayage';
-    let stagedFiles = [];   // { file, objectURL }
+    let stagedFiles = [];
 
     const catLabels = {
       Balayage: 'Balayage', Farge: 'Colour', HairTreatment: 'Keratin Treatment',
       Extensions: 'Extensions', Haircut: 'Cut & Style', Styling: 'Styling', Brides: 'Bridal'
     };
 
-    // ── AUTH STATE ──
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        authScreen.style.display  = 'none';
-        adminPanel.style.display  = 'block';
-        btnLogout.style.display   = 'inline-flex';
-        loadExisting(selectedCategory);
-      } else {
-        authScreen.style.display  = 'flex';
-        adminPanel.style.display  = 'none';
-        btnLogout.style.display   = 'none';
-      }
+    // ── CHECK SESSION ON LOAD ──
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) showPanel();
+    else showAuth();
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) showPanel();
+      else showAuth();
     });
+
+    function showPanel() {
+      authScreen.style.display = 'none';
+      adminPanel.style.display = 'block';
+      btnLogout.style.display  = 'inline-flex';
+      loadExisting(selectedCategory);
+    }
+    function showAuth() {
+      authScreen.style.display = 'flex';
+      adminPanel.style.display = 'none';
+      btnLogout.style.display  = 'none';
+    }
 
     // ── LOGIN ──
     btnLogin.addEventListener('click', async () => {
@@ -501,18 +479,14 @@
       const pass  = passInput.value;
       if (!email || !pass) { authError.textContent = 'Please enter email and password.'; return; }
       btnLogin.disabled = true;
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch (e) {
-        authError.textContent = 'Invalid email or password.';
-      } finally {
-        btnLogin.disabled = false;
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (error) authError.textContent = 'Invalid email or password.';
+      btnLogin.disabled = false;
     });
     passInput.addEventListener('keydown', e => { if (e.key === 'Enter') btnLogin.click(); });
 
     // ── LOGOUT ──
-    btnLogout.addEventListener('click', () => signOut(auth));
+    btnLogout.addEventListener('click', () => supabase.auth.signOut());
 
     // ── CATEGORY TABS ──
     document.getElementById('cat-tabs').addEventListener('click', e => {
@@ -553,15 +527,15 @@
     function renderPreviews() {
       previewGrid.innerHTML = '';
       stagedFiles.forEach((item, idx) => {
-        const div  = document.createElement('div');
+        const div   = document.createElement('div');
         div.className = 'preview-item';
         const isVid = item.file.type.startsWith('video/');
         const media = document.createElement(isVid ? 'video' : 'img');
-        media.src = item.objectURL;
+        media.src   = item.objectURL;
         if (isVid) { media.muted = true; media.loop = true; media.autoplay = true; }
 
         const badge = document.createElement('span');
-        badge.className = 'file-badge';
+        badge.className   = 'file-badge';
         badge.textContent = isVid ? 'video' : 'photo';
 
         const rm = document.createElement('button');
@@ -593,101 +567,106 @@
     // ── UPLOAD ──
     btnUpload.addEventListener('click', async () => {
       if (stagedFiles.length === 0) return;
-      btnUpload.disabled  = true;
+      btnUpload.disabled = true;
       progressWrap.style.display = 'block';
       statusEl.textContent = '';
       statusEl.className = '';
 
       const total = stagedFiles.length;
-      let done  = 0;
+      let done = 0;
 
-      for (const item of stagedFiles) {
-        const ext       = item.file.name.split('.').pop();
-        const safeName  = `${selectedCategory}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      try {
+        for (const item of stagedFiles) {
+          const ext        = item.file.name.split('.').pop();
+          const safeName   = `${selectedCategory}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-        progressLbl.textContent = `Uploading ${done + 1} of ${total}…`;
-        progressBar.style.width = ((done / total) * 100).toFixed(1) + '%';
+          progressLbl.textContent  = `Uploading ${done + 1} of ${total}…`;
+          progressBar.style.width  = ((done / total) * 100).toFixed(1) + '%';
 
-        // Upload to Supabase Storage
-        const { error: upErr } = await supabase.storage
-          .from('gallery')
-          .upload(safeName, item.file, { upsert: false });
+          // Upload file to Supabase Storage
+          const { error: upErr } = await supabase.storage
+            .from('gallery')
+            .upload(safeName, item.file, { upsert: false });
+          if (upErr) throw new Error(upErr.message);
 
-        if (upErr) throw new Error(upErr.message);
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from('gallery')
+            .getPublicUrl(safeName);
 
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('gallery')
-          .getPublicUrl(safeName);
+          // Save record to database
+          const { error: dbErr } = await supabase
+            .from('gallery_media')
+            .insert({
+              category:     selectedCategory,
+              url:          urlData.publicUrl,
+              storage_path: safeName,
+              type:         item.file.type.startsWith('video/') ? 'video' : 'image'
+            });
+          if (dbErr) throw new Error(dbErr.message);
 
-        const url = urlData.publicUrl;
+          done++;
+          progressBar.style.width = ((done / total) * 100).toFixed(1) + '%';
+        }
 
-        // Save URL to Firestore
-        await addDoc(collection(db, 'gallery', selectedCategory, 'media'), {
-          url,
-          storagePath: safeName,
-          type: item.file.type.startsWith('video/') ? 'video' : 'image',
-          uploadedAt: serverTimestamp()
-        });
+        progressBar.style.width  = '100%';
+        progressLbl.textContent  = 'Done!';
+        statusEl.textContent     = `✓ ${total} file${total > 1 ? 's' : ''} uploaded to ${catLabels[selectedCategory]}.`;
+        statusEl.className       = 'success';
+        clearStaged();
+        loadExisting(selectedCategory);
 
-        done++;
-        progressBar.style.width = ((done / total) * 100).toFixed(1) + '%';
+      } catch (err) {
+        statusEl.textContent = '✕ Upload failed: ' + err.message;
+        statusEl.className   = 'error';
+        btnUpload.disabled   = false;
       }
-
-      progressBar.style.width = '100%';
-      progressLbl.textContent = 'Done!';
-      statusEl.textContent = `✓ ${total} file${total > 1 ? 's' : ''} uploaded to ${catLabels[selectedCategory]}.`;
-      statusEl.className = 'success';
-
-      clearStaged();
-      loadExisting(selectedCategory);
     });
 
-    // ── LOAD EXISTING CLOUD MEDIA ──
+    // ── LOAD EXISTING MEDIA ──
     async function loadExisting(cat) {
       existingGrid.innerHTML = '<p class="existing-empty">Loading…</p>';
-      try {
-        const snap = await getDocs(collection(db, 'gallery', cat, 'media'));
-        if (snap.empty) {
-          existingGrid.innerHTML = '<p class="existing-empty">No cloud media yet for this category.</p>';
-          return;
-        }
-        existingGrid.innerHTML = '';
-        snap.forEach(docSnap => {
-          const data = docSnap.data();
-          const div  = document.createElement('div');
-          div.className = 'existing-item';
+      const { data, error } = await supabase
+        .from('gallery_media')
+        .select('*')
+        .eq('category', cat)
+        .order('uploaded_at', { ascending: false });
 
-          const isVid = data.type === 'video';
-          const media = document.createElement(isVid ? 'video' : 'img');
-          media.src = data.url;
-          if (isVid) { media.muted = true; media.loop = true; }
-
-          const delBtn = document.createElement('button');
-          delBtn.className = 'del-btn';
-          delBtn.title = 'Delete';
-          delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-          delBtn.addEventListener('click', async () => {
-            if (!confirm('Delete this item? This cannot be undone.')) return;
-            try {
-              // Delete from Supabase Storage
-              if (data.storagePath) {
-                await supabase.storage.from('gallery').remove([data.storagePath]);
-              }
-              // Delete from Firestore
-              await deleteDoc(doc(db, 'gallery', cat, 'media', docSnap.id));
-              div.remove();
-            } catch (err) {
-              alert('Delete failed: ' + err.message);
-            }
-          });
-
-          div.append(media, delBtn);
-          existingGrid.appendChild(div);
-        });
-      } catch (err) {
-        existingGrid.innerHTML = `<p class="existing-empty" style="color:#c0392b">Error loading media: ${err.message}</p>`;
+      if (error) {
+        existingGrid.innerHTML = `<p class="existing-empty" style="color:#c0392b">Error: ${error.message}</p>`;
+        return;
       }
+      if (!data || data.length === 0) {
+        existingGrid.innerHTML = '<p class="existing-empty">No cloud media yet for this category.</p>';
+        return;
+      }
+
+      existingGrid.innerHTML = '';
+      data.forEach(row => {
+        const div   = document.createElement('div');
+        div.className = 'existing-item';
+
+        const isVid = row.type === 'video';
+        const media = document.createElement(isVid ? 'video' : 'img');
+        media.src   = row.url;
+        if (isVid) { media.muted = true; media.loop = true; }
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'del-btn';
+        delBtn.title     = 'Delete';
+        delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        delBtn.addEventListener('click', async () => {
+          if (!confirm('Delete this item? This cannot be undone.')) return;
+          // Delete from storage
+          await supabase.storage.from('gallery').remove([row.storage_path]);
+          // Delete from database
+          await supabase.from('gallery_media').delete().eq('id', row.id);
+          div.remove();
+        });
+
+        div.append(media, delBtn);
+        existingGrid.appendChild(div);
+      });
     }
   </script>
 

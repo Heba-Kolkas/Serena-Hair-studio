@@ -352,32 +352,27 @@ const galleryData = {
   ]
 };
 
-// ── CLOUD GALLERY MERGE (Firebase Firestore) ──
+// ── CLOUD GALLERY MERGE (Supabase) ──
 // Fetches admin-uploaded media for every category and prepends URLs to galleryData.
-// Falls back silently if Firebase is not configured yet.
-(function loadCloudGallery() {
-  const CATEGORIES = ['Balayage','Farge','HairTreatment','Extensions','Haircut','Styling','Brides'];
+// Falls back silently if Supabase is not reachable.
+(async function loadCloudGallery() {
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+    const { SUPABASE_URL, SUPABASE_ANON } = await import('./supabase-config.js');
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-  // Only runs if firebase-config.js is present (loaded as <script type="module"> in index.html)
-  if (!window.__firebaseApp) return;
+    const { data } = await supabase
+      .from('gallery_media')
+      .select('category, url, type')
+      .order('uploaded_at', { ascending: false });
 
-  Promise.all(
-    CATEGORIES.map(cat =>
-      window.__firestoreGetDocs(
-        window.__firestoreCollection(window.__firebaseDb, 'gallery', cat, 'media')
-      ).then(snap => ({ cat, snap }))
-    )
-  ).then(results => {
-    results.forEach(({ cat, snap }) => {
-      const cloudURLs = [];
-      snap.forEach(d => {
-        if (d.data().url) cloudURLs.push(d.data().url);
-      });
-      if (cloudURLs.length) {
-        galleryData[cat] = [...cloudURLs, ...(galleryData[cat] || [])];
-      }
+    if (!data || data.length === 0) return;
+
+    data.forEach(row => {
+      if (!galleryData[row.category]) return;
+      galleryData[row.category].unshift(row.url);
     });
-  }).catch(() => { /* Firebase not configured — static gallery still works */ });
+  } catch (_) { /* static gallery still works */ }
 })();
 
 // ── LIGHTBOX VIDEO SYSTEM ──
