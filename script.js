@@ -216,6 +216,8 @@ document.querySelectorAll('.svc-row').forEach(row => {
 });
 
 // ── GALLERY LIGHTBOX ──
+// galleryData holds the static (local) files.
+// Cloud images uploaded via admin.html are fetched from Firestore and prepended at runtime.
 const galleryData = {
   Balayage: [
     './html/Pics/Balayage/Balayage1.jpeg',
@@ -349,6 +351,34 @@ const galleryData = {
     './html/Pics/Treatment/Ht10.mp4',
   ]
 };
+
+// ── CLOUD GALLERY MERGE (Firebase Firestore) ──
+// Fetches admin-uploaded media for every category and prepends URLs to galleryData.
+// Falls back silently if Firebase is not configured yet.
+(function loadCloudGallery() {
+  const CATEGORIES = ['Balayage','Farge','HairTreatment','Extensions','Haircut','Styling','Brides'];
+
+  // Only runs if firebase-config.js is present (loaded as <script type="module"> in index.html)
+  if (!window.__firebaseApp) return;
+
+  Promise.all(
+    CATEGORIES.map(cat =>
+      window.__firestoreGetDocs(
+        window.__firestoreCollection(window.__firebaseDb, 'gallery', cat, 'media')
+      ).then(snap => ({ cat, snap }))
+    )
+  ).then(results => {
+    results.forEach(({ cat, snap }) => {
+      const cloudURLs = [];
+      snap.forEach(d => {
+        if (d.data().url) cloudURLs.push(d.data().url);
+      });
+      if (cloudURLs.length) {
+        galleryData[cat] = [...cloudURLs, ...(galleryData[cat] || [])];
+      }
+    });
+  }).catch(() => { /* Firebase not configured — static gallery still works */ });
+})();
 
 // ── LIGHTBOX VIDEO SYSTEM ──
 // IntersectionObserver only used for videos scrolled out of view (bandwidth saving)

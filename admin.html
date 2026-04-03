@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Studio Serena</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --cream:    #faf8f5;
+      --linen:    #fff7f7;
+      --warmgrey: #E0D8CF;
+      --taupe:    #B5A89A;
+      --greige:   #9f948e;
+      --espresso: #3f3632;
+      --gold:     #C9A96E;
+      --font-display: 'Cormorant Garamond', serif;
+      --font-body:    'Jost', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--cream);
+      color: var(--espresso);
+      font-family: var(--font-body);
+      min-height: 100vh;
+    }
+
+    /* ── TOPBAR ── */
+    .admin-topbar {
+      background: var(--espresso);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-topbar-logo {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: 0.06em;
+    }
+    .admin-topbar-logo span { color: var(--gold); }
+    #btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #btn-logout:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── AUTH SCREEN ── */
+    #auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 56px);
+      padding: 2rem;
+    }
+    .auth-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 8px 40px rgba(63,54,50,0.12);
+      text-align: center;
+    }
+    .auth-card h1 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 400;
+      margin-bottom: 0.3rem;
+    }
+    .auth-card p {
+      font-size: 0.82rem;
+      color: var(--greige);
+      margin-bottom: 2rem;
+      letter-spacing: 0.04em;
+    }
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      text-align: left;
+      margin-bottom: 1.2rem;
+    }
+    .auth-field label {
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--greige);
+    }
+    .auth-field input {
+      border: 1px solid var(--warmgrey);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--espresso);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .auth-field input:focus { border-color: var(--gold); }
+    #btn-login {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ba9f93, #524339);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+      margin-top: 0.5rem;
+    }
+    #btn-login:hover { opacity: 0.9; transform: translateY(-1px); }
+    #auth-error {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: #c0392b;
+      min-height: 1.2em;
+    }
+
+    /* ── ADMIN PANEL ── */
+    #admin-panel { display: none; padding: 2.5rem 2rem; max-width: 900px; margin: 0 auto; }
+
+    .admin-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 400;
+      margin-bottom: 0.3rem;
+    }
+    .admin-subtitle {
+      font-size: 0.82rem;
+      color: var(--greige);
+      letter-spacing: 0.04em;
+      margin-bottom: 2rem;
+    }
+
+    /* ── CATEGORY TABS ── */
+    .cat-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .cat-tab {
+      padding: 0.45rem 1.1rem;
+      border-radius: 50px;
+      border: 1px solid var(--warmgrey);
+      background: transparent;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--espresso);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .cat-tab.active, .cat-tab:hover {
+      background: var(--espresso);
+      border-color: var(--espresso);
+      color: #fff;
+    }
+
+    /* ── UPLOAD CARD ── */
+    .upload-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 24px rgba(63,54,50,0.08);
+      margin-bottom: 2rem;
+    }
+    .upload-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
+    }
+    .drop-zone {
+      border: 2px dashed var(--warmgrey);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--cream);
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--gold);
+      background: #fdf8f2;
+    }
+    .drop-zone i { font-size: 2rem; color: var(--taupe); margin-bottom: 0.8rem; display: block; }
+    .drop-zone p { font-size: 0.85rem; color: var(--greige); line-height: 1.6; }
+    .drop-zone strong { color: var(--espresso); }
+    #file-input { display: none; }
+
+    /* ── PREVIEW GRID ── */
+    #preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.8rem;
+      margin-top: 1.5rem;
+    }
+    .preview-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 4/5;
+      background: var(--espresso);
+    }
+    .preview-item img, .preview-item video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .preview-item .remove-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 0.7rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview-item .file-badge {
+      position: absolute;
+      bottom: 4px; left: 4px;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      font-size: 0.6rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* ── UPLOAD BTN ── */
+    #btn-upload {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ba9f93, #524339);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #btn-upload:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    #btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── PROGRESS ── */
+    #upload-progress-wrap {
+      margin-top: 1.2rem;
+      display: none;
+    }
+    #upload-progress-label {
+      font-size: 0.78rem;
+      color: var(--greige);
+      margin-bottom: 0.4rem;
+    }
+    #upload-progress-bar-track {
+      height: 4px;
+      background: var(--warmgrey);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    #upload-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #c8794a);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* ── STATUS MESSAGE ── */
+    #upload-status {
+      margin-top: 1rem;
+      font-size: 0.82rem;
+      min-height: 1.2em;
+    }
+    #upload-status.success { color: #27ae60; }
+    #upload-status.error   { color: #c0392b; }
+
+    /* ── EXISTING MEDIA ── */
+    .existing-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 24px rgba(63,54,50,0.08);
+    }
+    .existing-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
+    }
+    #existing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.8rem;
+    }
+    .existing-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 4/5;
+      background: var(--espresso);
+    }
+    .existing-item img, .existing-item video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .existing-item .del-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(192,57,43,0.85);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .existing-item .del-btn:hover { background: rgba(192,57,43,1); }
+    .existing-empty {
+      color: var(--greige);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="admin-topbar">
+    <div class="admin-topbar-logo">Studio <span>Serena</span> — Admin</div>
+    <button id="btn-logout" style="display:none"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+  </header>
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <h1>Admin Login</h1>
+      <p>Studio Serena · Gallery Management</p>
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="admin-email" autocomplete="username" placeholder="admin@studioserena.no" />
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="admin-password" autocomplete="current-password" placeholder="••••••••" />
+      </div>
+      <button id="btn-login"><i class="fa-solid fa-lock"></i> Sign In</button>
+      <div id="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL (shown after login) -->
+  <div id="admin-panel">
+    <h1 class="admin-title">Gallery Manager</h1>
+    <p class="admin-subtitle">Upload photos &amp; videos to any category. Changes appear on the site immediately.</p>
+
+    <!-- CATEGORY TABS -->
+    <div class="cat-tabs" id="cat-tabs">
+      <button class="cat-tab active" data-cat="Balayage">Balayage</button>
+      <button class="cat-tab" data-cat="Farge">Colour</button>
+      <button class="cat-tab" data-cat="HairTreatment">Keratin</button>
+      <button class="cat-tab" data-cat="Extensions">Extensions</button>
+      <button class="cat-tab" data-cat="Haircut">Cut &amp; Style</button>
+      <button class="cat-tab" data-cat="Styling">Styling</button>
+      <button class="cat-tab" data-cat="Brides">Bridal</button>
+    </div>
+
+    <!-- UPLOAD CARD -->
+    <div class="upload-card">
+      <h2>Upload to <em id="active-cat-label">Balayage</em></h2>
+
+      <div class="drop-zone" id="drop-zone">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p><strong>Drag &amp; drop files here</strong><br>or click to browse<br><br>Accepted: JPG, PNG, WEBP, MP4, MOV</p>
+      </div>
+      <input type="file" id="file-input" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" />
+
+      <div id="preview-grid"></div>
+
+      <button id="btn-upload" disabled><i class="fa-solid fa-upload"></i> Upload Files</button>
+
+      <div id="upload-progress-wrap">
+        <div id="upload-progress-label">Uploading…</div>
+        <div id="upload-progress-bar-track">
+          <div id="upload-progress-bar"></div>
+        </div>
+      </div>
+      <div id="upload-status"></div>
+    </div>
+
+    <!-- EXISTING MEDIA -->
+    <div class="existing-card">
+      <h2>Existing Cloud Media — <em id="existing-cat-label">Balayage</em></h2>
+      <div id="existing-grid"><p class="existing-empty">Loading…</p></div>
+    </div>
+  </div>
+
+  <!-- FIREBASE (Auth + Firestore) + SUPABASE (Storage) -->
+  <script type="module">
+    import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+                                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp }
+                                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { createClient }                         from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { firebaseConfig }                       from './firebase-config.js';
+    import { SUPABASE_URL, SUPABASE_ANON }          from './supabase-config.js';
+
+    // ── INIT ──
+    const app      = initializeApp(firebaseConfig);
+    const auth     = getAuth(app);
+    const db       = getFirestore(app);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // ── ELEMENTS ──
+    const authScreen   = document.getElementById('auth-screen');
+    const adminPanel   = document.getElementById('admin-panel');
+    const btnLogout    = document.getElementById('btn-logout');
+    const btnLogin     = document.getElementById('btn-login');
+    const emailInput   = document.getElementById('admin-email');
+    const passInput    = document.getElementById('admin-password');
+    const authError    = document.getElementById('auth-error');
+    const dropZone     = document.getElementById('drop-zone');
+    const fileInput    = document.getElementById('file-input');
+    const previewGrid  = document.getElementById('preview-grid');
+    const btnUpload    = document.getElementById('btn-upload');
+    const progressWrap = document.getElementById('upload-progress-wrap');
+    const progressBar  = document.getElementById('upload-progress-bar');
+    const progressLbl  = document.getElementById('upload-progress-label');
+    const statusEl     = document.getElementById('upload-status');
+    const existingGrid = document.getElementById('existing-grid');
+    const activeCatLbl = document.getElementById('active-cat-label');
+    const existingLbl  = document.getElementById('existing-cat-label');
+
+    let selectedCategory = 'Balayage';
+    let stagedFiles = [];   // { file, objectURL }
+
+    const catLabels = {
+      Balayage: 'Balayage', Farge: 'Colour', HairTreatment: 'Keratin Treatment',
+      Extensions: 'Extensions', Haircut: 'Cut & Style', Styling: 'Styling', Brides: 'Bridal'
+    };
+
+    // ── AUTH STATE ──
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        authScreen.style.display  = 'none';
+        adminPanel.style.display  = 'block';
+        btnLogout.style.display   = 'inline-flex';
+        loadExisting(selectedCategory);
+      } else {
+        authScreen.style.display  = 'flex';
+        adminPanel.style.display  = 'none';
+        btnLogout.style.display   = 'none';
+      }
+    });
+
+    // ── LOGIN ──
+    btnLogin.addEventListener('click', async () => {
+      authError.textContent = '';
+      const email = emailInput.value.trim();
+      const pass  = passInput.value;
+      if (!email || !pass) { authError.textContent = 'Please enter email and password.'; return; }
+      btnLogin.disabled = true;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (e) {
+        authError.textContent = 'Invalid email or password.';
+      } finally {
+        btnLogin.disabled = false;
+      }
+    });
+    passInput.addEventListener('keydown', e => { if (e.key === 'Enter') btnLogin.click(); });
+
+    // ── LOGOUT ──
+    btnLogout.addEventListener('click', () => signOut(auth));
+
+    // ── CATEGORY TABS ──
+    document.getElementById('cat-tabs').addEventListener('click', e => {
+      const tab = e.target.closest('.cat-tab');
+      if (!tab) return;
+      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      selectedCategory = tab.dataset.cat;
+      activeCatLbl.textContent = catLabels[selectedCategory] || selectedCategory;
+      existingLbl.textContent  = catLabels[selectedCategory] || selectedCategory;
+      clearStaged();
+      loadExisting(selectedCategory);
+    });
+
+    // ── DROP ZONE ──
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      addFiles(Array.from(e.dataTransfer.files));
+    });
+    fileInput.addEventListener('change', () => {
+      addFiles(Array.from(fileInput.files));
+      fileInput.value = '';
+    });
+
+    function addFiles(files) {
+      const allowed = ['image/jpeg','image/png','image/webp','video/mp4','video/quicktime'];
+      files.forEach(f => {
+        if (!allowed.includes(f.type)) return;
+        stagedFiles.push({ file: f, objectURL: URL.createObjectURL(f) });
+      });
+      renderPreviews();
+    }
+
+    function renderPreviews() {
+      previewGrid.innerHTML = '';
+      stagedFiles.forEach((item, idx) => {
+        const div  = document.createElement('div');
+        div.className = 'preview-item';
+        const isVid = item.file.type.startsWith('video/');
+        const media = document.createElement(isVid ? 'video' : 'img');
+        media.src = item.objectURL;
+        if (isVid) { media.muted = true; media.loop = true; media.autoplay = true; }
+
+        const badge = document.createElement('span');
+        badge.className = 'file-badge';
+        badge.textContent = isVid ? 'video' : 'photo';
+
+        const rm = document.createElement('button');
+        rm.className = 'remove-btn';
+        rm.innerHTML = '✕';
+        rm.addEventListener('click', () => {
+          URL.revokeObjectURL(item.objectURL);
+          stagedFiles.splice(idx, 1);
+          renderPreviews();
+        });
+
+        div.append(media, badge, rm);
+        previewGrid.appendChild(div);
+      });
+      btnUpload.disabled = stagedFiles.length === 0;
+    }
+
+    function clearStaged() {
+      stagedFiles.forEach(f => URL.revokeObjectURL(f.objectURL));
+      stagedFiles = [];
+      previewGrid.innerHTML = '';
+      btnUpload.disabled = true;
+      statusEl.textContent = '';
+      statusEl.className = '';
+      progressWrap.style.display = 'none';
+      progressBar.style.width = '0%';
+    }
+
+    // ── UPLOAD ──
+    btnUpload.addEventListener('click', async () => {
+      if (stagedFiles.length === 0) return;
+      btnUpload.disabled  = true;
+      progressWrap.style.display = 'block';
+      statusEl.textContent = '';
+      statusEl.className = '';
+
+      const total = stagedFiles.length;
+      let done  = 0;
+
+      for (const item of stagedFiles) {
+        const ext       = item.file.name.split('.').pop();
+        const safeName  = `${selectedCategory}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+        progressLbl.textContent = `Uploading ${done + 1} of ${total}…`;
+        progressBar.style.width = ((done / total) * 100).toFixed(1) + '%';
+
+        // Upload to Supabase Storage
+        const { error: upErr } = await supabase.storage
+          .from('gallery')
+          .upload(safeName, item.file, { upsert: false });
+
+        if (upErr) throw new Error(upErr.message);
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('gallery')
+          .getPublicUrl(safeName);
+
+        const url = urlData.publicUrl;
+
+        // Save URL to Firestore
+        await addDoc(collection(db, 'gallery', selectedCategory, 'media'), {
+          url,
+          storagePath: safeName,
+          type: item.file.type.startsWith('video/') ? 'video' : 'image',
+          uploadedAt: serverTimestamp()
+        });
+
+        done++;
+        progressBar.style.width = ((done / total) * 100).toFixed(1) + '%';
+      }
+
+      progressBar.style.width = '100%';
+      progressLbl.textContent = 'Done!';
+      statusEl.textContent = `✓ ${total} file${total > 1 ? 's' : ''} uploaded to ${catLabels[selectedCategory]}.`;
+      statusEl.className = 'success';
+
+      clearStaged();
+      loadExisting(selectedCategory);
+    });
+
+    // ── LOAD EXISTING CLOUD MEDIA ──
+    async function loadExisting(cat) {
+      existingGrid.innerHTML = '<p class="existing-empty">Loading…</p>';
+      try {
+        const snap = await getDocs(collection(db, 'gallery', cat, 'media'));
+        if (snap.empty) {
+          existingGrid.innerHTML = '<p class="existing-empty">No cloud media yet for this category.</p>';
+          return;
+        }
+        existingGrid.innerHTML = '';
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          const div  = document.createElement('div');
+          div.className = 'existing-item';
+
+          const isVid = data.type === 'video';
+          const media = document.createElement(isVid ? 'video' : 'img');
+          media.src = data.url;
+          if (isVid) { media.muted = true; media.loop = true; }
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'del-btn';
+          delBtn.title = 'Delete';
+          delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+          delBtn.addEventListener('click', async () => {
+            if (!confirm('Delete this item? This cannot be undone.')) return;
+            try {
+              // Delete from Supabase Storage
+              if (data.storagePath) {
+                await supabase.storage.from('gallery').remove([data.storagePath]);
+              }
+              // Delete from Firestore
+              await deleteDoc(doc(db, 'gallery', cat, 'media', docSnap.id));
+              div.remove();
+            } catch (err) {
+              alert('Delete failed: ' + err.message);
+            }
+          });
+
+          div.append(media, delBtn);
+          existingGrid.appendChild(div);
+        });
+      } catch (err) {
+        existingGrid.innerHTML = `<p class="existing-empty" style="color:#c0392b">Error loading media: ${err.message}</p>`;
+      }
+    }
+  </script>
+
+</body>
+</html>

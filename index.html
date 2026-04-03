@@ -1644,6 +1644,24 @@
           window.addEventListener('scroll', positionSubNav);
         </script>
 
+        <!-- ── FIREBASE: load cloud gallery media uploaded by admin ── -->
+        <script type="module">
+          import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+          import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+          import { firebaseConfig }  from './firebase-config.js';
+
+          try {
+            const app = initializeApp(firebaseConfig);
+            const db  = getFirestore(app);
+            window.__firebaseApp         = app;
+            window.__firebaseDb          = db;
+            window.__firestoreCollection = collection;
+            window.__firestoreGetDocs    = getDocs;
+          } catch (e) {
+            // Firebase not configured yet — static gallery works fine
+          }
+        </script>
+
         <script src="./script.js" defer></script>
 
         <!-- ── GDPR COOKIE CONSENT LOGIC ──
