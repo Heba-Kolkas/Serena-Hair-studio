@@ -357,7 +357,7 @@ const galleryData = {
 // Falls back silently if Supabase is not reachable.
 (async function loadCloudGallery() {
   try {
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm');
     const { SUPABASE_URL, SUPABASE_ANON } = await import('./supabase-config.js');
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
