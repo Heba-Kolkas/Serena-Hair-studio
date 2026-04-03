@@ -545,9 +545,10 @@
   <header class="admin-topbar">
     <div class="admin-topbar-logo">Studio <span>Serena</span> — Admin</div>
     <button id="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+  </header>
 
-    <!-- AUTH SCREEN -->
-    <div id="auth-screen">
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen">
       <div class="auth-card">
         <h1>Admin Login</h1>
         <p>Studio Serena · Gallery Management</p>
@@ -613,7 +614,9 @@
         <div id="existing-grid">
           <p class="existing-empty">Loading…</p>
         </div>
-           <!-- TEAM MANAGER (shown when Team tab selected) -->
+      </div>
+
+    <!-- TEAM MANAGER (shown when Team tab selected) -->
     <div class="existing-card" id="team-section" style="display:none">
       <h2>Team Members</h2>
 
@@ -652,7 +655,6 @@
         <p class="existing-empty">Loading…</p>
       </div>
     </div>
-      </div>
 
     <!-- FIREBASE (Auth + Firestore) + SUPABASE (Storage) -->
     <script type="module">
