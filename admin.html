@@ -13,12 +13,12 @@
   <style>
     :root {
       --cream:    #faf8f5;
+      --linen:    #fff7f7;
       --warmgrey: #E0D8CF;
       --taupe:    #B5A89A;
       --greige:   #9f948e;
       --espresso: #3f3632;
       --gold:     #C9A96E;
-      --sidebar-w: 240px;
       --font-display: 'Cormorant Garamond', serif;
       --font-body:    'Jost', sans-serif;
     }
@@ -26,45 +26,70 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #f2ede8;
+      background: var(--cream);
       color: var(--espresso);
       font-family: var(--font-body);
       min-height: 100vh;
     }
+
+    /* ── TOPBAR ── */
+    .admin-topbar {
+      background: var(--espresso);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-topbar-logo {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: 0.06em;
+    }
+    .admin-topbar-logo span { color: var(--gold); }
+    #btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #btn-logout:hover { background: rgba(255,255,255,0.12); }
 
     /* ── AUTH SCREEN ── */
     #auth-screen {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      min-height: calc(100vh - 56px);
       padding: 2rem;
     }
     .auth-card {
       background: #fff;
-      border-radius: 20px;
+      border-radius: 16px;
       padding: 3rem 2.5rem;
       width: 100%;
       max-width: 400px;
       box-shadow: 0 8px 40px rgba(63,54,50,0.12);
       text-align: center;
     }
-    .auth-logo {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.2rem;
-    }
-    .auth-logo span { color: var(--gold); }
     .auth-card h1 {
       font-family: var(--font-display);
-      font-size: 1.7rem;
+      font-size: 2rem;
       font-weight: 400;
       margin-bottom: 0.3rem;
-      margin-top: 1.5rem;
     }
-    .auth-card > p {
-      font-size: 0.8rem;
+    .auth-card p {
+      font-size: 0.82rem;
       color: var(--greige);
       margin-bottom: 2rem;
       letter-spacing: 0.04em;
@@ -77,15 +102,15 @@
       margin-bottom: 1.2rem;
     }
     .auth-field label {
-      font-size: 0.72rem;
-      letter-spacing: 0.09em;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--greige);
     }
     .auth-field input {
       border: 1px solid var(--warmgrey);
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
       font-family: var(--font-body);
       font-size: 0.9rem;
       color: var(--espresso);
@@ -96,7 +121,7 @@
     .auth-field input:focus { border-color: var(--gold); }
     #btn-login {
       width: 100%;
-      padding: 0.85rem;
+      padding: 0.8rem;
       border: none;
       border-radius: 50px;
       background: linear-gradient(135deg, #ba9f93, #524339);
@@ -107,7 +132,7 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.15s;
+      transition: opacity 0.2s, transform 0.2s;
       margin-top: 0.5rem;
     }
     #btn-login:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -118,243 +143,46 @@
       min-height: 1.2em;
     }
 
-    /* ── ADMIN LAYOUT ── */
-    #admin-panel {
-      display: none;
-      min-height: 100vh;
-    }
+    /* ── ADMIN PANEL ── */
+    #admin-panel { display: none; padding: 2.5rem 2rem; max-width: 900px; margin: 0 auto; }
 
-    /* ── SIDEBAR ── */
-    .admin-sidebar {
-      position: fixed;
-      top: 0; left: 0;
-      width: var(--sidebar-w);
-      height: 100vh;
-      background: var(--espresso);
-      display: flex;
-      flex-direction: column;
-      z-index: 200;
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
-
-    .sidebar-logo {
-      padding: 1.8rem 1.5rem 1.4rem;
-      font-family: var(--font-display);
-      font-size: 1.3rem;
-      letter-spacing: 0.06em;
-      color: #fff;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      flex-shrink: 0;
-    }
-    .sidebar-logo span { color: var(--gold); }
-    .sidebar-logo small {
-      display: block;
-      font-family: var(--font-body);
-      font-size: 0.65rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.35);
-      margin-top: 0.15rem;
-    }
-
-    .sidebar-section {
-      padding: 1.2rem 0 0.4rem;
-      flex: 1;
-    }
-    .sidebar-section-label {
-      font-size: 0.62rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
-      padding: 0 1.5rem;
-      margin-bottom: 0.4rem;
-    }
-
-    /* ── NAV ITEMS ── */
-    .cat-tabs { display: flex; flex-direction: column; gap: 2px; }
-
-    .cat-tab {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.65rem 1.5rem;
-      border: none;
-      background: transparent;
-      color: rgba(255,255,255,0.55);
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-      letter-spacing: 0.05em;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      border-left: 3px solid transparent;
-      width: 100%;
-      position: relative;
-    }
-    .cat-tab i.nav-icon {
-      width: 16px;
-      text-align: center;
-      font-size: 0.82rem;
-      flex-shrink: 0;
-      opacity: 0.7;
-    }
-    .cat-tab:hover {
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.85);
-    }
-    .cat-tab.active {
-      background: rgba(201,169,110,0.12);
-      color: var(--gold);
-      border-left-color: var(--gold);
-    }
-    .cat-tab.active i.nav-icon { opacity: 1; }
-
-    .cat-tab .tab-remove {
-      margin-left: auto;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.4);
-      font-size: 0.6rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: background 0.15s, color 0.15s;
-    }
-    .cat-tab .tab-remove:hover {
-      background: rgba(192,57,43,0.7);
-      color: #fff;
-    }
-
-    .sidebar-divider {
-      height: 1px;
-      background: rgba(255,255,255,0.08);
-      margin: 0.8rem 1.5rem;
-    }
-
-    /* ── ADD CATEGORY (inside sidebar) ── */
-    .new-cat-area {
-      padding: 0.6rem 1.2rem 1rem;
-    }
-    .new-cat-area-label {
-      font-size: 0.62rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
-      margin-bottom: 0.6rem;
-      padding-left: 0.3rem;
-    }
-    .new-cat-row {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .new-cat-row input {
-      width: 100%;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      padding: 0.5rem 0.75rem;
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      color: rgba(255,255,255,0.8);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .new-cat-row input::placeholder { color: rgba(255,255,255,0.25); }
-    .new-cat-row input:focus { border-color: var(--gold); }
-    .new-cat-cover-label {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.45rem 0.75rem;
-      background: rgba(255,255,255,0.06);
-      border: 1px dashed rgba(255,255,255,0.18);
-      border-radius: 8px;
-      font-size: 0.73rem;
-      color: rgba(255,255,255,0.45);
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .new-cat-cover-label:hover { border-color: var(--gold); color: rgba(255,255,255,0.75); }
-    #new-cat-cover-name {
-      font-size: 0.68rem;
-      color: rgba(255,255,255,0.35);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      padding-left: 0.3rem;
-    }
-    #btn-add-cat {
-      width: 100%;
-      padding: 0.55rem 0.75rem;
-      border-radius: 8px;
-      border: 1px solid rgba(201,169,110,0.5);
-      background: rgba(201,169,110,0.1);
-      color: var(--gold);
-      font-family: var(--font-body);
-      font-size: 0.75rem;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-      text-align: center;
-    }
-    #btn-add-cat:hover { background: rgba(201,169,110,0.22); border-color: var(--gold); }
-
-    /* ── SIDEBAR FOOTER ── */
-    .sidebar-footer {
-      padding: 1rem 1.2rem 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      flex-shrink: 0;
-    }
-    #btn-logout {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      width: 100%;
-      padding: 0.6rem 0.75rem;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: transparent;
-      color: rgba(255,255,255,0.45);
-      font-family: var(--font-body);
-      font-size: 0.77rem;
-      letter-spacing: 0.06em;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s, border-color 0.2s;
-    }
-    #btn-logout:hover {
-      background: rgba(255,255,255,0.07);
-      color: rgba(255,255,255,0.8);
-      border-color: rgba(255,255,255,0.25);
-    }
-
-    /* ── MAIN CONTENT ── */
-    .admin-main {
-      margin-left: var(--sidebar-w);
-      padding: 2.5rem 2.5rem 3rem;
-      min-height: 100vh;
-    }
-
-    .admin-main-header {
-      margin-bottom: 2rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--warmgrey);
-    }
     .admin-title {
       font-family: var(--font-display);
-      font-size: 2rem;
+      font-size: 2.2rem;
       font-weight: 400;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.3rem;
     }
     .admin-subtitle {
       font-size: 0.82rem;
       color: var(--greige);
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
+      margin-bottom: 2rem;
+    }
+
+    /* ── CATEGORY TABS ── */
+    .cat-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .cat-tab {
+      padding: 0.45rem 1.1rem;
+      border-radius: 50px;
+      border: 1px solid var(--warmgrey);
+      background: transparent;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--espresso);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .cat-tab.active, .cat-tab:hover {
+      background: var(--espresso);
+      border-color: var(--espresso);
+      color: #fff;
     }
 
     /* ── UPLOAD CARD ── */
@@ -362,19 +190,19 @@
       background: #fff;
       border-radius: 16px;
       padding: 2rem;
-      box-shadow: 0 2px 16px rgba(63,54,50,0.07);
+      box-shadow: 0 4px 24px rgba(63,54,50,0.08);
       margin-bottom: 2rem;
     }
     .upload-card h2 {
       font-family: var(--font-display);
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 400;
-      margin-bottom: 1.4rem;
+      margin-bottom: 1.5rem;
     }
     .drop-zone {
       border: 2px dashed var(--warmgrey);
       border-radius: 12px;
-      padding: 2.5rem 2rem;
+      padding: 3rem 2rem;
       text-align: center;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
@@ -385,14 +213,14 @@
       background: #fdf8f2;
     }
     .drop-zone i { font-size: 2rem; color: var(--taupe); margin-bottom: 0.8rem; display: block; }
-    .drop-zone p { font-size: 0.84rem; color: var(--greige); line-height: 1.6; }
+    .drop-zone p { font-size: 0.85rem; color: var(--greige); line-height: 1.6; }
     .drop-zone strong { color: var(--espresso); }
     #file-input { display: none; }
 
     /* ── PREVIEW GRID ── */
     #preview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 0.8rem;
       margin-top: 1.5rem;
     }
@@ -403,7 +231,9 @@
       aspect-ratio: 4/5;
       background: var(--espresso);
     }
-    .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item img, .preview-item video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
     .preview-item .remove-btn {
       position: absolute;
       top: 4px; right: 4px;
@@ -451,8 +281,15 @@
     #btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* ── PROGRESS ── */
-    #upload-progress-wrap { margin-top: 1.2rem; display: none; }
-    #upload-progress-label { font-size: 0.78rem; color: var(--greige); margin-bottom: 0.4rem; }
+    #upload-progress-wrap {
+      margin-top: 1.2rem;
+      display: none;
+    }
+    #upload-progress-label {
+      font-size: 0.78rem;
+      color: var(--greige);
+      margin-bottom: 0.4rem;
+    }
     #upload-progress-bar-track {
       height: 4px;
       background: var(--warmgrey);
@@ -467,8 +304,12 @@
       transition: width 0.3s;
     }
 
-    /* ── STATUS ── */
-    #upload-status { margin-top: 1rem; font-size: 0.82rem; min-height: 1.2em; }
+    /* ── STATUS MESSAGE ── */
+    #upload-status {
+      margin-top: 1rem;
+      font-size: 0.82rem;
+      min-height: 1.2em;
+    }
     #upload-status.success { color: #27ae60; }
     #upload-status.error   { color: #c0392b; }
 
@@ -477,17 +318,17 @@
       background: #fff;
       border-radius: 16px;
       padding: 2rem;
-      box-shadow: 0 2px 16px rgba(63,54,50,0.07);
+      box-shadow: 0 4px 24px rgba(63,54,50,0.08);
     }
     .existing-card h2 {
       font-family: var(--font-display);
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 400;
-      margin-bottom: 1.4rem;
+      margin-bottom: 1.5rem;
     }
     #existing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 0.8rem;
     }
     .existing-item {
@@ -497,7 +338,9 @@
       aspect-ratio: 4/5;
       background: var(--espresso);
     }
-    .existing-item img, .existing-item video { width: 100%; height: 100%; object-fit: cover; }
+    .existing-item img, .existing-item video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
     .existing-item .del-btn {
       position: absolute;
       top: 4px; right: 4px;
@@ -517,71 +360,22 @@
       font-size: 0.85rem;
       text-align: center;
       padding: 2rem;
-      grid-column: 1/-1;
-    }
-
-    /* ── MOBILE HAMBURGER ── */
-    #sidebar-toggle {
-      display: none;
-      position: fixed;
-      top: 1rem; left: 1rem;
-      z-index: 300;
-      width: 40px; height: 40px;
-      border-radius: 10px;
-      border: none;
-      background: var(--espresso);
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      align-items: center;
-      justify-content: center;
-    }
-    #sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 190;
-    }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      :root { --sidebar-w: 220px; }
-
-      #sidebar-toggle { display: flex; }
-
-      .admin-sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.25s ease;
-      }
-      .admin-sidebar.open { transform: translateX(0); }
-      #sidebar-overlay.open { display: block; }
-
-      .admin-main {
-        margin-left: 0;
-        padding: 4.5rem 1.2rem 2rem;
-      }
-
-      #admin-panel { display: block !important; }
-
-      .auth-card { padding: 2rem 1.5rem; }
-
-      #preview-grid, #existing-grid {
-        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-      }
-
-      #btn-upload { width: 100%; justify-content: center; }
     }
   </style>
 </head>
 <body>
 
+  <!-- TOP BAR -->
+  <header class="admin-topbar">
+    <div class="admin-topbar-logo">Studio <span>Serena</span> — Admin</div>
+    <button id="btn-logout" style="display:none"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+  </header>
+
   <!-- AUTH SCREEN -->
   <div id="auth-screen">
     <div class="auth-card">
-      <div class="auth-logo">Studio <span>Serena</span></div>
       <h1>Admin Login</h1>
-      <p>Gallery Management</p>
+      <p>Studio Serena · Gallery Management</p>
       <div class="auth-field">
         <label>Email</label>
         <input type="email" id="admin-email" autocomplete="username" placeholder="admin@studioserena.no" />
@@ -595,134 +389,68 @@
     </div>
   </div>
 
-  <!-- MOBILE HAMBURGER -->
-  <button id="sidebar-toggle" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
-  <div id="sidebar-overlay"></div>
-
-  <!-- ADMIN PANEL -->
+  <!-- ADMIN PANEL (shown after login) -->
   <div id="admin-panel">
+    <h1 class="admin-title">Gallery Manager</h1>
+    <p class="admin-subtitle">Upload photos &amp; videos to any category. Changes appear on the site immediately.</p>
 
-    <!-- SIDEBAR -->
-    <aside class="admin-sidebar" id="admin-sidebar">
-      <div class="sidebar-logo">
-        Studio <span>Serena</span>
-        <small>Admin Dashboard</small>
-      </div>
+    <!-- CATEGORY TABS -->
+    <div class="cat-tabs" id="cat-tabs">
+      <button class="cat-tab active" data-cat="Balayage">Balayage</button>
+      <button class="cat-tab" data-cat="Farge">Colour</button>
+      <button class="cat-tab" data-cat="HairTreatment">Keratin</button>
+      <button class="cat-tab" data-cat="Extensions">Extensions</button>
+      <button class="cat-tab" data-cat="Haircut">Cut &amp; Style</button>
+      <button class="cat-tab" data-cat="Styling">Styling</button>
+      <button class="cat-tab" data-cat="Brides">Bridal</button>
+    </div>
 
-      <div class="sidebar-section">
-        <div class="sidebar-section-label">Gallery</div>
-        <nav class="cat-tabs" id="cat-tabs">
-          <button class="cat-tab active" data-cat="Balayage"><i class="fa-solid fa-wand-magic-sparkles nav-icon"></i>Balayage</button>
-          <button class="cat-tab" data-cat="Farge"><i class="fa-solid fa-palette nav-icon"></i>Colour</button>
-          <button class="cat-tab" data-cat="HairTreatment"><i class="fa-solid fa-droplet nav-icon"></i>Keratin</button>
-          <button class="cat-tab" data-cat="Extensions"><i class="fa-solid fa-layer-group nav-icon"></i>Extensions</button>
-          <button class="cat-tab" data-cat="Haircut"><i class="fa-solid fa-scissors nav-icon"></i>Cut &amp; Style</button>
-          <button class="cat-tab" data-cat="Styling"><i class="fa-solid fa-star nav-icon"></i>Styling</button>
-          <button class="cat-tab" data-cat="Brides"><i class="fa-solid fa-heart nav-icon"></i>Bridal</button>
-          <div class="sidebar-divider"></div>
-          <button class="cat-tab" data-cat="behind-the-chair"><i class="fa-solid fa-video nav-icon"></i>Behind the Chair</button>
-          <button class="cat-tab" data-cat="__team__"><i class="fa-solid fa-users nav-icon"></i>Team</button>
-        </nav>
-
-        <div class="sidebar-divider" style="margin-top:1rem"></div>
-
-        <div class="new-cat-area">
-          <div class="new-cat-area-label">New Category</div>
-          <div class="new-cat-row">
-            <input type="text" id="new-cat-input" placeholder="Category name…" maxlength="40" />
-            <label class="new-cat-cover-label">
-              <i class="fa-solid fa-image"></i> Cover photo
-              <input type="file" id="new-cat-cover" accept="image/jpeg,image/png,image/webp" style="display:none" />
-            </label>
-            <span id="new-cat-cover-name"></span>
-            <button id="btn-add-cat"><i class="fa-solid fa-plus"></i> Add Category</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="sidebar-footer">
-        <button id="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="admin-main">
-      <div class="admin-main-header">
-        <h1 class="admin-title">Gallery Manager</h1>
-        <p class="admin-subtitle">Upload photos &amp; videos — changes appear on the site immediately.</p>
-      </div>
-
+    <!-- UPLOAD CARD -->
     <div class="upload-card">
       <h2>Upload to <em id="active-cat-label">Balayage</em></h2>
+
       <div class="drop-zone" id="drop-zone">
         <i class="fa-solid fa-cloud-arrow-up"></i>
         <p><strong>Drag &amp; drop files here</strong><br>or click to browse<br><br>Accepted: JPG, PNG, WEBP, MP4, MOV</p>
       </div>
       <input type="file" id="file-input" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" />
+
       <div id="preview-grid"></div>
+
       <button id="btn-upload" disabled><i class="fa-solid fa-upload"></i> Upload Files</button>
+
       <div id="upload-progress-wrap">
         <div id="upload-progress-label">Uploading…</div>
-        <div id="upload-progress-bar-track"><div id="upload-progress-bar"></div></div>
+        <div id="upload-progress-bar-track">
+          <div id="upload-progress-bar"></div>
+        </div>
       </div>
       <div id="upload-status"></div>
     </div>
 
-    <!-- MEDIA EXISTING (gallery + behind the chair) -->
-    <div class="existing-card" id="existing-section">
-      <h2>Existing Media — <em id="existing-cat-label">Balayage</em></h2>
+    <!-- EXISTING MEDIA -->
+    <div class="existing-card">
+      <h2>Existing Cloud Media — <em id="existing-cat-label">Balayage</em></h2>
       <div id="existing-grid"><p class="existing-empty">Loading…</p></div>
     </div>
+  </div>
 
-    <!-- TEAM MANAGER (shown when Team tab selected) -->
-    <div class="existing-card" id="team-section" style="display:none">
-      <h2>Team Members</h2>
+  <!-- FIREBASE SDK (v10 modular via CDN compat build) -->
+  <script type="module">
+    import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+                                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp }
+                                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject }
+                                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+    import { firebaseConfig }                       from './firebase-config.js';
 
-      <!-- ADD NEW MEMBER FORM -->
-      <div class="upload-card" style="margin-bottom:1.5rem;box-shadow:none;border:1px solid var(--warmgrey)">
-        <h2 style="font-size:1.2rem;margin-bottom:1rem">Add New Member</h2>
-        <div class="auth-field">
-          <label>Name</label>
-          <input type="text" id="tm-name" placeholder="Hassan K." />
-        </div>
-        <div class="auth-field">
-          <label>Role</label>
-          <input type="text" id="tm-role" placeholder="Founder & Master Stylist" />
-        </div>
-        <div class="auth-field">
-          <label>Bio</label>
-          <input type="text" id="tm-bio" placeholder="25+ years of experience…" />
-        </div>
-        <div class="auth-field">
-          <label>Instagram URL</label>
-          <input type="url" id="tm-instagram" placeholder="https://www.instagram.com/…" />
-        </div>
-        <div class="auth-field">
-          <label>Photo</label>
-          <input type="file" id="tm-photo" accept="image/jpeg,image/png,image/webp" style="padding:0.4rem 0" />
-        </div>
-        <button id="btn-add-member" style="margin-top:0.5rem;display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 2rem;border:none;border-radius:50px;background:linear-gradient(135deg,#ba9f93,#524339);color:#fff;font-family:var(--font-body);font-size:0.82rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">
-          <i class="fa-solid fa-user-plus"></i> Add Member
-        </button>
-        <div id="tm-status" style="margin-top:0.8rem;font-size:0.82rem;min-height:1.2em"></div>
-      </div>
-
-      <!-- EXISTING MEMBERS -->
-      <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:400;margin-bottom:1rem">Current Team</h3>
-      <div id="team-members-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem">
-        <p class="existing-empty">Loading…</p>
-      </div>
-    </div>
-
-    </main><!-- /.admin-main -->
-  </div><!-- /#admin-panel -->
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
-  <script>
-    const SUPABASE_URL  = 'https://drejwxijygwwhnfpgxvl.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyZWp3eGlqeWd3d2huZnBneHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMDg0MjIsImV4cCI6MjA5MDc4NDQyMn0.1MJxo7D2WlX9jcvuVzgYm-A1qKqh26o1tJ827rvUaro';
-
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    // ── INIT ──
+    const app     = initializeApp(firebaseConfig);
+    const auth    = getAuth(app);
+    const db      = getFirestore(app);
+    const storage = getStorage(app);
 
     // ── ELEMENTS ──
     const authScreen   = document.getElementById('auth-screen');
@@ -745,148 +473,26 @@
     const existingLbl  = document.getElementById('existing-cat-label');
 
     let selectedCategory = 'Balayage';
-    let stagedFiles = [];
+    let stagedFiles = [];   // { file, objectURL }
 
     const catLabels = {
       Balayage: 'Balayage', Farge: 'Colour', HairTreatment: 'Keratin Treatment',
-      Extensions: 'Extensions', Haircut: 'Cut & Style', Styling: 'Styling', Brides: 'Bridal',
-      'behind-the-chair': 'Behind the Chair'
+      Extensions: 'Extensions', Haircut: 'Cut & Style', Styling: 'Styling', Brides: 'Bridal'
     };
 
-    const uploadSection  = document.querySelector('.upload-card');
-    const existingSection = document.getElementById('existing-section');
-    const teamSection    = document.getElementById('team-section');
-    const catTabsEl      = document.getElementById('cat-tabs');
-    const newCatInput    = document.getElementById('new-cat-input');
-
-    // ── CUSTOM CATEGORIES (stored in Supabase as _custom_cats.json) ──
-    const CUSTOM_CATS_PATH = '_custom_cats.json';
-
-    async function fetchCustomCats() {
-      try {
-        const { data, error } = await supabase.storage.from('gallery').download(CUSTOM_CATS_PATH);
-        if (error || !data) return [];
-        return JSON.parse(await data.text());
-      } catch { return []; }
-    }
-
-    async function saveCustomCats(cats) {
-      const blob = new Blob([JSON.stringify(cats)], { type: 'application/json' });
-      await supabase.storage.from('gallery').upload(CUSTOM_CATS_PATH, blob, { upsert: true, contentType: 'application/json' });
-    }
-
-    function addCatTab(name, key) {
-      const tab = document.createElement('button');
-      tab.className    = 'cat-tab';
-      tab.dataset.cat  = key;
-      tab.dataset.custom = '1';
-
-      const label = document.createTextNode(name);
-      const rm    = document.createElement('span');
-      rm.className   = 'tab-remove';
-      rm.title       = 'Remove category';
-      rm.textContent = '✕';
-      rm.addEventListener('click', async e => {
-        e.stopPropagation();
-        if (!confirm(`Remove the "${name}" category tab?\n(Files already uploaded are NOT deleted.)`)) return;
-        const cats = await fetchCustomCats();
-        await saveCustomCats(cats.filter(c => c.key !== key));
-        tab.remove();
-        if (selectedCategory === key) {
-          const first = catTabsEl.querySelector('.cat-tab');
-          if (first) first.click();
-        }
-      });
-
-      tab.append(label, rm);
-      catTabsEl.insertBefore(tab, catTabsEl.querySelector('[data-cat="__team__"]'));
-    }
-
-    async function loadCustomCatsFromSupabase() {
-      // Remove any previously rendered custom tabs
-      catTabsEl.querySelectorAll('.cat-tab[data-custom]').forEach(t => t.remove());
-      const cats = await fetchCustomCats();
-      cats.forEach(({ name, key }) => addCatTab(name, key));
-    }
-
-    const newCatCoverInput = document.getElementById('new-cat-cover');
-    const newCatCoverName  = document.getElementById('new-cat-cover-name');
-    newCatCoverInput.addEventListener('change', () => {
-      newCatCoverName.textContent = newCatCoverInput.files[0] ? newCatCoverInput.files[0].name : '';
-    });
-
-    document.getElementById('btn-add-cat').addEventListener('click', async () => {
-      const raw = newCatInput.value.trim();
-      if (!raw) return;
-      const key = raw.replace(/[^a-zA-Z0-9_-]/g, '_');
-      const exists = [...catTabsEl.querySelectorAll('.cat-tab')].some(t => t.dataset.cat === key);
-      if (exists) { newCatInput.select(); return; }
-
-      const btn = document.getElementById('btn-add-cat');
-      btn.disabled    = true;
-      btn.textContent = 'Saving…';
-
-      let coverUrl = null;
-      const coverFile = newCatCoverInput.files[0];
-      if (coverFile) {
-        const compressed = await compressImage(coverFile);
-        const coverPath  = `${key}/cover.jpg`;
-        const { error: upErr } = await supabase.storage.from('gallery').upload(coverPath, compressed, { upsert: true, contentType: 'image/jpeg' });
-        if (!upErr) {
-          const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(coverPath);
-          coverUrl = urlData.publicUrl;
-        }
+    // ── AUTH STATE ──
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        authScreen.style.display  = 'none';
+        adminPanel.style.display  = 'block';
+        btnLogout.style.display   = 'inline-flex';
+        loadExisting(selectedCategory);
+      } else {
+        authScreen.style.display  = 'flex';
+        adminPanel.style.display  = 'none';
+        btnLogout.style.display   = 'none';
       }
-
-      addCatTab(raw, key);
-      const cats = await fetchCustomCats();
-      cats.push({ name: raw, key, coverUrl });
-      await saveCustomCats(cats);
-
-      newCatInput.value          = '';
-      newCatCoverInput.value     = '';
-      newCatCoverName.textContent = '';
-      btn.disabled    = false;
-      btn.textContent = '+ Add Category';
     });
-    newCatInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('btn-add-cat').click();
-    });
-
-    // ── CHECK SESSION ON LOAD ──
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) showPanel();
-      else showAuth();
-    });
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) showPanel();
-      else showAuth();
-    });
-
-    function showPanel() {
-      authScreen.style.display = 'none';
-      adminPanel.style.display = 'flex';
-      document.getElementById('sidebar-toggle').style.display = 'flex';
-      loadExisting(selectedCategory);
-      loadCustomCatsFromSupabase();
-    }
-    function showAuth() {
-      authScreen.style.display = 'flex';
-      adminPanel.style.display = 'none';
-      document.getElementById('sidebar-toggle').style.display = 'none';
-    }
-
-    // ── MOBILE SIDEBAR TOGGLE ──
-    const sidebarEl  = document.getElementById('admin-sidebar');
-    const overlayEl  = document.getElementById('sidebar-overlay');
-    const toggleBtn  = document.getElementById('sidebar-toggle');
-    function openSidebar()  { sidebarEl.classList.add('open');  overlayEl.classList.add('open'); }
-    function closeSidebar() { sidebarEl.classList.remove('open'); overlayEl.classList.remove('open'); }
-    toggleBtn.addEventListener('click', () => sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar());
-    overlayEl.addEventListener('click', closeSidebar);
-    // Close sidebar when a category is picked on mobile
-    document.getElementById('cat-tabs').addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
 
     // ── LOGIN ──
     btnLogin.addEventListener('click', async () => {
@@ -895,27 +501,18 @@
       const pass  = passInput.value;
       if (!email || !pass) { authError.textContent = 'Please enter email and password.'; return; }
       btnLogin.disabled = true;
-      btnLogin.textContent = 'Signing in…';
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password: pass });
-      if (error) {
-        if (error.message.toLowerCase().includes('email not confirmed')) {
-          authError.textContent = 'Please confirm your email address first, then try again.';
-        } else if (error.message.toLowerCase().includes('invalid login') || error.message.toLowerCase().includes('invalid credentials')) {
-          authError.textContent = 'Incorrect email or password.';
-        } else {
-          authError.textContent = error.message;
-        }
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (e) {
+        authError.textContent = 'Invalid email or password.';
+      } finally {
         btnLogin.disabled = false;
-        btnLogin.innerHTML = '<i class="fa-solid fa-lock"></i> Sign In';
-      } else if (signInData?.session) {
-        showPanel();
       }
     });
-    emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') btnLogin.click(); });
-    passInput.addEventListener('keydown',  e => { if (e.key === 'Enter') btnLogin.click(); });
+    passInput.addEventListener('keydown', e => { if (e.key === 'Enter') btnLogin.click(); });
 
     // ── LOGOUT ──
-    btnLogout.addEventListener('click', () => supabase.auth.signOut());
+    btnLogout.addEventListener('click', () => signOut(auth));
 
     // ── CATEGORY TABS ──
     document.getElementById('cat-tabs').addEventListener('click', e => {
@@ -924,18 +521,6 @@
       document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       selectedCategory = tab.dataset.cat;
-
-      if (selectedCategory === '__team__') {
-        uploadSection.style.display  = 'none';
-        existingSection.style.display = 'none';
-        teamSection.style.display    = 'block';
-        loadTeamMembers();
-        return;
-      }
-
-      uploadSection.style.display   = 'block';
-      existingSection.style.display = 'block';
-      teamSection.style.display     = 'none';
       activeCatLbl.textContent = catLabels[selectedCategory] || selectedCategory;
       existingLbl.textContent  = catLabels[selectedCategory] || selectedCategory;
       clearStaged();
@@ -956,25 +541,6 @@
       fileInput.value = '';
     });
 
-    // Compress images to max 1200px wide, 0.82 quality before upload
-    async function compressImage(file) {
-      return new Promise(resolve => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        img.onload = () => {
-          const maxW = 1200;
-          const scale = Math.min(1, maxW / img.width);
-          const canvas = document.createElement('canvas');
-          canvas.width  = Math.round(img.width  * scale);
-          canvas.height = Math.round(img.height * scale);
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          URL.revokeObjectURL(url);
-          canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.82);
-        };
-        img.src = url;
-      });
-    }
-
     function addFiles(files) {
       const allowed = ['image/jpeg','image/png','image/webp','video/mp4','video/quicktime'];
       files.forEach(f => {
@@ -987,15 +553,15 @@
     function renderPreviews() {
       previewGrid.innerHTML = '';
       stagedFiles.forEach((item, idx) => {
-        const div   = document.createElement('div');
+        const div  = document.createElement('div');
         div.className = 'preview-item';
         const isVid = item.file.type.startsWith('video/');
         const media = document.createElement(isVid ? 'video' : 'img');
-        media.src   = item.objectURL;
+        media.src = item.objectURL;
         if (isVid) { media.muted = true; media.loop = true; media.autoplay = true; }
 
         const badge = document.createElement('span');
-        badge.className   = 'file-badge';
+        badge.className = 'file-badge';
         badge.textContent = isVid ? 'video' : 'photo';
 
         const rm = document.createElement('button');
@@ -1027,183 +593,99 @@
     // ── UPLOAD ──
     btnUpload.addEventListener('click', async () => {
       if (stagedFiles.length === 0) return;
-      btnUpload.disabled = true;
+      btnUpload.disabled  = true;
       progressWrap.style.display = 'block';
       statusEl.textContent = '';
       statusEl.className = '';
 
       const total = stagedFiles.length;
-      let done = 0;
-      const startTime = Date.now();
+      let done  = 0;
 
-      function updateProgress(done, total) {
-        const pct = ((done / total) * 100).toFixed(1);
-        progressBar.style.width = pct + '%';
-        if (done > 0) {
-          const elapsed = (Date.now() - startTime) / 1000;
-          const rate    = done / elapsed;
-          const remaining = Math.ceil((total - done) / rate);
-          progressLbl.textContent = `Uploading ${done + 1} of ${total} — ~${remaining}s left`;
-        } else {
-          progressLbl.textContent = `Uploading ${done + 1} of ${total}…`;
-        }
-      }
+      for (const item of stagedFiles) {
+        const ext       = item.file.name.split('.').pop();
+        const safeName  = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const storePath = `gallery/${selectedCategory}/${safeName}`;
+        const storRef   = ref(storage, storePath);
 
-      try {
-        for (const item of stagedFiles) {
-          const isVid     = item.file.type.startsWith('video/');
-          const ext       = isVid ? item.file.name.split('.').pop() : 'jpg';
-          const safeName  = `${selectedCategory}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-
-          updateProgress(done, total);
-
-          // Compress images before upload (videos uploaded as-is)
-          const uploadFile = isVid ? item.file : await compressImage(item.file);
-          const mimeType   = isVid ? item.file.type : 'image/jpeg';
-
-          // Upload file to Supabase Storage (no database needed)
-          const { error: upErr } = await supabase.storage
-            .from('gallery')
-            .upload(safeName, uploadFile, { upsert: false, contentType: mimeType });
-          if (upErr) throw new Error(upErr.message);
-
-          done++;
-          progressBar.style.width = ((done / total) * 100).toFixed(1) + '%';
-          updateProgress(done, total);
-        }
-
-        progressBar.style.width  = '100%';
-        progressLbl.textContent  = 'Done!';
-        statusEl.textContent     = `✓ ${total} file${total > 1 ? 's' : ''} uploaded to ${catLabels[selectedCategory]}.`;
-        statusEl.className       = 'success';
-        clearStaged();
-        loadExisting(selectedCategory);
-
-      } catch (err) {
-        statusEl.textContent = '✕ Upload failed: ' + err.message;
-        statusEl.className   = 'error';
-        btnUpload.disabled   = false;
-      }
-    });
-
-    // ── TEAM MANAGEMENT ──
-    const TEAM_PATH = 'team/members.json';
-
-    async function getTeamData() {
-      const { data, error } = await supabase.storage.from('gallery').download(TEAM_PATH);
-      if (error) return [];
-      try { return JSON.parse(await data.text()); } catch { return []; }
-    }
-
-    async function saveTeamData(members) {
-      const blob = new Blob([JSON.stringify(members)], { type: 'application/json' });
-      await supabase.storage.from('gallery').remove([TEAM_PATH]);
-      const { error } = await supabase.storage.from('gallery').upload(TEAM_PATH, blob, { contentType: 'application/json', upsert: true });
-      if (error) throw new Error(error.message);
-    }
-
-    async function loadTeamMembers() {
-      const grid = document.getElementById('team-members-grid');
-      grid.innerHTML = '<p class="existing-empty">Loading…</p>';
-      const members = await getTeamData();
-      if (!members.length) { grid.innerHTML = '<p class="existing-empty">No team members yet. Add one above.</p>'; return; }
-      grid.innerHTML = '';
-      members.forEach((m, idx) => {
-        const card = document.createElement('div');
-        card.style.cssText = 'background:#fff;border-radius:12px;padding:1rem;box-shadow:0 2px 12px rgba(63,54,50,0.08);text-align:center;position:relative';
-        card.innerHTML = `
-          ${m.photo ? `<img src="${m.photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:0.5rem" />` : `<div style="width:80px;height:80px;border-radius:50%;background:var(--warmgrey);margin:0 auto 0.5rem;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-user" style="font-size:1.5rem;color:var(--taupe)"></i></div>`}
-          <strong style="font-family:var(--font-display);font-size:1rem;display:block">${m.name}</strong>
-          <span style="font-size:0.75rem;color:var(--greige);letter-spacing:0.04em">${m.role}</span>
-          <button data-idx="${idx}" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(192,57,43,0.85);color:#fff;border:none;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center" title="Delete"><i class="fa-solid fa-trash"></i></button>
-        `;
-        card.querySelector('button').addEventListener('click', async () => {
-          if (!confirm(`Remove ${m.name} from the team?`)) return;
-          const all = await getTeamData();
-          all.splice(idx, 1);
-          await saveTeamData(all);
-          loadTeamMembers();
+        await new Promise((resolve, reject) => {
+          const task = uploadBytesResumable(storRef, item.file);
+          task.on('state_changed',
+            snap => {
+              const fileProgress = snap.bytesTransferred / snap.totalBytes;
+              const overall = ((done + fileProgress) / total) * 100;
+              progressBar.style.width = overall.toFixed(1) + '%';
+              progressLbl.textContent = `Uploading ${done + 1} of ${total}…`;
+            },
+            reject,
+            async () => {
+              const url = await getDownloadURL(task.snapshot.ref);
+              await addDoc(collection(db, 'gallery', selectedCategory, 'media'), {
+                url,
+                storagePath: storPath,
+                type: item.file.type.startsWith('video/') ? 'video' : 'image',
+                uploadedAt: serverTimestamp()
+              });
+              done++;
+              resolve();
+            }
+          );
         });
-        grid.appendChild(card);
-      });
-    }
-
-    document.getElementById('btn-add-member').addEventListener('click', async () => {
-      const statusEl2 = document.getElementById('tm-status');
-      const name  = document.getElementById('tm-name').value.trim();
-      const role  = document.getElementById('tm-role').value.trim();
-      const bio   = document.getElementById('tm-bio').value.trim();
-      const insta = document.getElementById('tm-instagram').value.trim();
-      const photoFile = document.getElementById('tm-photo').files[0];
-      if (!name || !role) { statusEl2.textContent = 'Name and Role are required.'; statusEl2.style.color = '#c0392b'; return; }
-      statusEl2.textContent = 'Saving…'; statusEl2.style.color = 'var(--greige)';
-      try {
-        let photoUrl = '';
-        if (photoFile) {
-          const compressed = await compressImage(photoFile);
-          const path = `team/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
-          const { error: upErr } = await supabase.storage.from('gallery').upload(path, compressed, { contentType: 'image/jpeg', upsert: false });
-          if (upErr) throw new Error(upErr.message);
-          photoUrl = supabase.storage.from('gallery').getPublicUrl(path).data.publicUrl;
-        }
-        const members = await getTeamData();
-        members.push({ name, role, bio, instagram: insta, photo: photoUrl });
-        await saveTeamData(members);
-        statusEl2.textContent = '✓ Member added!'; statusEl2.style.color = '#27ae60';
-        document.getElementById('tm-name').value = '';
-        document.getElementById('tm-role').value = '';
-        document.getElementById('tm-bio').value = '';
-        document.getElementById('tm-instagram').value = '';
-        document.getElementById('tm-photo').value = '';
-        loadTeamMembers();
-      } catch (err) {
-        statusEl2.textContent = '✕ ' + err.message; statusEl2.style.color = '#c0392b';
       }
+
+      progressBar.style.width = '100%';
+      progressLbl.textContent = 'Done!';
+      statusEl.textContent = `✓ ${total} file${total > 1 ? 's' : ''} uploaded to ${catLabels[selectedCategory]}.`;
+      statusEl.className = 'success';
+
+      clearStaged();
+      loadExisting(selectedCategory);
     });
 
-    // ── LOAD EXISTING MEDIA ──
+    // ── LOAD EXISTING CLOUD MEDIA ──
     async function loadExisting(cat) {
       existingGrid.innerHTML = '<p class="existing-empty">Loading…</p>';
-      const { data, error } = await supabase.storage
-        .from('gallery')
-        .list(cat, { sortBy: { column: 'created_at', order: 'desc' } });
+      try {
+        const snap = await getDocs(collection(db, 'gallery', cat, 'media'));
+        if (snap.empty) {
+          existingGrid.innerHTML = '<p class="existing-empty">No cloud media yet for this category.</p>';
+          return;
+        }
+        existingGrid.innerHTML = '';
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          const div  = document.createElement('div');
+          div.className = 'existing-item';
 
-      if (error) {
-        existingGrid.innerHTML = `<p class="existing-empty" style="color:#c0392b">Error: ${error.message}</p>`;
-        return;
-      }
-      if (!data || data.length === 0) {
-        existingGrid.innerHTML = '<p class="existing-empty">No cloud media yet for this category.</p>';
-        return;
-      }
+          const isVid = data.type === 'video';
+          const media = document.createElement(isVid ? 'video' : 'img');
+          media.src = data.url;
+          if (isVid) { media.muted = true; media.loop = true; }
 
-      existingGrid.innerHTML = '';
-      data.forEach(file => {
-        const storagePath = `${cat}/${file.name}`;
-        const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(storagePath);
-        const url   = urlData.publicUrl;
-        const isVid = /\.(mp4|mov|webm)$/i.test(file.name);
+          const delBtn = document.createElement('button');
+          delBtn.className = 'del-btn';
+          delBtn.title = 'Delete';
+          delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+          delBtn.addEventListener('click', async () => {
+            if (!confirm('Delete this item? This cannot be undone.')) return;
+            try {
+              // Delete from Storage
+              if (data.storagePath) {
+                await deleteObject(ref(storage, data.storagePath));
+              }
+              // Delete from Firestore
+              await deleteDoc(doc(db, 'gallery', cat, 'media', docSnap.id));
+              div.remove();
+            } catch (err) {
+              alert('Delete failed: ' + err.message);
+            }
+          });
 
-        const div   = document.createElement('div');
-        div.className = 'existing-item';
-
-        const media = document.createElement(isVid ? 'video' : 'img');
-        media.src   = url;
-        if (isVid) { media.muted = true; media.loop = true; }
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'del-btn';
-        delBtn.title     = 'Delete';
-        delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-        delBtn.addEventListener('click', async () => {
-          if (!confirm('Delete this item? This cannot be undone.')) return;
-          await supabase.storage.from('gallery').remove([storagePath]);
-          div.remove();
+          div.append(media, delBtn);
+          existingGrid.appendChild(div);
         });
-
-        div.append(media, delBtn);
-        existingGrid.appendChild(div);
-      });
+      } catch (err) {
+        existingGrid.innerHTML = `<p class="existing-empty" style="color:#c0392b">Error loading media: ${err.message}</p>`;
+      }
     }
   </script>
 
