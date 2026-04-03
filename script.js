@@ -352,6 +352,58 @@ const galleryData = {
   ]
 };
 
+// ── CUSTOM CATEGORIES (from Supabase _custom_cats.json) ──
+(async function loadCustomCategories() {
+  try {
+    const SUPABASE_URL  = 'https://drejwxijygwwhnfpgxvl.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyZWp3eGlqeWd3d2huZnBneHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMDg0MjIsImV4cCI6MjA5MDc4NDQyMn0.1MJxo7D2WlX9jcvuVzgYm-A1qKqh26o1tJ827rvUaro';
+    const res = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/public/gallery/_custom_cats.json?t=${Date.now()}`
+    );
+    if (!res.ok) return;
+    const cats = await res.json();
+    if (!Array.isArray(cats) || cats.length === 0) return;
+
+    const grid = document.getElementById('galleryGrid');
+
+    // Add a gallery card + load images for each custom category
+    await Promise.all(cats.map(async ({ name, key, coverUrl }) => {
+      // Initialize galleryData slot
+      if (!galleryData[key]) galleryData[key] = [];
+
+      // Fetch images in this category folder
+      const listRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/gallery`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prefix: key + '/', limit: 200, offset: 0 })
+      });
+      if (listRes.ok) {
+        const files = await listRes.json();
+        if (Array.isArray(files)) {
+          const urls = files
+            .filter(f => f.name !== 'cover.jpg')
+            .map(f => `${SUPABASE_URL}/storage/v1/object/public/gallery/${key}/${f.name}`);
+          galleryData[key] = [...urls, ...galleryData[key]];
+        }
+      }
+
+      // Add gallery card to the grid
+      if (grid) {
+        const card = document.createElement('div');
+        card.className = 'gallery-cat-card';
+        card.addEventListener('click', () => window.openLightbox(key));
+        const coverHtml = coverUrl
+          ? `<img src="${coverUrl}" alt="${name}" loading="lazy" decoding="async">`
+          : `<div style="background:var(--warmgrey,#E0D8CF);width:100%;height:100%;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-images" style="font-size:2rem;color:#fff;opacity:0.5"></i></div>`;
+        card.innerHTML = `
+          <div class="gallery-cat-img-wrap">${coverHtml}</div>
+          <div class="gallery-cat-label">${name}</div>`;
+        grid.appendChild(card);
+      }
+    }));
+  } catch (_) {}
+})();
+
 // ── CLOUD GALLERY MERGE (Supabase Storage REST API) ──
 (async function loadCloudGallery() {
   try {

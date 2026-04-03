@@ -238,6 +238,29 @@
       transition: background 0.2s, color 0.2s;
     }
     #btn-add-cat:hover { background: var(--gold); color: #fff; }
+    .new-cat-cover-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 50px;
+      border: 1px dashed var(--warmgrey);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      color: var(--greige);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .new-cat-cover-label:hover { border-color: var(--gold); color: var(--espresso); }
+    #new-cat-cover-name {
+      font-size: 0.73rem;
+      color: var(--greige);
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
     /* ── UPLOAD CARD ── */
     .upload-card {
@@ -487,6 +510,11 @@
 
     <div class="new-cat-row">
       <input type="text" id="new-cat-input" placeholder="New category name…" maxlength="40" />
+      <label class="new-cat-cover-label">
+        <i class="fa-solid fa-image"></i> Cover photo
+        <input type="file" id="new-cat-cover" accept="image/jpeg,image/png,image/webp" style="display:none" />
+      </label>
+      <span id="new-cat-cover-name"></span>
       <button id="btn-add-cat">+ Add Category</button>
     </div>
 
@@ -595,31 +623,38 @@
     const catTabsEl      = document.getElementById('cat-tabs');
     const newCatInput    = document.getElementById('new-cat-input');
 
-    // ── CUSTOM CATEGORIES ──
-    const STORAGE_KEY = 'serena_custom_cats';
+    // ── CUSTOM CATEGORIES (stored in Supabase as _custom_cats.json) ──
+    const CUSTOM_CATS_PATH = '_custom_cats.json';
 
-    function loadCustomCats() {
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+    async function fetchCustomCats() {
+      try {
+        const { data, error } = await supabase.storage.from('gallery').download(CUSTOM_CATS_PATH);
+        if (error || !data) return [];
+        return JSON.parse(await data.text());
+      } catch { return []; }
     }
-    function saveCustomCats(cats) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cats));
+
+    async function saveCustomCats(cats) {
+      const blob = new Blob([JSON.stringify(cats)], { type: 'application/json' });
+      await supabase.storage.from('gallery').upload(CUSTOM_CATS_PATH, blob, { upsert: true, contentType: 'application/json' });
     }
 
     function addCatTab(name, key) {
       const tab = document.createElement('button');
-      tab.className   = 'cat-tab';
-      tab.dataset.cat = key;
+      tab.className    = 'cat-tab';
+      tab.dataset.cat  = key;
+      tab.dataset.custom = '1';
 
       const label = document.createTextNode(name);
       const rm    = document.createElement('span');
       rm.className   = 'tab-remove';
       rm.title       = 'Remove category';
       rm.textContent = '✕';
-      rm.addEventListener('click', e => {
+      rm.addEventListener('click', async e => {
         e.stopPropagation();
         if (!confirm(`Remove the "${name}" category tab?\n(Files already uploaded are NOT deleted.)`)) return;
-        const cats = loadCustomCats().filter(c => c.key !== key);
-        saveCustomCats(cats);
+        const cats = await fetchCustomCats();
+        await saveCustomCats(cats.filter(c => c.key !== key));
         tab.remove();
         if (selectedCategory === key) {
           const first = catTabsEl.querySelector('.cat-tab');
@@ -631,22 +666,52 @@
       catTabsEl.insertBefore(tab, catTabsEl.querySelector('[data-cat="__team__"]'));
     }
 
-    // Restore saved custom cats on load
-    loadCustomCats().forEach(({ name, key }) => addCatTab(name, key));
+    async function loadCustomCatsFromSupabase() {
+      // Remove any previously rendered custom tabs
+      catTabsEl.querySelectorAll('.cat-tab[data-custom]').forEach(t => t.remove());
+      const cats = await fetchCustomCats();
+      cats.forEach(({ name, key }) => addCatTab(name, key));
+    }
 
-    document.getElementById('btn-add-cat').addEventListener('click', () => {
+    const newCatCoverInput = document.getElementById('new-cat-cover');
+    const newCatCoverName  = document.getElementById('new-cat-cover-name');
+    newCatCoverInput.addEventListener('change', () => {
+      newCatCoverName.textContent = newCatCoverInput.files[0] ? newCatCoverInput.files[0].name : '';
+    });
+
+    document.getElementById('btn-add-cat').addEventListener('click', async () => {
       const raw = newCatInput.value.trim();
       if (!raw) return;
-      // Build a safe storage key
       const key = raw.replace(/[^a-zA-Z0-9_-]/g, '_');
-      // Prevent duplicates
       const exists = [...catTabsEl.querySelectorAll('.cat-tab')].some(t => t.dataset.cat === key);
       if (exists) { newCatInput.select(); return; }
+
+      const btn = document.getElementById('btn-add-cat');
+      btn.disabled    = true;
+      btn.textContent = 'Saving…';
+
+      let coverUrl = null;
+      const coverFile = newCatCoverInput.files[0];
+      if (coverFile) {
+        const compressed = await compressImage(coverFile);
+        const coverPath  = `${key}/cover.jpg`;
+        const { error: upErr } = await supabase.storage.from('gallery').upload(coverPath, compressed, { upsert: true, contentType: 'image/jpeg' });
+        if (!upErr) {
+          const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(coverPath);
+          coverUrl = urlData.publicUrl;
+        }
+      }
+
       addCatTab(raw, key);
-      const cats = loadCustomCats();
-      cats.push({ name: raw, key });
-      saveCustomCats(cats);
-      newCatInput.value = '';
+      const cats = await fetchCustomCats();
+      cats.push({ name: raw, key, coverUrl });
+      await saveCustomCats(cats);
+
+      newCatInput.value          = '';
+      newCatCoverInput.value     = '';
+      newCatCoverName.textContent = '';
+      btn.disabled    = false;
+      btn.textContent = '+ Add Category';
     });
     newCatInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('btn-add-cat').click();
@@ -668,6 +733,7 @@
       adminPanel.style.display = 'block';
       btnLogout.style.display  = 'inline-flex';
       loadExisting(selectedCategory);
+      loadCustomCatsFromSupabase();
     }
     function showAuth() {
       authScreen.style.display = 'flex';
