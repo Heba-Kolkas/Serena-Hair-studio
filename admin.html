@@ -352,6 +352,42 @@
       padding: 2rem;
       grid-column: 1/-1;
     }
+
+    /* ── MOBILE & TABLET ── */
+    @media (max-width: 600px) {
+      .admin-topbar { padding: 0 1rem; }
+      .admin-topbar-logo { font-size: 1.1rem; }
+
+      #admin-panel { padding: 1.5rem 1rem; }
+      .admin-title { font-size: 1.7rem; }
+
+      .auth-card { padding: 2rem 1.5rem; }
+
+      .cat-tabs { gap: 0.4rem; }
+      .cat-tab { font-size: 0.7rem; padding: 0.4rem 0.85rem; }
+
+      .upload-card, .existing-card { padding: 1.5rem 1rem; }
+
+      .drop-zone { padding: 2rem 1rem; }
+      .drop-zone i { font-size: 1.5rem; }
+
+      #preview-grid,
+      #existing-grid {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 0.5rem;
+      }
+
+      #btn-upload { width: 100%; justify-content: center; }
+    }
+
+    @media (max-width: 900px) and (min-width: 601px) {
+      /* Tablet */
+      #admin-panel { padding: 2rem 1.5rem; }
+      #preview-grid,
+      #existing-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      }
+    }
   </style>
 </head>
 <body>
