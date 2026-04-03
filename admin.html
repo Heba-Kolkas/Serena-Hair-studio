@@ -185,6 +185,59 @@
       border-color: var(--espresso);
       color: #fff;
     }
+    .cat-tab .tab-remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 0.4rem;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      font-size: 0.6rem;
+      line-height: 1;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+    .cat-tab:not(.active) .tab-remove { background: rgba(63,54,50,0.15); }
+
+    /* ── NEW CATEGORY ROW ── */
+    .new-cat-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .new-cat-row input {
+      border: 1px dashed var(--warmgrey);
+      border-radius: 50px;
+      padding: 0.4rem 1rem;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      color: var(--espresso);
+      background: transparent;
+      outline: none;
+      width: 200px;
+      transition: border-color 0.2s;
+    }
+    .new-cat-row input:focus { border-color: var(--gold); border-style: solid; }
+    .new-cat-row input::placeholder { color: var(--taupe); }
+    #btn-add-cat {
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--espresso);
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    #btn-add-cat:hover { background: var(--gold); color: #fff; }
 
     /* ── UPLOAD CARD ── */
     .upload-card {
@@ -432,6 +485,11 @@
       <button class="cat-tab" data-cat="__team__" style="border-color:var(--gold);color:var(--espresso)">👥 Team</button>
     </div>
 
+    <div class="new-cat-row">
+      <input type="text" id="new-cat-input" placeholder="New category name…" maxlength="40" />
+      <button id="btn-add-cat">+ Add Category</button>
+    </div>
+
     <div class="upload-card">
       <h2>Upload to <em id="active-cat-label">Balayage</em></h2>
       <div class="drop-zone" id="drop-zone">
@@ -534,6 +592,65 @@
     const uploadSection  = document.querySelector('.upload-card');
     const existingSection = document.getElementById('existing-section');
     const teamSection    = document.getElementById('team-section');
+    const catTabsEl      = document.getElementById('cat-tabs');
+    const newCatInput    = document.getElementById('new-cat-input');
+
+    // ── CUSTOM CATEGORIES ──
+    const STORAGE_KEY = 'serena_custom_cats';
+
+    function loadCustomCats() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+    }
+    function saveCustomCats(cats) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cats));
+    }
+
+    function addCatTab(name, key) {
+      const tab = document.createElement('button');
+      tab.className   = 'cat-tab';
+      tab.dataset.cat = key;
+
+      const label = document.createTextNode(name);
+      const rm    = document.createElement('span');
+      rm.className   = 'tab-remove';
+      rm.title       = 'Remove category';
+      rm.textContent = '✕';
+      rm.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!confirm(`Remove the "${name}" category tab?\n(Files already uploaded are NOT deleted.)`)) return;
+        const cats = loadCustomCats().filter(c => c.key !== key);
+        saveCustomCats(cats);
+        tab.remove();
+        if (selectedCategory === key) {
+          const first = catTabsEl.querySelector('.cat-tab');
+          if (first) first.click();
+        }
+      });
+
+      tab.append(label, rm);
+      catTabsEl.insertBefore(tab, catTabsEl.querySelector('[data-cat="__team__"]'));
+    }
+
+    // Restore saved custom cats on load
+    loadCustomCats().forEach(({ name, key }) => addCatTab(name, key));
+
+    document.getElementById('btn-add-cat').addEventListener('click', () => {
+      const raw = newCatInput.value.trim();
+      if (!raw) return;
+      // Build a safe storage key
+      const key = raw.replace(/[^a-zA-Z0-9_-]/g, '_');
+      // Prevent duplicates
+      const exists = [...catTabsEl.querySelectorAll('.cat-tab')].some(t => t.dataset.cat === key);
+      if (exists) { newCatInput.select(); return; }
+      addCatTab(raw, key);
+      const cats = loadCustomCats();
+      cats.push({ name: raw, key });
+      saveCustomCats(cats);
+      newCatInput.value = '';
+    });
+    newCatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-add-cat').click();
+    });
 
     // ── CHECK SESSION ON LOAD ──
     supabase.auth.getSession().then(({ data: { session } }) => {
