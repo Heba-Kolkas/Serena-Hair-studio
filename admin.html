@@ -963,7 +963,12 @@
           .list(cat, { sortBy: { column: 'created_at', order: 'desc' } });
 
         if (error) {
-          existingGrid.innerHTML = `<p class="existing-empty" style="color:#c0392b">Error: ${error.message}</p>`;
+          const errEl = document.createElement('p');
+          errEl.className = 'existing-empty';
+          errEl.style.color = '#c0392b';
+          errEl.textContent = 'Error: ' + error.message;
+          existingGrid.innerHTML = '';
+          existingGrid.appendChild(errEl);
           return;
         }
         if (!data || data.length === 0) {
