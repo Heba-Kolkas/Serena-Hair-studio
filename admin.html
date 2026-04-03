@@ -726,10 +726,15 @@
         const pass = passInput.value;
         if (!email || !pass) { authError.textContent = 'Please enter email and password.'; return; }
         btnLogin.disabled = true;
-        const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-        if (error) authError.textContent = 'Invalid email or password.';
+        btnLogin.textContent = 'Signing in…';
+        try {
+          const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+          if (error) authError.textContent = error.message;
+        } catch (e) {
+          authError.textContent = 'Connection error: ' + e.message;
+        }
         btnLogin.disabled = false;
-
+        btnLogin.innerHTML = '<i class="fa-solid fa-lock"></i> Sign In';
       });
       passInput.addEventListener('keydown', e => { if (e.key === 'Enter') btnLogin.click(); });
 
