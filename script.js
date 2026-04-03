@@ -384,6 +384,81 @@ const galleryData = {
   } catch (_) { /* static gallery still works */ }
 })();
 
+// ── BEHIND THE CHAIR SECTION ──
+(async function loadBehindTheChair() {
+  try {
+    const SUPABASE_URL  = 'https://drejwxijygwwhnfpgxvl.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyZWp3eGlqeWd3d2huZnBneHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMDg0MjIsImV4cCI6MjA5MDc4NDQyMn0.1MJxo7D2WlX9jcvuVzgYm-A1qKqh26o1tJ827rvUaro';
+    const track = document.getElementById('behindChairTrack');
+    const empty = document.getElementById('behindChairEmpty');
+    if (!track) return;
+
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/gallery`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefix: 'behind-the-chair/', limit: 100, offset: 0 })
+    });
+    if (!res.ok) { if (empty) empty.style.display = 'block'; return; }
+    const files = await res.json();
+    if (!Array.isArray(files) || files.length === 0) { if (empty) empty.style.display = 'block'; return; }
+
+    files.forEach(f => {
+      const url   = `${SUPABASE_URL}/storage/v1/object/public/gallery/behind-the-chair/${f.name}`;
+      const isVid = /\.(mp4|mov|webm)$/i.test(f.name);
+      const card  = document.createElement('div');
+      card.className = 'behind-chair-card';
+      const media = document.createElement(isVid ? 'video' : 'img');
+      media.src = url;
+      if (isVid) { media.muted = true; media.loop = true; media.autoplay = true; media.playsInline = true; }
+      card.appendChild(media);
+      track.appendChild(card);
+    });
+
+    // drag to scroll
+    let isDown = false, startX, scrollLeft;
+    track.addEventListener('mousedown', e => { isDown = true; startX = e.pageX - track.offsetLeft; scrollLeft = track.scrollLeft; });
+    track.addEventListener('mouseleave', () => isDown = false);
+    track.addEventListener('mouseup', () => isDown = false);
+    track.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      track.scrollLeft = scrollLeft - (e.pageX - track.offsetLeft - startX);
+    });
+  } catch (_) {}
+})();
+
+// ── CLOUD TEAM MEMBERS ──
+(async function loadCloudTeam() {
+  try {
+    const SUPABASE_URL = 'https://drejwxijygwwhnfpgxvl.supabase.co';
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/gallery/team/members.json?t=${Date.now()}`);
+    if (!res.ok) return;
+    const members = await res.json();
+    if (!Array.isArray(members) || members.length === 0) return;
+
+    const grid = document.querySelector('.team-grid');
+    if (!grid) return;
+
+    members.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'team-card reveal';
+      card.innerHTML = `
+        <div class="team-img-wrap">
+          <img src="${m.photo || ''}" loading="lazy" alt="${m.name}">
+          <div class="team-overlay"></div>
+          <div class="team-socials">
+            ${m.instagram ? `<a href="${m.instagram}" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>` : ''}
+          </div>
+        </div>
+        <div class="team-name">${m.name}</div>
+        <div class="team-role">${m.role}</div>
+        <div class="team-bio">${m.bio || ''}</div>
+      `;
+      grid.appendChild(card);
+    });
+  } catch (_) {}
+})();
+
 // ── LIGHTBOX VIDEO SYSTEM ──
 // IntersectionObserver only used for videos scrolled out of view (bandwidth saving)
 const _videoPlayObserver = new IntersectionObserver((entries) => {

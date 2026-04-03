@@ -1205,6 +1205,64 @@ section {
   }
 }
 
+/* ───── BEHIND THE CHAIR ───── */
+#behind-chair {
+  padding: 5rem 0 4rem;
+  background: var(--linen);
+  overflow: hidden;
+}
+#behind-chair .section-title,
+#behind-chair .section-eyebrow,
+#behind-chair .divider {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+#behind-chair .divider { display: block; }
+
+.behind-chair-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 1.5rem 2rem 2rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+.behind-chair-track:active { cursor: grabbing; }
+.behind-chair-track::-webkit-scrollbar { height: 4px; }
+.behind-chair-track::-webkit-scrollbar-track { background: var(--warmgrey); border-radius: 4px; }
+.behind-chair-track::-webkit-scrollbar-thumb { background: var(--taupe); border-radius: 4px; }
+
+.behind-chair-card {
+  flex: 0 0 240px;
+  scroll-snap-align: start;
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 9/16;
+  background: var(--espresso);
+  position: relative;
+}
+.behind-chair-card video,
+.behind-chair-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.behind-chair-empty {
+  padding: 3rem;
+  color: var(--greige);
+  font-size: 0.85rem;
+  text-align: center;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .behind-chair-card { flex: 0 0 180px; }
+  #behind-chair { padding: 3rem 0 2rem; }
+}
+
 /* ───── TEAM SECTION ───── */
 #team {
   background: var(--cream);

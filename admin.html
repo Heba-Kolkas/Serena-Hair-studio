@@ -428,6 +428,8 @@
       <button class="cat-tab" data-cat="Haircut">Cut &amp; Style</button>
       <button class="cat-tab" data-cat="Styling">Styling</button>
       <button class="cat-tab" data-cat="Brides">Bridal</button>
+      <button class="cat-tab" data-cat="behind-the-chair" style="border-color:var(--gold);color:var(--espresso)">🎬 Behind the Chair</button>
+      <button class="cat-tab" data-cat="__team__" style="border-color:var(--gold);color:var(--espresso)">👥 Team</button>
     </div>
 
     <div class="upload-card">
@@ -446,9 +448,50 @@
       <div id="upload-status"></div>
     </div>
 
-    <div class="existing-card">
+    <!-- MEDIA EXISTING (gallery + behind the chair) -->
+    <div class="existing-card" id="existing-section">
       <h2>Existing Media — <em id="existing-cat-label">Balayage</em></h2>
       <div id="existing-grid"><p class="existing-empty">Loading…</p></div>
+    </div>
+
+    <!-- TEAM MANAGER (shown when Team tab selected) -->
+    <div class="existing-card" id="team-section" style="display:none">
+      <h2>Team Members</h2>
+
+      <!-- ADD NEW MEMBER FORM -->
+      <div class="upload-card" style="margin-bottom:1.5rem;box-shadow:none;border:1px solid var(--warmgrey)">
+        <h2 style="font-size:1.2rem;margin-bottom:1rem">Add New Member</h2>
+        <div class="auth-field">
+          <label>Name</label>
+          <input type="text" id="tm-name" placeholder="Hassan K." />
+        </div>
+        <div class="auth-field">
+          <label>Role</label>
+          <input type="text" id="tm-role" placeholder="Founder & Master Stylist" />
+        </div>
+        <div class="auth-field">
+          <label>Bio</label>
+          <input type="text" id="tm-bio" placeholder="25+ years of experience…" />
+        </div>
+        <div class="auth-field">
+          <label>Instagram URL</label>
+          <input type="url" id="tm-instagram" placeholder="https://www.instagram.com/…" />
+        </div>
+        <div class="auth-field">
+          <label>Photo</label>
+          <input type="file" id="tm-photo" accept="image/jpeg,image/png,image/webp" style="padding:0.4rem 0" />
+        </div>
+        <button id="btn-add-member" style="margin-top:0.5rem;display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 2rem;border:none;border-radius:50px;background:linear-gradient(135deg,#ba9f93,#524339);color:#fff;font-family:var(--font-body);font-size:0.82rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">
+          <i class="fa-solid fa-user-plus"></i> Add Member
+        </button>
+        <div id="tm-status" style="margin-top:0.8rem;font-size:0.82rem;min-height:1.2em"></div>
+      </div>
+
+      <!-- EXISTING MEMBERS -->
+      <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:400;margin-bottom:1rem">Current Team</h3>
+      <div id="team-members-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem">
+        <p class="existing-empty">Loading…</p>
+      </div>
     </div>
   </div>
 
@@ -483,8 +526,13 @@
 
     const catLabels = {
       Balayage: 'Balayage', Farge: 'Colour', HairTreatment: 'Keratin Treatment',
-      Extensions: 'Extensions', Haircut: 'Cut & Style', Styling: 'Styling', Brides: 'Bridal'
+      Extensions: 'Extensions', Haircut: 'Cut & Style', Styling: 'Styling', Brides: 'Bridal',
+      'behind-the-chair': 'Behind the Chair'
     };
+
+    const uploadSection  = document.querySelector('.upload-card');
+    const existingSection = document.getElementById('existing-section');
+    const teamSection    = document.getElementById('team-section');
 
     // ── CHECK SESSION ON LOAD ──
     const { data: { session } } = await supabase.auth.getSession();
@@ -531,6 +579,18 @@
       document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       selectedCategory = tab.dataset.cat;
+
+      if (selectedCategory === '__team__') {
+        uploadSection.style.display  = 'none';
+        existingSection.style.display = 'none';
+        teamSection.style.display    = 'block';
+        loadTeamMembers();
+        return;
+      }
+
+      uploadSection.style.display   = 'block';
+      existingSection.style.display = 'block';
+      teamSection.style.display     = 'none';
       activeCatLbl.textContent = catLabels[selectedCategory] || selectedCategory;
       existingLbl.textContent  = catLabels[selectedCategory] || selectedCategory;
       clearStaged();
@@ -725,6 +785,98 @@
         existingGrid.appendChild(div);
       });
     }
+
+    // ── TEAM MANAGEMENT ──
+    const SUPABASE_URL  = 'https://drejwxijygwwhnfpgxvl.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyZWp3eGlqeWd3d2huZnBneHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMDg0MjIsImV4cCI6MjA5MDc4NDQyMn0.1MJxo7D2WlX9jcvuVzgYm-A1qKqh26o1tJ827rvUaro';
+
+    async function getTeamData() {
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/gallery/team/members.json?t=${Date.now()}`);
+      if (!res.ok) return [];
+      return await res.json();
+    }
+
+    async function saveTeamData(members) {
+      const blob = new Blob([JSON.stringify(members)], { type: 'application/json' });
+      await supabase.storage.from('gallery').upload('team/members.json', blob, {
+        upsert: true, contentType: 'application/json'
+      });
+    }
+
+    async function loadTeamMembers() {
+      const grid = document.getElementById('team-members-grid');
+      grid.innerHTML = '<p class="existing-empty">Loading…</p>';
+      const members = await getTeamData();
+      if (!members.length) {
+        grid.innerHTML = '<p class="existing-empty">No cloud team members yet. Add one above!</p>';
+        return;
+      }
+      grid.innerHTML = '';
+      members.forEach((m, idx) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'background:var(--cream);border-radius:12px;padding:1rem;text-align:center;position:relative';
+
+        const img = document.createElement('img');
+        img.src = m.photo || '';
+        img.style.cssText = 'width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:0.5rem';
+
+        const name = document.createElement('div');
+        name.style.cssText = 'font-family:var(--font-display);font-size:1rem;font-weight:500';
+        name.textContent = m.name;
+
+        const role = document.createElement('div');
+        role.style.cssText = 'font-size:0.72rem;color:var(--greige);margin-top:0.2rem';
+        role.textContent = m.role;
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'del-btn';
+        delBtn.style.cssText = 'position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(192,57,43,0.85);color:#fff;border:none;cursor:pointer;font-size:0.75rem;display:flex;align-items:center;justify-content:center';
+        delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        delBtn.addEventListener('click', async () => {
+          if (!confirm('Remove ' + m.name + ' from the team?')) return;
+          const all = await getTeamData();
+          all.splice(idx, 1);
+          await saveTeamData(all);
+          div.remove();
+        });
+
+        div.append(img, name, role, delBtn);
+        grid.appendChild(div);
+      });
+    }
+
+    document.getElementById('btn-add-member').addEventListener('click', async () => {
+      const name      = document.getElementById('tm-name').value.trim();
+      const role      = document.getElementById('tm-role').value.trim();
+      const bio       = document.getElementById('tm-bio').value.trim();
+      const instagram = document.getElementById('tm-instagram').value.trim();
+      const photoFile = document.getElementById('tm-photo').files[0];
+      const statusEl  = document.getElementById('tm-status');
+
+      if (!name || !role) { statusEl.textContent = 'Name and role are required.'; statusEl.style.color = '#c0392b'; return; }
+
+      statusEl.textContent = 'Saving…'; statusEl.style.color = 'var(--greige)';
+
+      let photoUrl = '';
+      if (photoFile) {
+        const ext      = photoFile.name.split('.').pop();
+        const path     = `team/${Date.now()}_${name.replace(/\s+/g,'_')}.${ext}`;
+        const { error } = await supabase.storage.from('gallery').upload(path, photoFile, { upsert: false, contentType: photoFile.type });
+        if (!error) photoUrl = `${SUPABASE_URL}/storage/v1/object/public/gallery/${path}`;
+      }
+
+      const members = await getTeamData();
+      members.push({ name, role, bio, instagram, photo: photoUrl });
+      await saveTeamData(members);
+
+      statusEl.textContent = `✓ ${name} added to the team!`; statusEl.style.color = '#27ae60';
+      document.getElementById('tm-name').value = '';
+      document.getElementById('tm-role').value = '';
+      document.getElementById('tm-bio').value  = '';
+      document.getElementById('tm-instagram').value = '';
+      document.getElementById('tm-photo').value = '';
+      loadTeamMembers();
+    });
   </script>
 
 </body>
