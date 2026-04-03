@@ -13,12 +13,12 @@
   <style>
     :root {
       --cream:    #faf8f5;
-      --linen:    #fff7f7;
       --warmgrey: #E0D8CF;
       --taupe:    #B5A89A;
       --greige:   #9f948e;
       --espresso: #3f3632;
       --gold:     #C9A96E;
+      --sidebar-w: 240px;
       --font-display: 'Cormorant Garamond', serif;
       --font-body:    'Jost', sans-serif;
     }
@@ -26,71 +26,45 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: var(--cream);
+      background: #f2ede8;
       color: var(--espresso);
       font-family: var(--font-body);
       min-height: 100vh;
     }
-
-    /* ── TOPBAR ── */
-    .admin-topbar {
-      background: var(--espresso);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 2rem;
-      height: 56px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .admin-topbar-logo {
-      font-family: var(--font-display);
-      font-size: 1.3rem;
-      letter-spacing: 0.06em;
-    }
-    .admin-topbar-logo span { color: var(--gold); }
-    #btn-logout {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.4);
-      color: #fff;
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      letter-spacing: 0.08em;
-      padding: 0.4rem 1rem;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: none;
-    }
-    #btn-logout:hover { background: rgba(255,255,255,0.12); }
 
     /* ── AUTH SCREEN ── */
     #auth-screen {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: calc(100vh - 56px);
+      min-height: 100vh;
       padding: 2rem;
     }
     .auth-card {
       background: #fff;
-      border-radius: 16px;
+      border-radius: 20px;
       padding: 3rem 2.5rem;
       width: 100%;
       max-width: 400px;
       box-shadow: 0 8px 40px rgba(63,54,50,0.12);
       text-align: center;
     }
+    .auth-logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.2rem;
+    }
+    .auth-logo span { color: var(--gold); }
     .auth-card h1 {
       font-family: var(--font-display);
-      font-size: 2rem;
+      font-size: 1.7rem;
       font-weight: 400;
       margin-bottom: 0.3rem;
+      margin-top: 1.5rem;
     }
-    .auth-card p {
-      font-size: 0.82rem;
+    .auth-card > p {
+      font-size: 0.8rem;
       color: var(--greige);
       margin-bottom: 2rem;
       letter-spacing: 0.04em;
@@ -103,15 +77,15 @@
       margin-bottom: 1.2rem;
     }
     .auth-field label {
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+      letter-spacing: 0.09em;
       text-transform: uppercase;
       color: var(--greige);
     }
     .auth-field input {
       border: 1px solid var(--warmgrey);
-      border-radius: 8px;
-      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
       font-family: var(--font-body);
       font-size: 0.9rem;
       color: var(--espresso);
@@ -122,7 +96,7 @@
     .auth-field input:focus { border-color: var(--gold); }
     #btn-login {
       width: 100%;
-      padding: 0.8rem;
+      padding: 0.85rem;
       border: none;
       border-radius: 50px;
       background: linear-gradient(135deg, #ba9f93, #524339);
@@ -133,7 +107,7 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.2s;
+      transition: opacity 0.2s, transform 0.15s;
       margin-top: 0.5rem;
     }
     #btn-login:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -144,122 +118,243 @@
       min-height: 1.2em;
     }
 
-    /* ── ADMIN PANEL ── */
-    #admin-panel { display: none; padding: 2.5rem 2rem; max-width: 900px; margin: 0 auto; }
+    /* ── ADMIN LAYOUT ── */
+    #admin-panel {
+      display: none;
+      min-height: 100vh;
+    }
 
+    /* ── SIDEBAR ── */
+    .admin-sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--espresso);
+      display: flex;
+      flex-direction: column;
+      z-index: 200;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar-logo {
+      padding: 1.8rem 1.5rem 1.4rem;
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: 0.06em;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .sidebar-logo span { color: var(--gold); }
+    .sidebar-logo small {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-top: 0.15rem;
+    }
+
+    .sidebar-section {
+      padding: 1.2rem 0 0.4rem;
+      flex: 1;
+    }
+    .sidebar-section-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      padding: 0 1.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    /* ── NAV ITEMS ── */
+    .cat-tabs { display: flex; flex-direction: column; gap: 2px; }
+
+    .cat-tab {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1.5rem;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.55);
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      border-left: 3px solid transparent;
+      width: 100%;
+      position: relative;
+    }
+    .cat-tab i.nav-icon {
+      width: 16px;
+      text-align: center;
+      font-size: 0.82rem;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+    .cat-tab:hover {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.85);
+    }
+    .cat-tab.active {
+      background: rgba(201,169,110,0.12);
+      color: var(--gold);
+      border-left-color: var(--gold);
+    }
+    .cat-tab.active i.nav-icon { opacity: 1; }
+
+    .cat-tab .tab-remove {
+      margin-left: auto;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.4);
+      font-size: 0.6rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .cat-tab .tab-remove:hover {
+      background: rgba(192,57,43,0.7);
+      color: #fff;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 0.8rem 1.5rem;
+    }
+
+    /* ── ADD CATEGORY (inside sidebar) ── */
+    .new-cat-area {
+      padding: 0.6rem 1.2rem 1rem;
+    }
+    .new-cat-area-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-bottom: 0.6rem;
+      padding-left: 0.3rem;
+    }
+    .new-cat-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .new-cat-row input {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.8);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .new-cat-row input::placeholder { color: rgba(255,255,255,0.25); }
+    .new-cat-row input:focus { border-color: var(--gold); }
+    .new-cat-cover-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.75rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px dashed rgba(255,255,255,0.18);
+      border-radius: 8px;
+      font-size: 0.73rem;
+      color: rgba(255,255,255,0.45);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .new-cat-cover-label:hover { border-color: var(--gold); color: rgba(255,255,255,0.75); }
+    #new-cat-cover-name {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.35);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-left: 0.3rem;
+    }
+    #btn-add-cat {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(201,169,110,0.5);
+      background: rgba(201,169,110,0.1);
+      color: var(--gold);
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      text-align: center;
+    }
+    #btn-add-cat:hover { background: rgba(201,169,110,0.22); border-color: var(--gold); }
+
+    /* ── SIDEBAR FOOTER ── */
+    .sidebar-footer {
+      padding: 1rem 1.2rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    #btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: transparent;
+      color: rgba(255,255,255,0.45);
+      font-family: var(--font-body);
+      font-size: 0.77rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    #btn-logout:hover {
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.8);
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    /* ── MAIN CONTENT ── */
+    .admin-main {
+      margin-left: var(--sidebar-w);
+      padding: 2.5rem 2.5rem 3rem;
+      min-height: 100vh;
+    }
+
+    .admin-main-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--warmgrey);
+    }
     .admin-title {
       font-family: var(--font-display);
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 400;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.25rem;
     }
     .admin-subtitle {
       font-size: 0.82rem;
       color: var(--greige);
-      letter-spacing: 0.04em;
-      margin-bottom: 2rem;
-    }
-
-    /* ── CATEGORY TABS ── */
-    .cat-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-    }
-    .cat-tab {
-      padding: 0.45rem 1.1rem;
-      border-radius: 50px;
-      border: 1px solid var(--warmgrey);
-      background: transparent;
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: var(--espresso);
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, color 0.2s;
-    }
-    .cat-tab.active, .cat-tab:hover {
-      background: var(--espresso);
-      border-color: var(--espresso);
-      color: #fff;
-    }
-    .cat-tab .tab-remove {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: 0.4rem;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.25);
-      font-size: 0.6rem;
-      line-height: 1;
-      vertical-align: middle;
-      cursor: pointer;
-    }
-    .cat-tab:not(.active) .tab-remove { background: rgba(63,54,50,0.15); }
-
-    /* ── NEW CATEGORY ROW ── */
-    .new-cat-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .new-cat-row input {
-      border: 1px dashed var(--warmgrey);
-      border-radius: 50px;
-      padding: 0.4rem 1rem;
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      letter-spacing: 0.06em;
-      color: var(--espresso);
-      background: transparent;
-      outline: none;
-      width: 200px;
-      transition: border-color 0.2s;
-    }
-    .new-cat-row input:focus { border-color: var(--gold); border-style: solid; }
-    .new-cat-row input::placeholder { color: var(--taupe); }
-    #btn-add-cat {
-      padding: 0.4rem 1rem;
-      border-radius: 50px;
-      border: 1px solid var(--gold);
-      background: transparent;
-      color: var(--espresso);
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-    #btn-add-cat:hover { background: var(--gold); color: #fff; }
-    .new-cat-cover-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      padding: 0.4rem 0.9rem;
-      border-radius: 50px;
-      border: 1px dashed var(--warmgrey);
-      font-size: 0.75rem;
-      letter-spacing: 0.06em;
-      color: var(--greige);
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-      white-space: nowrap;
-    }
-    .new-cat-cover-label:hover { border-color: var(--gold); color: var(--espresso); }
-    #new-cat-cover-name {
-      font-size: 0.73rem;
-      color: var(--greige);
-      max-width: 140px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      letter-spacing: 0.03em;
     }
 
     /* ── UPLOAD CARD ── */
@@ -267,19 +362,19 @@
       background: #fff;
       border-radius: 16px;
       padding: 2rem;
-      box-shadow: 0 4px 24px rgba(63,54,50,0.08);
+      box-shadow: 0 2px 16px rgba(63,54,50,0.07);
       margin-bottom: 2rem;
     }
     .upload-card h2 {
       font-family: var(--font-display);
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 400;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.4rem;
     }
     .drop-zone {
       border: 2px dashed var(--warmgrey);
       border-radius: 12px;
-      padding: 3rem 2rem;
+      padding: 2.5rem 2rem;
       text-align: center;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
@@ -290,14 +385,14 @@
       background: #fdf8f2;
     }
     .drop-zone i { font-size: 2rem; color: var(--taupe); margin-bottom: 0.8rem; display: block; }
-    .drop-zone p { font-size: 0.85rem; color: var(--greige); line-height: 1.6; }
+    .drop-zone p { font-size: 0.84rem; color: var(--greige); line-height: 1.6; }
     .drop-zone strong { color: var(--espresso); }
     #file-input { display: none; }
 
     /* ── PREVIEW GRID ── */
     #preview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
       gap: 0.8rem;
       margin-top: 1.5rem;
     }
@@ -308,9 +403,7 @@
       aspect-ratio: 4/5;
       background: var(--espresso);
     }
-    .preview-item img, .preview-item video {
-      width: 100%; height: 100%; object-fit: cover;
-    }
+    .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; }
     .preview-item .remove-btn {
       position: absolute;
       top: 4px; right: 4px;
@@ -384,17 +477,17 @@
       background: #fff;
       border-radius: 16px;
       padding: 2rem;
-      box-shadow: 0 4px 24px rgba(63,54,50,0.08);
+      box-shadow: 0 2px 16px rgba(63,54,50,0.07);
     }
     .existing-card h2 {
       font-family: var(--font-display);
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 400;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.4rem;
     }
     #existing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
       gap: 0.8rem;
     }
     .existing-item {
@@ -404,9 +497,7 @@
       aspect-ratio: 4/5;
       background: var(--espresso);
     }
-    .existing-item img, .existing-item video {
-      width: 100%; height: 100%; object-fit: cover;
-    }
+    .existing-item img, .existing-item video { width: 100%; height: 100%; object-fit: cover; }
     .existing-item .del-btn {
       position: absolute;
       top: 4px; right: 4px;
@@ -429,55 +520,68 @@
       grid-column: 1/-1;
     }
 
-    /* ── MOBILE & TABLET ── */
-    @media (max-width: 600px) {
-      .admin-topbar { padding: 0 1rem; }
-      .admin-topbar-logo { font-size: 1.1rem; }
+    /* ── MOBILE HAMBURGER ── */
+    #sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 1rem; left: 1rem;
+      z-index: 300;
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: none;
+      background: var(--espresso);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 190;
+    }
 
-      #admin-panel { padding: 1.5rem 1rem; }
-      .admin-title { font-size: 1.7rem; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 220px; }
+
+      #sidebar-toggle { display: flex; }
+
+      .admin-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+      }
+      .admin-sidebar.open { transform: translateX(0); }
+      #sidebar-overlay.open { display: block; }
+
+      .admin-main {
+        margin-left: 0;
+        padding: 4.5rem 1.2rem 2rem;
+      }
+
+      #admin-panel { display: block !important; }
 
       .auth-card { padding: 2rem 1.5rem; }
 
-      .cat-tabs { gap: 0.4rem; }
-      .cat-tab { font-size: 0.7rem; padding: 0.4rem 0.85rem; }
-
-      .upload-card, .existing-card { padding: 1.5rem 1rem; }
-
-      .drop-zone { padding: 2rem 1rem; }
-      .drop-zone i { font-size: 1.5rem; }
-
-      #preview-grid,
-      #existing-grid {
+      #preview-grid, #existing-grid {
         grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-        gap: 0.5rem;
       }
 
       #btn-upload { width: 100%; justify-content: center; }
-    }
-
-    @media (max-width: 900px) and (min-width: 601px) {
-      /* Tablet */
-      #admin-panel { padding: 2rem 1.5rem; }
-      #preview-grid,
-      #existing-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      }
     }
   </style>
 </head>
 <body>
 
-  <header class="admin-topbar">
-    <div class="admin-topbar-logo">Studio <span>Serena</span> — Admin</div>
-    <button id="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
-  </header>
-
   <!-- AUTH SCREEN -->
   <div id="auth-screen">
     <div class="auth-card">
+      <div class="auth-logo">Studio <span>Serena</span></div>
       <h1>Admin Login</h1>
-      <p>Studio Serena · Gallery Management</p>
+      <p>Gallery Management</p>
       <div class="auth-field">
         <label>Email</label>
         <input type="email" id="admin-email" autocomplete="username" placeholder="admin@studioserena.no" />
@@ -491,32 +595,62 @@
     </div>
   </div>
 
+  <!-- MOBILE HAMBURGER -->
+  <button id="sidebar-toggle" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+  <div id="sidebar-overlay"></div>
+
   <!-- ADMIN PANEL -->
   <div id="admin-panel">
-    <h1 class="admin-title">Gallery Manager</h1>
-    <p class="admin-subtitle">Upload photos &amp; videos to any category. Changes appear on the site immediately.</p>
 
-    <div class="cat-tabs" id="cat-tabs">
-      <button class="cat-tab active" data-cat="Balayage">Balayage</button>
-      <button class="cat-tab" data-cat="Farge">Colour</button>
-      <button class="cat-tab" data-cat="HairTreatment">Keratin</button>
-      <button class="cat-tab" data-cat="Extensions">Extensions</button>
-      <button class="cat-tab" data-cat="Haircut">Cut &amp; Style</button>
-      <button class="cat-tab" data-cat="Styling">Styling</button>
-      <button class="cat-tab" data-cat="Brides">Bridal</button>
-      <button class="cat-tab" data-cat="behind-the-chair" style="border-color:var(--gold);color:var(--espresso)">🎬 Behind the Chair</button>
-      <button class="cat-tab" data-cat="__team__" style="border-color:var(--gold);color:var(--espresso)">👥 Team</button>
-    </div>
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-logo">
+        Studio <span>Serena</span>
+        <small>Admin Dashboard</small>
+      </div>
 
-    <div class="new-cat-row">
-      <input type="text" id="new-cat-input" placeholder="New category name…" maxlength="40" />
-      <label class="new-cat-cover-label">
-        <i class="fa-solid fa-image"></i> Cover photo
-        <input type="file" id="new-cat-cover" accept="image/jpeg,image/png,image/webp" style="display:none" />
-      </label>
-      <span id="new-cat-cover-name"></span>
-      <button id="btn-add-cat">+ Add Category</button>
-    </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Gallery</div>
+        <nav class="cat-tabs" id="cat-tabs">
+          <button class="cat-tab active" data-cat="Balayage"><i class="fa-solid fa-wand-magic-sparkles nav-icon"></i>Balayage</button>
+          <button class="cat-tab" data-cat="Farge"><i class="fa-solid fa-palette nav-icon"></i>Colour</button>
+          <button class="cat-tab" data-cat="HairTreatment"><i class="fa-solid fa-droplet nav-icon"></i>Keratin</button>
+          <button class="cat-tab" data-cat="Extensions"><i class="fa-solid fa-layer-group nav-icon"></i>Extensions</button>
+          <button class="cat-tab" data-cat="Haircut"><i class="fa-solid fa-scissors nav-icon"></i>Cut &amp; Style</button>
+          <button class="cat-tab" data-cat="Styling"><i class="fa-solid fa-star nav-icon"></i>Styling</button>
+          <button class="cat-tab" data-cat="Brides"><i class="fa-solid fa-heart nav-icon"></i>Bridal</button>
+          <div class="sidebar-divider"></div>
+          <button class="cat-tab" data-cat="behind-the-chair"><i class="fa-solid fa-video nav-icon"></i>Behind the Chair</button>
+          <button class="cat-tab" data-cat="__team__"><i class="fa-solid fa-users nav-icon"></i>Team</button>
+        </nav>
+
+        <div class="sidebar-divider" style="margin-top:1rem"></div>
+
+        <div class="new-cat-area">
+          <div class="new-cat-area-label">New Category</div>
+          <div class="new-cat-row">
+            <input type="text" id="new-cat-input" placeholder="Category name…" maxlength="40" />
+            <label class="new-cat-cover-label">
+              <i class="fa-solid fa-image"></i> Cover photo
+              <input type="file" id="new-cat-cover" accept="image/jpeg,image/png,image/webp" style="display:none" />
+            </label>
+            <span id="new-cat-cover-name"></span>
+            <button id="btn-add-cat"><i class="fa-solid fa-plus"></i> Add Category</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="admin-main">
+      <div class="admin-main-header">
+        <h1 class="admin-title">Gallery Manager</h1>
+        <p class="admin-subtitle">Upload photos &amp; videos — changes appear on the site immediately.</p>
+      </div>
 
     <div class="upload-card">
       <h2>Upload to <em id="active-cat-label">Balayage</em></h2>
