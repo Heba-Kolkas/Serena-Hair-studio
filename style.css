@@ -468,6 +468,7 @@ nav.scrolled .hamburger span {
   text-transform: uppercase;
   text-decoration: none;
   border: none;
+  border-radius: 50px;
   cursor: pointer;
   transition: all 0.4s ease;
 }
@@ -486,6 +487,7 @@ nav.scrolled .hamburger span {
   text-transform: uppercase;
   text-decoration: none;
   border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50px;
   transition: all 0.4s ease;
 }
 
