@@ -392,12 +392,26 @@ const galleryData = {
         const card = document.createElement('div');
         card.className = 'gallery-cat-card';
         card.addEventListener('click', () => window.openLightbox(key));
-        const coverHtml = coverUrl
-          ? `<img src="${coverUrl}" alt="${name}" loading="lazy" decoding="async">`
-          : `<div style="background:var(--warmgrey,#E0D8CF);width:100%;height:100%;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-images" style="font-size:2rem;color:#fff;opacity:0.5"></i></div>`;
-        card.innerHTML = `
-          <div class="gallery-cat-img-wrap">${coverHtml}</div>
-          <div class="gallery-cat-label">${name}</div>`;
+
+        const imgWrap = document.createElement('div');
+        imgWrap.className = 'gallery-cat-img-wrap';
+        if (coverUrl) {
+          const img = document.createElement('img');
+          img.src     = coverUrl;
+          img.alt     = name;           // textContent-safe via DOM API
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          imgWrap.appendChild(img);
+        } else {
+          imgWrap.innerHTML = `<div style="background:var(--warmgrey,#E0D8CF);width:100%;height:100%;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-images" style="font-size:2rem;color:#fff;opacity:0.5"></i></div>`;
+        }
+
+        const labelEl = document.createElement('div');
+        labelEl.className   = 'gallery-cat-label';
+        labelEl.textContent = name;     // safe — never parsed as HTML
+
+        card.appendChild(imgWrap);
+        card.appendChild(labelEl);
         grid.appendChild(card);
       }
     }));
