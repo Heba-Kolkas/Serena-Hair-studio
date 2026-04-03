@@ -551,6 +551,25 @@
       fileInput.value = '';
     });
 
+    // Compress images to max 1200px wide, 0.82 quality before upload
+    async function compressImage(file) {
+      return new Promise(resolve => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const maxW = 1200;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width  = Math.round(img.width  * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.82);
+        };
+        img.src = url;
+      });
+    }
+
     function addFiles(files) {
       const allowed = ['image/jpeg','image/png','image/webp','video/mp4','video/quicktime'];
       files.forEach(f => {
@@ -613,16 +632,21 @@
 
       try {
         for (const item of stagedFiles) {
-          const ext        = item.file.name.split('.').pop();
-          const safeName   = `${selectedCategory}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+          const isVid     = item.file.type.startsWith('video/');
+          const ext       = isVid ? item.file.name.split('.').pop() : 'jpg';
+          const safeName  = `${selectedCategory}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
           progressLbl.textContent  = `Uploading ${done + 1} of ${total}…`;
           progressBar.style.width  = ((done / total) * 100).toFixed(1) + '%';
 
+          // Compress images before upload (videos uploaded as-is)
+          const uploadFile = isVid ? item.file : await compressImage(item.file);
+          const mimeType   = isVid ? item.file.type : 'image/jpeg';
+
           // Upload file to Supabase Storage
           const { error: upErr } = await supabase.storage
             .from('gallery')
-            .upload(safeName, item.file, { upsert: false });
+            .upload(safeName, uploadFile, { upsert: false, contentType: mimeType });
           if (upErr) throw new Error(upErr.message);
 
           // Get public URL
