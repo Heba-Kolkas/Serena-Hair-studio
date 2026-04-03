@@ -508,18 +508,51 @@ const galleryData = {
     members.forEach(m => {
       const card = document.createElement('div');
       card.className = 'team-card reveal';
-      card.innerHTML = `
-        <div class="team-img-wrap">
-          <img src="${m.photo || ''}" loading="lazy" alt="${m.name}">
-          <div class="team-overlay"></div>
-          <div class="team-socials">
-            ${m.instagram ? `<a href="${m.instagram}" class="team-social-link" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>` : ''}
-          </div>
-        </div>
-        <div class="team-name">${m.name}</div>
-        <div class="team-role">${m.role}</div>
-        <div class="team-bio">${m.bio || ''}</div>
-      `;
+
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'team-img-wrap';
+
+      const img = document.createElement('img');
+      img.src = m.photo || '';
+      img.loading = 'lazy';
+      img.alt = m.name;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'team-overlay';
+
+      const socials = document.createElement('div');
+      socials.className = 'team-socials';
+
+      if (m.instagram) {
+        const igUrl = String(m.instagram);
+        if (igUrl.startsWith('https://') || igUrl.startsWith('http://')) {
+          const a = document.createElement('a');
+          a.href = igUrl;
+          a.className = 'team-social-link';
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          const icon = document.createElement('i');
+          icon.className = 'fa-brands fa-instagram';
+          a.appendChild(icon);
+          socials.appendChild(a);
+        }
+      }
+
+      imgWrap.append(img, overlay, socials);
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'team-name';
+      nameEl.textContent = m.name;
+
+      const roleEl = document.createElement('div');
+      roleEl.className = 'team-role';
+      roleEl.textContent = m.role;
+
+      const bioEl = document.createElement('div');
+      bioEl.className = 'team-bio';
+      bioEl.textContent = m.bio || '';
+
+      card.append(imgWrap, nameEl, roleEl, bioEl);
       grid.appendChild(card);
     });
   } catch (_) {}
