@@ -713,7 +713,9 @@
         <p class="existing-empty">Loading…</p>
       </div>
     </div>
-  </div>
+
+    </main><!-- /.admin-main -->
+  </div><!-- /#admin-panel -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
   <script>
@@ -864,16 +866,27 @@
 
     function showPanel() {
       authScreen.style.display = 'none';
-      adminPanel.style.display = 'block';
-      btnLogout.style.display  = 'inline-flex';
+      adminPanel.style.display = 'flex';
+      document.getElementById('sidebar-toggle').style.display = 'flex';
       loadExisting(selectedCategory);
       loadCustomCatsFromSupabase();
     }
     function showAuth() {
       authScreen.style.display = 'flex';
       adminPanel.style.display = 'none';
-      btnLogout.style.display  = 'none';
+      document.getElementById('sidebar-toggle').style.display = 'none';
     }
+
+    // ── MOBILE SIDEBAR TOGGLE ──
+    const sidebarEl  = document.getElementById('admin-sidebar');
+    const overlayEl  = document.getElementById('sidebar-overlay');
+    const toggleBtn  = document.getElementById('sidebar-toggle');
+    function openSidebar()  { sidebarEl.classList.add('open');  overlayEl.classList.add('open'); }
+    function closeSidebar() { sidebarEl.classList.remove('open'); overlayEl.classList.remove('open'); }
+    toggleBtn.addEventListener('click', () => sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar());
+    overlayEl.addEventListener('click', closeSidebar);
+    // Close sidebar when a category is picked on mobile
+    document.getElementById('cat-tabs').addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
 
     // ── LOGIN ──
     btnLogin.addEventListener('click', async () => {
