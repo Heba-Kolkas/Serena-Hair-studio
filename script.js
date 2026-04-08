@@ -458,52 +458,38 @@ function _thumbUrl(src) {
 })();
 
 // ── BEHIND THE CHAIR SECTION ──
-(async function loadBehindTheChair() {
+(function loadBehindTheChair() {
   try {
-    const SUPABASE_URL  = 'https://drejwxijygwwhnfpgxvl.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyZWp3eGlqeWd3d2huZnBneHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMDg0MjIsImV4cCI6MjA5MDc4NDQyMn0.1MJxo7D2WlX9jcvuVzgYm-A1qKqh26o1tJ827rvUaro';
     const track = document.getElementById('behindChairTrack');
     const empty = document.getElementById('behindChairEmpty');
     if (!track) return;
 
-    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/gallery`, {
-      method: 'POST',
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prefix: 'behind-the-chair/', limit: 100, offset: 0 })
-    });
-    if (!res.ok) { if (empty) empty.style.display = 'block'; return; }
-    const files = await res.json();
-    if (!Array.isArray(files) || files.length === 0) { if (empty) empty.style.display = 'block'; return; }
+    const files = [
+      './html/Pics/Behind the chair/1.MOV',
+      './html/Pics/Behind the chair/2.MOV',
+      './html/Pics/Behind the chair/3.MOV',
+      './html/Pics/Behind the chair/4.MOV',
+      './html/Pics/Behind the chair/5.MOV',
+      './html/Pics/Behind the chair/6.MOV',
+      './html/Pics/Behind the chair/7.MOV',
+    ];
 
-    // Limit to 20 items to reduce egress
-    const limited = files.slice(0, 20);
-    limited.forEach(f => {
-      const url   = `${SUPABASE_URL}/storage/v1/object/public/gallery/behind-the-chair/${f.name}`;
-      const isVid = /\.(mp4|mov|webm)$/i.test(f.name);
-      const card  = document.createElement('div');
+    files.forEach(url => {
+      const card = document.createElement('div');
       card.className = 'behind-chair-card';
-      if (isVid) {
-        const vid = document.createElement('video');
-        vid.src = url;
-        vid.muted = true;
-        vid.loop = true;
-        vid.playsInline = true;
-        vid.preload = 'none'; // don't download until visible
-        vid.setAttribute('disablepictureinpicture', '');
-        // Play only when visible
-        const obs = new IntersectionObserver(([e]) => {
-          if (e.isIntersecting) { vid.play().catch(() => {}); }
-          else { vid.pause(); }
-        }, { threshold: 0.1 });
-        obs.observe(vid);
-        card.appendChild(vid);
-      } else {
-        const img = document.createElement('img');
-        img.src = _thumbUrl(url, 400);
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        card.appendChild(img);
-      }
+      const vid = document.createElement('video');
+      vid.src = url;
+      vid.muted = true;
+      vid.loop = true;
+      vid.playsInline = true;
+      vid.preload = 'none';
+      vid.setAttribute('disablepictureinpicture', '');
+      const obs = new IntersectionObserver(([e]) => {
+        if (e.isIntersecting) { vid.play().catch(() => {}); }
+        else { vid.pause(); }
+      }, { threshold: 0.1 });
+      obs.observe(vid);
+      card.appendChild(vid);
       track.appendChild(card);
     });
 
