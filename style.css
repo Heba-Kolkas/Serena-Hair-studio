@@ -1,3 +1,9 @@
+/* ── HIDE BROWSER VIDEO OVERLAY CONTROLS (PiP, translate, etc.) ── */
+video::-webkit-media-controls-overlay-play-button { display: none !important; }
+video::-webkit-media-controls-panel { display: none !important; }
+video::-webkit-media-controls { display: none !important; }
+video::--internal-media-controls-button-panel { display: none !important; }
+
 :root {
   --cream: #faf8f5;
   --linen: #fff7f7;

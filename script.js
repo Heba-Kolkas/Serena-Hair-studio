@@ -352,13 +352,20 @@ const galleryData = {
   ]
 };
 
+// ── IMAGE URL PASSTHROUGH ──
+// Image transformations are unavailable on the free Supabase plan.
+// This function is kept as a no-op so call sites still work.
+function _thumbUrl(src) {
+  return src || '';
+}
+
 // ── CUSTOM CATEGORIES (from Supabase _custom_cats.json) ──
 (async function loadCustomCategories() {
   try {
     const SUPABASE_URL  = 'https://drejwxijygwwhnfpgxvl.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyZWp3eGlqeWd3d2huZnBneHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMDg0MjIsImV4cCI6MjA5MDc4NDQyMn0.1MJxo7D2WlX9jcvuVzgYm-A1qKqh26o1tJ827rvUaro';
     const res = await fetch(
-      `${SUPABASE_URL}/storage/v1/object/public/gallery/_custom_cats.json?t=${Date.now()}`
+      `${SUPABASE_URL}/storage/v1/object/public/gallery/_custom_cats.json`
     );
     if (!res.ok) return;
     const cats = await res.json();
@@ -397,7 +404,7 @@ const galleryData = {
         imgWrap.className = 'gallery-cat-img-wrap';
         if (coverUrl) {
           const img = document.createElement('img');
-          img.src     = coverUrl;
+          img.src     = _thumbUrl(coverUrl, 400);
           img.alt     = name;           // textContent-safe via DOM API
           img.loading = 'lazy';
           img.decoding = 'async';
@@ -468,15 +475,35 @@ const galleryData = {
     const files = await res.json();
     if (!Array.isArray(files) || files.length === 0) { if (empty) empty.style.display = 'block'; return; }
 
-    files.forEach(f => {
+    // Limit to 20 items to reduce egress
+    const limited = files.slice(0, 20);
+    limited.forEach(f => {
       const url   = `${SUPABASE_URL}/storage/v1/object/public/gallery/behind-the-chair/${f.name}`;
       const isVid = /\.(mp4|mov|webm)$/i.test(f.name);
       const card  = document.createElement('div');
       card.className = 'behind-chair-card';
-      const media = document.createElement(isVid ? 'video' : 'img');
-      media.src = url;
-      if (isVid) { media.muted = true; media.loop = true; media.autoplay = true; media.playsInline = true; }
-      card.appendChild(media);
+      if (isVid) {
+        const vid = document.createElement('video');
+        vid.src = url;
+        vid.muted = true;
+        vid.loop = true;
+        vid.playsInline = true;
+        vid.preload = 'none'; // don't download until visible
+        vid.setAttribute('disablepictureinpicture', '');
+        // Play only when visible
+        const obs = new IntersectionObserver(([e]) => {
+          if (e.isIntersecting) { vid.play().catch(() => {}); }
+          else { vid.pause(); }
+        }, { threshold: 0.1 });
+        obs.observe(vid);
+        card.appendChild(vid);
+      } else {
+        const img = document.createElement('img');
+        img.src = _thumbUrl(url, 400);
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        card.appendChild(img);
+      }
       track.appendChild(card);
     });
 
@@ -497,7 +524,7 @@ const galleryData = {
 (async function loadCloudTeam() {
   try {
     const SUPABASE_URL = 'https://drejwxijygwwhnfpgxvl.supabase.co';
-    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/gallery/team/members.json?t=${Date.now()}`);
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/gallery/team/members.json`);
     if (!res.ok) return;
     const members = await res.json();
     if (!Array.isArray(members) || members.length === 0) return;
@@ -513,7 +540,7 @@ const galleryData = {
       imgWrap.className = 'team-img-wrap';
 
       const img = document.createElement('img');
-      img.src = m.photo || '';
+      img.src = _thumbUrl(m.photo || '', 400);
       img.loading = 'lazy';
       img.alt = m.name;
 
@@ -597,6 +624,8 @@ function _buildVideoWrapper(src) {
   video.autoplay    = true;
   video.preload     = 'auto';
   video.setAttribute('muted', '');
+  video.setAttribute('disablepictureinpicture', '');
+  video.setAttribute('x-webkit-airplay', 'deny');
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('autoplay', '');
@@ -638,35 +667,9 @@ function _buildVideoWrapper(src) {
   return { wrapper, video };
 }
 
-// Pre-warm video cache on gallery card hover / touch
+// Pre-warming removed — was downloading all images/videos on hover, causing excessive egress.
+// Videos and images now load on demand when the lightbox is actually opened.
 const _imgPrefetchCache = {};
-document.querySelectorAll('.gallery-cat-card').forEach(card => {
-  const oncard = card.getAttribute('onclick') || '';
-  const match  = oncard.match(/openLightbox\('([^']+)'\)/);
-  if (!match) return;
-  const cat = match[1];
-
-  const prefetch = () => {
-    if (_imgPrefetchCache[cat]) return;
-    _imgPrefetchCache[cat] = true;
-
-    (galleryData[cat] || []).forEach(src => {
-      if (/\.(mp4|mov|webm)$/i.test(src)) {
-        // Pre-build and pre-load every video in the background
-        if (!_videoCache[src]) {
-          _videoCache[src] = _buildVideoWrapper(src);
-        }
-      } else {
-        // Pre-fetch images
-        const i = new Image();
-        i.src = src;
-      }
-    });
-  };
-
-  card.addEventListener('mouseenter', prefetch);
-  card.addEventListener('touchstart', prefetch, { passive: true });
-});
 
 window.openLightbox = function openLightbox(category) {
   const overlay = document.getElementById('lightboxOverlay');
@@ -702,19 +705,7 @@ window.openLightbox = function openLightbox(category) {
     return;
   }
 
-  // Ensure all media for this category is pre-warming even if hover didn't trigger it
-  if (!_imgPrefetchCache[category]) {
-    _imgPrefetchCache[category] = true;
-    items.forEach(src => {
-      if (/\.(mp4|mov|webm)$/i.test(src)) {
-        if (!_videoCache[src]) _videoCache[src] = _buildVideoWrapper(src);
-      } else {
-        const i = new Image(); i.src = src;
-      }
-    });
-  }
-
-  // Build grid from cache — reuse pre-built wrappers where available
+  // Build grid — build video wrappers on demand
   items.forEach(src => {
     if (/\.(mp4|mov|webm)$/i.test(src)) {
       const cached = _videoCache[src];
@@ -736,9 +727,9 @@ window.openLightbox = function openLightbox(category) {
       wrap.style.cssText = 'position:relative;width:100%;padding-bottom:125%;height:0;overflow:hidden;border-radius:10px;display:block;background:#1a1715;';
       const img = document.createElement('img');
       img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center top;display:block;pointer-events:none;border-radius:0;';
-      img.src      = src;
+      img.src      = _thumbUrl(src, 900);
       img.alt      = category;
-      img.loading  = 'eager';
+      img.loading  = 'lazy';
       img.decoding = 'async';
       wrap.appendChild(img);
       grid.appendChild(wrap);
