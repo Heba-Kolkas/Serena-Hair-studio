@@ -1,3 +1,27 @@
+// ── BROKEN IMAGE FALLBACK ──
+// Missing/failed photos (e.g. a team member's headshot not uploaded yet)
+// collapse to an icon on a solid background instead of a browser broken-image
+// glyph floating in an otherwise blank box.
+(function () {
+  function applyFallback(img) {
+    if (img.dataset.fallbackApplied) return;
+    img.dataset.fallbackApplied = '1';
+    img.style.display = 'none';
+    const wrap = img.parentElement;
+    if (!wrap || wrap.querySelector('.img-fallback-icon')) return;
+    if (!wrap.style.position) wrap.style.position = 'relative';
+    wrap.style.background = 'var(--taupe)';
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-image img-fallback-icon';
+    icon.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#fff;opacity:0.55;';
+    wrap.appendChild(icon);
+  }
+  document.querySelectorAll('.team-img-wrap img, .gallery-cat-img-wrap img').forEach(img => {
+    if (img.complete && img.naturalWidth === 0) applyFallback(img);
+    else img.addEventListener('error', () => applyFallback(img));
+  });
+})();
+
 // ── SMOOTH SCROLL TO SECTION ──
 window.smoothTo = function smoothTo(id) {
   const el = document.getElementById(id);
