@@ -349,6 +349,14 @@ const galleryData = {
     './html/Pics/Treatment/Ht6.mp4',
     './html/Pics/Treatment/Ht5.mp4',
     './html/Pics/Treatment/Ht10.mp4',
+  ],
+  Nails: [
+    './html/Pics/Nails/Nails1.jpeg',
+    './html/Pics/Nails/Nails2.jpeg',
+    './html/Pics/Nails/Nails3.jpeg',
+    './html/Pics/Nails/Nails4.jpeg',
+    './html/Pics/Nails/Nails5.jpeg',
+    './html/Pics/Nails/Nails6.jpeg',
   ]
 };
 
@@ -671,6 +679,7 @@ window.openLightbox = function openLightbox(category) {
     Haircut:       { en: 'Cut & Style',       no: 'Klipp & Style' },
     Styling:       { en: 'Styling',           no: 'Styling' },
     Brides:        { en: 'Bridal',            no: 'Brud' },
+    Nails:         { en: 'Nails',             no: 'Negler' },
   };
   const currentLang = (typeof lang !== 'undefined') ? lang : 'en';
   const titleObj = categoryTitles[category];
@@ -931,10 +940,15 @@ if (!window._studioSerenaChatInit) {
       reply: `We offer a full range of colour services — from classic one-colour applications to multi-dimensional highlights and creative toning. ✦\n\nDM us on Instagram ${INSTAGRAM} to discuss what's right for you.`
     },
 
+    {
+      keys: ['nails', 'nail', 'negler', 'negl', 'manicure', 'gel nails'],
+      reply: "Our Nail Artist Pati specialises in gel, nail extensions, and creative nail art ✦\n\nFollow her work on Instagram @studio.serena.nailsbypati, or book your appointment directly via Timma: https://timma.no/salong/patrycja-neglebar"
+    },
+
     // SERVICES — general
     {
       keys: ['our services', 'services', 'service', 'what do you offer', 'hva tilbyr', 'tjenester', 'behandlinger', 'våre tjenester'],
-      reply: "We offer / Vi tilbyr:\n✦ Balayage\n✦ Haircuts / Hårklipp\n✦ Keratin\n✦ Extensions\n✦ One Color\n✦ Botox Hair Treatment\n✦ Protein Treatment\n✦ Anti-Frizz Treatment\n✦ Bridal Hair / Brudefrisyre\n✦ Hijabi services\n\nAsk me about any treatment for more details, or contact us for a consultation!"
+      reply: "We offer / Vi tilbyr:\n✦ Balayage\n✦ Haircuts / Hårklipp\n✦ Keratin\n✦ Extensions\n✦ One Color\n✦ Botox Hair Treatment\n✦ Protein Treatment\n✦ Anti-Frizz Treatment\n✦ Bridal Hair / Brudefrisyre\n✦ Hijabi services\n✦ Nails / Negler\n\nAsk me about any treatment for more details, or contact us for a consultation!"
     },
 
     // TEAM
@@ -955,8 +969,12 @@ if (!window._studioSerenaChatInit) {
       reply: "Heba K. is our Creative Lead & Communications ✦\n\nShe specialises in digital artistry and high-end client relations — the architect of our online world and the voice behind every appointment."
     },
     {
+      keys: ['pati'],
+      reply: "Pati is our Nail Artist ✦\n\nShe specialises in gel, nail extensions, and creative nail art. Follow her on Instagram @studio.serena.nailsbypati or book directly via Timma: https://timma.no/salong/patrycja-neglebar"
+    },
+    {
       keys: ['team', 'staff', 'stylists', 'ansatte', 'hvem jobber'],
-      reply: "Our expert team:\n✦ Hassan K. — Founder (25+ years luxury experience)\n✦ Kani M. — Stylist & MUA (bridal & balayage)\n✦ Taniya S. — Treatment Expert (Keratin & restoration)\n✦ Heba K. — Creative Lead & Communications"
+      reply: "Our expert team:\n✦ Hassan K. — Founder (25+ years luxury experience)\n✦ Kani M. — Stylist & MUA (bridal & balayage)\n✦ Taniya S. — Treatment Expert (Keratin & restoration)\n✦ Heba K. — Creative Lead & Communications\n✦ Pati — Nail Artist"
     },
 
     // LOCATION & HOURS
