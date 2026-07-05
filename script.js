@@ -505,6 +505,11 @@ function _thumbUrl(src) {
       './html/Pics/Behind the chair/7.MOV',
     ];
 
+    // Respect data-saver users — these clips are large, so skip autoplay
+    // entirely for them rather than burning their data budget unasked.
+    const saveData = (navigator.connection && navigator.connection.saveData) ||
+      (window.matchMedia && window.matchMedia('(prefers-reduced-data: reduce)').matches);
+
     files.forEach(url => {
       const card = document.createElement('div');
       card.className = 'behind-chair-card';
@@ -515,11 +520,16 @@ function _thumbUrl(src) {
       vid.playsInline = true;
       vid.preload = 'none';
       vid.setAttribute('disablepictureinpicture', '');
-      const obs = new IntersectionObserver(([e]) => {
-        if (e.isIntersecting) { vid.play().catch(() => {}); }
-        else { vid.pause(); }
-      }, { threshold: 0.1 });
-      obs.observe(vid);
+      if (!saveData) {
+        // Require most of the clip to be visible (not just a sliver of the
+        // next card) before it starts downloading/playing, so scrolling
+        // through the strip doesn't kick off several large downloads at once.
+        const obs = new IntersectionObserver(([e]) => {
+          if (e.isIntersecting) { vid.play().catch(() => {}); }
+          else { vid.pause(); }
+        }, { threshold: 0.5 });
+        obs.observe(vid);
+      }
       card.appendChild(vid);
       track.appendChild(card);
     });
