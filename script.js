@@ -356,7 +356,6 @@ const galleryData = {
     './html/Pics/Nails/Nails3.jpeg',
     './html/Pics/Nails/Nails4.jpeg',
     './html/Pics/Nails/Nails5.jpeg',
-    './html/Pics/Nails/Nails6.jpeg',
   ]
 };
 
