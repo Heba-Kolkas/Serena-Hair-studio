@@ -3377,3 +3377,39 @@ nav.scrolled #scroll-progress {
 input, textarea, select {
   font-size: 16px !important;
 }
+
+/* ── TEAM GRID: 3 per row on desktop, trailing pair centered ──
+   Uses a 6-column base (each card spans 2) so a leftover pair from an
+   odd team size (e.g. 5 = 3 + 2) can be shifted to sit exactly centered
+   instead of hugging the left edge of an empty row. */
+@media (min-width: 901px) {
+  .team-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .team-card {
+    grid-column: span 2;
+  }
+  .team-card:nth-child(3n+1):nth-last-child(2) {
+    grid-column: 2 / 4;
+  }
+  .team-card:nth-child(3n+1):nth-last-child(2) ~ .team-card {
+    grid-column: 4 / 6;
+  }
+}
+
+/* ── TEAM GRID: phone fix ──
+   An earlier, later-in-cascade tablet rule (max-width: 900px) was
+   overriding this file's own max-width:600px rule on real phones,
+   forcing 3 cramped columns instead of 2. Reasserted last so it wins,
+   and the leftover single card (odd team size) is centered instead of
+   sitting flush left next to empty space. */
+@media (max-width: 600px) {
+  .team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .team-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    max-width: calc(50% - 0.4rem);
+  }
+}
