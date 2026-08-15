@@ -5,13 +5,14 @@ video::-webkit-media-controls { display: none !important; }
 video::--internal-media-controls-button-panel { display: none !important; }
 
 :root {
-  --cream: #faf8f5;
-  --linen: #fff7f7;
+  --cream: #f3e9d3;
+  --linen: #f8f0dd;
   --warmgrey: #E0D8CF;
   --taupe: #B5A89A;
   --greige: #9f948e;
   --espresso: #3f3632;
   --gold: #C9A96E;
+  --blush: #f1ded8;
   --white: #ffffffd7;
   --font-display: 'Cormorant Garamond', serif;
   --font-body: 'Jost', sans-serif;
@@ -28,6 +29,7 @@ video::--internal-media-controls-button-panel { display: none !important; }
   --espresso: #f4f0ec;
   --white: #12100e;
   --gold: #d4af37;
+  --blush: #3a2e2a;
 }
 
 /* Fix for anti-aliasing in dark mode */
@@ -66,6 +68,26 @@ body {
   font-family: var(--font-body);
   font-weight: 300;
   overflow-x: hidden;
+}
+
+/* ── SHARED APP-PAGE UTILITIES ── */
+.container {
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+}
+
+.page-header {
+  padding: 5.5rem 1.5rem 1.25rem;
+  text-align: center;
+}
+.page-header .section-eyebrow,
+.page-header .section-title {
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 900px) {
+  .page-header { padding: 7rem 2rem 1.5rem; }
 }
 
 /* ───── PRELOADER ───── */
@@ -157,6 +179,13 @@ body {
 }
 
 /* ───── NAV ───── */
+/* Anchor-jump targets (nav/footer links to #team, #gallery, #reviews,
+   #location, #faq) need clearance for the fixed nav above them — otherwise
+   the heading scrolls to right under the bar and looks like it's missing. */
+#team, #gallery, #reviews, #location, #faq {
+  scroll-margin-top: 90px;
+}
+
 nav {
   position: fixed;
   top: 0;
@@ -168,11 +197,17 @@ nav {
   align-items: center;
   justify-content: space-between;
   transition: background 0.4s ease, padding var(--transition), box-shadow var(--transition), border-color 0.4s ease;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-bottom: 1px solid transparent;
-  box-shadow: none;
+  /* App-style pages have a cream background from the very top (no full-bleed
+     dark hero to sit transparently over), so the nav is solid from the start;
+     .scrolled just tightens the padding/shadow further once you scroll. */
+  background: rgba(250,248,245,0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--warmgrey);
+  box-shadow: 0 2px 20px rgba(44,36,32,0.06);
+}
+[data-theme="dark"] nav {
+  background: rgba(18,16,14,0.97);
 }
 nav.scrolled {
   background: rgba(250,248,245,0.97) !important;
@@ -202,35 +237,79 @@ nav.scrolled {
   font-size: 1.4rem;
   font-weight: 400;
   letter-spacing: 0.12em;
-  color: #fff;
+  color: var(--espresso);
   text-decoration: none;
   transition: color var(--transition);
   white-space: nowrap;
 }
 
-nav.scrolled .nav-logo {
+/* ── NAV WORDMARK (replaces .nav-logo on the new app-style pages) ── */
+.nav-wordmark {
+  /* True center regardless of how wide the hamburger vs. lang/bell controls
+     are — space-between alone drifts it toward whichever side is narrower. */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.nav-wordmark-main {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   color: var(--espresso);
+  text-transform: uppercase;
+}
+.nav-wordmark-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  font-weight: 400;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin-top: 0.15rem;
+}
+.nav-wordmark-sub::before,
+.nav-wordmark-sub::after {
+  content: '';
+  width: 14px;
+  height: 1px;
+  background: var(--taupe);
 }
 
+/* The inline link row is retired in favor of the hamburger menu at every
+   width — kept as a plain list (not display:none) so its <a> tags stay
+   real, crawlable links for SEO even though they're visually hidden. */
 .nav-links {
-  display: flex;
-  gap: 2.5rem;
-  list-style: none;
-  align-items: center;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 .nav-links a {
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.85);
+  color: var(--greige);
   text-decoration: none;
   position: relative;
   transition: color var(--transition);
 }
-
-nav.scrolled .nav-links a {
-  color: var(--greige);
+.nav-links a.nav-active,
+.mobile-menu a.nav-active {
+  color: var(--taupe);
 }
 
 .nav-links a::after {
@@ -256,7 +335,7 @@ nav.scrolled .nav-links a {
 
 .toggle-btn {
   background: none;
-  border: 1px solid rgba(255,255,255,0.4);
+  border: 1px solid var(--warmgrey);
   border-radius: 50%;
   padding: 0;
   width: 32px;
@@ -264,7 +343,7 @@ nav.scrolled .nav-links a {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,0.85);
+  color: var(--greige);
   cursor: pointer;
   transition: all var(--transition);
   flex-shrink: 0;
@@ -274,11 +353,6 @@ nav.scrolled .nav-links a {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-}
-
-nav.scrolled .toggle-btn {
-  color: var(--greige);
-  border-color: var(--warmgrey);
 }
 
 .toggle-btn:hover {
@@ -294,17 +368,44 @@ nav.scrolled .toggle-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(255,255,255,0.85);
+  color: var(--greige);
   font-family: var(--font-body);
   white-space: nowrap;
 }
 
-nav.scrolled .lang-toggle {
+/* ── NAV BELL ── */
+.nav-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--warmgrey);
   color: var(--greige);
+  text-decoration: none;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.nav-bell:hover {
+  background: var(--taupe);
+  border-color: var(--taupe);
+  color: #fff;
+}
+.nav-bell-dot {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e07a3f;
+  border: 1.5px solid var(--cream);
 }
 
 .hamburger {
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 5px;
   cursor: pointer;
@@ -317,24 +418,27 @@ nav.scrolled .lang-toggle {
   display: block;
   width: 22px;
   height: 1px;
-  background: rgba(255,255,255,0.9);
+  background: var(--espresso);
   transition: all 0.3s;
 }
 
-nav.scrolled .hamburger span {
-  background: var(--espresso);
-}
-
+/* Compact anchored dropdown (below the hamburger) instead of a full-screen
+   takeover — same cream/espresso/taupe theme as the rest of the site. */
 .mobile-menu {
   display: none;
   position: fixed;
-  inset: 0;
-  background: #1e1612;
+  top: 4.2rem;
+  left: 1rem;
+  width: 240px;
+  max-width: calc(100vw - 2rem);
+  background: var(--linen);
+  border: 1px solid var(--warmgrey);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(44,36,32,0.18);
   z-index: 9001;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2.5rem;
+  padding: 0.5rem;
+  gap: 0.15rem;
 }
 
 .mobile-menu.open {
@@ -342,30 +446,43 @@ nav.scrolled .hamburger span {
 }
 
 .mobile-menu a {
-  font-family: var(--font-display);
-  font-size: 2.5rem;
-  font-weight: 300;
-  color: #faf8f5;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--espresso);
   text-decoration: none;
-  letter-spacing: 0.1em;
-  transition: color 0.2s;
+  letter-spacing: 0.01em;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .mobile-menu a:hover {
-  color: #B5A89A;
+  background: var(--linen);
+  color: var(--taupe);
+}
+.mobile-menu a i {
+  width: 1.1rem;
+  text-align: center;
+  color: var(--taupe);
+  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .mobile-menu .close-menu {
   position: absolute;
-  top: 5.5rem;
-  right: 1.5rem;
-  width: 44px;
-  height: 44px;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.22);
-  color: #faf8f5;
-  font-size: 1.1rem;
+  background: var(--blush);
+  border: none;
+  color: var(--espresso);
+  font-size: 0.7rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -374,15 +491,9 @@ nav.scrolled .hamburger span {
   z-index: 9002;
 }
 .mobile-menu .close-menu:hover {
-  background: rgba(255,255,255,0.18);
-  transform: rotate(90deg) scale(1.1);
-}
-
-@media (max-width: 599px) {
-  .mobile-menu .close-menu {
-    top: 5.8rem;
-    right: 1.2rem;
-  }
+  background: var(--taupe);
+  color: #fff;
+  transform: rotate(90deg);
 }
 
 /* ───── HERO ───── */
@@ -808,6 +919,10 @@ section {
 #gallery {
   padding-left: clamp(16px, 4vw, 60px);
   padding-right: clamp(16px, 4vw, 60px);
+  /* The generic section bottom-padding (up to 8rem at desktop-large) plus
+     .gallery-grid's own bottom padding stacked into a dead gap before
+     "Visit the Studio" — same fix as the other section seams. */
+  padding-bottom: 3rem;
 }
 
 .gallery-grid {
@@ -817,6 +932,20 @@ section {
   padding: 10px 0 48px;
   max-width: 860px;
   margin: 0 auto;
+}
+
+/* Desktop: 4 across (all 8 categories fill exactly 2 clean rows) with a
+   shorter, less portrait-heavy card — the 4:5 ratio read as a lot of
+   scrolling once there was room for more columns. */
+@media (min-width: 1000px) {
+  .gallery-grid {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 1300px;
+    gap: 20px;
+  }
+  .gallery-cat-img-wrap {
+    aspect-ratio: 4 / 3;
+  }
 }
 
 /* Last card alone: center it */
@@ -1526,13 +1655,18 @@ section {
 /* ───── HOURS & MAP ───── */
 #location {
   background: var(--cream);
+  /* Gallery's own bottom padding plus the generic section top/bottom padding
+     (up to 8rem at desktop-large) stacked into dead gaps on both sides of
+     this section — same fix as the Team/Gallery/FAQ seams. */
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 
 .location-inner {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .hours-list {
@@ -1556,18 +1690,34 @@ section {
 }
 
 .status-badge {
-  display: inline-block;
-  padding: 0.3rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 50px;
   font-size: 0.6rem;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   margin-top: 1.5rem;
+}
+.status-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
 .status-open {
   background: rgba(90, 140, 90, 0.1);
   color: #5a8c5a;
   border: 1px solid rgba(90, 140, 90, 0.3);
+}
+.status-open::before { animation: statusPulse 1.8s ease-in-out infinite; }
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.5); }
 }
 
 .status-closed {
@@ -1578,7 +1728,7 @@ section {
 
 .map-frame {
   width: 100%;
-  height: 450px;
+  height: 320px;
   border: none;
   filter: grayscale(20%)contrast(1.05);
   border: 1px solid var(--warmgrey);
@@ -1997,9 +2147,6 @@ section {
 @media (max-width: 1100px) {
   nav {
     padding: 1rem 2.5rem;
-    background: transparent;
-    border-bottom: 1px solid transparent;
-    box-shadow: none;
   }
 
   nav.scrolled {
@@ -2025,10 +2172,7 @@ section {
 /* ── TABLET PORTRAIT (600px–899px) ── */
 @media (max-width: 900px) {
   nav {
-    padding: 0.4rem 1.2rem;
-    background: transparent;
-    border-bottom: 1px solid transparent;
-    box-shadow: none;
+    padding: 0.5rem 1.2rem;
   }
   nav.scrolled {
     padding: 0.3rem 1.2rem;
@@ -2109,10 +2253,7 @@ section {
 
   /* Nav */
   nav {
-    padding: 0.35rem 1rem;
-    background: transparent;
-    border-bottom: 1px solid transparent;
-    box-shadow: none;
+    padding: 0.45rem 1rem;
   }
 
   nav.scrolled {
@@ -2513,48 +2654,50 @@ section {
 /* ───── FOOTER RESPONSIVE ───── */
 footer {
   background: var(--espresso);
-  padding: 5rem 4rem 2rem;
+  padding: 2.5rem 2.5rem 1.25rem;
 }
 
 .footer-top {
+  max-width: 1400px;
+  margin: 0 auto 1.25rem;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 3rem;
-  margin-bottom: 3rem;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
 }
 
 .footer-brand {
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   font-weight: 300;
   color: var(--cream);
-  letter-spacing: 0.1em;
-  margin-bottom: 1rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
 }
 
 .footer-tagline {
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   color: var(--greige);
-  line-height: 1.8;
+  line-height: 1.5;
 }
 
 .footer-col-title {
-  font-size: 0.6rem;
-  letter-spacing: 0.35em;
+  font-size: 0.58rem;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--taupe);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.6rem;
 }
 
 .footer-links {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.4rem;
 }
 
 .footer-links a {
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   color: var(--greige);
   text-decoration: none;
   transition: color 0.3s;
@@ -2565,39 +2708,46 @@ footer {
 }
 
 .footer-bottom {
+  max-width: 1400px;
+  margin: 0 auto;
   border-top: 1px solid var(--warmgrey);
-  padding-top: 2rem;
+  padding-top: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--greige);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
 }
 
 @media (max-width: 900px) {
   .footer-top {
     grid-template-columns: repeat(2, 1fr);
-    gap: 2.5rem;
+    gap: 1.5rem;
+  }
+  .footer-top > div:first-child {
+    grid-column: 1 / -1;
   }
   footer {
-    padding: 4rem 2.5rem 2rem;
+    padding: 2rem 1.5rem 1rem;
   }
 }
 
 @media (max-width: 599px) {
   .footer-top {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  .footer-top > div:first-child {
+    grid-column: 1 / -1;
   }
   footer {
-    padding: 3rem 1.5rem 1.5rem;
+    padding: 1.75rem 1.25rem 1rem;
   }
   .footer-bottom {
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-    font-size: 0.65rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-size: 0.6rem;
   }
 }
 
@@ -2631,14 +2781,13 @@ footer {
 @media (max-height: 500px) and (orientation: landscape) {
   nav {
     padding: 0.45rem 1.2rem !important;
-    background: transparent !important;
-    border-bottom: 1px solid transparent !important;
     position: fixed !important;
     top: 0; left: 0; right: 0;
     z-index: 999 !important;
     min-height: 48px;
   }
-  .nav-logo { font-size: 1rem !important; }
+  .nav-wordmark-main { font-size: 0.95rem !important; }
+  .nav-wordmark-sub { font-size: 0.48rem !important; }
   .nav-links { display: none !important; }
   .hamburger { display: flex !important; }
   .nav-controls { gap: 0.3rem !important; }
@@ -3280,21 +3429,23 @@ nav.scrolled #scroll-progress {
   }
 }
 
-/* ── MOBILE MENU CONTROLS (bottom of menu) ── */
+/* ── MOBILE MENU CONTROLS (bottom of dropdown) ── */
 .mobile-menu-controls {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--warmgrey);
   flex-wrap: wrap;
   justify-content: center;
 }
 .mobile-menu-controls .lang-toggle {
-  color: rgba(250,248,245,0.65) !important;
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  border: 1px solid rgba(255,255,255,0.2) !important;
-  padding: 0.5rem 1rem;
+  color: var(--greige) !important;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--warmgrey) !important;
+  padding: 0.4rem 0.9rem;
   border-radius: 20px;
   background: transparent !important;
   cursor: pointer;
@@ -3302,8 +3453,8 @@ nav.scrolled #scroll-progress {
   transition: all 0.2s;
 }
 .mobile-menu-controls .lang-toggle:hover {
-  color: rgba(250,248,245,0.95) !important;
-  border-color: rgba(255,255,255,0.4) !important;
+  color: var(--espresso) !important;
+  border-color: var(--taupe) !important;
 }
 .mobile-menu-book {
   font-size: 0.75rem !important;
@@ -3412,4 +3563,56 @@ input, textarea, select {
     justify-self: center;
     max-width: calc(50% - 0.4rem);
   }
+}
+
+/* ── GDPR COOKIE BANNER (now a site-wide partial, previously index-only inline) ── */
+#cookie-banner {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999;
+  background: rgba(28, 22, 18, 0.97); backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(181,168,154,0.25);
+  padding: 1.4rem 2rem; display: flex; align-items: center;
+  justify-content: space-between; gap: 1.5rem; flex-wrap: wrap;
+  transform: translateY(100%); transition: transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  font-family: var(--font-body);
+}
+#cookie-banner.visible { transform: translateY(0); }
+.cookie-text { flex: 1; min-width: 220px; font-size: 0.8rem; font-weight: 300; color: rgba(255,255,255,0.72); line-height: 1.7; }
+.cookie-text strong { color: #fff; font-weight: 500; display: block; margin-bottom: 0.3rem; font-size: 0.85rem; }
+.cookie-text a { color: var(--taupe); text-decoration: underline; text-underline-offset: 2px; }
+.cookie-btns { display: flex; gap: 0.75rem; flex-shrink: 0; flex-wrap: wrap; }
+.cookie-btn-accept, .cookie-btn-decline {
+  padding: 0.6rem 1.5rem; border-radius: 50px; font-family: var(--font-body);
+  font-size: 0.75rem; font-weight: 500; letter-spacing: 0.10em; text-transform: uppercase;
+  cursor: pointer; white-space: nowrap; transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  background: transparent;
+  color: rgba(255,255,255,0.9);
+  border: 1px solid rgba(255,255,255,0.55);
+}
+.cookie-btn-accept:hover, .cookie-btn-decline:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); background: rgba(255,255,255,0.08); }
+#manageCookiesFooter {
+  background: none; border: none; font-family: var(--font-body);
+  font-size: inherit; color: inherit; cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px; padding: 0;
+}
+#manageCookiesFooter:hover { color: var(--taupe); }
+.map-blocked {
+  width: 100%; min-height: 340px; background: rgba(44,36,32,0.06); border-radius: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1rem; border: 1px dashed rgba(181,168,154,0.4);
+  font-family: var(--font-body); text-align: center; padding: 2rem;
+}
+.map-blocked p { font-size: 0.82rem; color: var(--greige); line-height: 1.7; max-width: 280px; }
+.map-blocked-title { font-family: var(--font-display); font-size: 1.2rem; color: var(--espresso); }
+.map-enable-btn {
+  padding: 0.55rem 1.4rem; background: linear-gradient(135deg, var(--taupe), var(--espresso));
+  color: #fff; border: none; border-radius: 50px; font-family: var(--font-body);
+  font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: transform 0.2s;
+}
+.map-enable-btn:hover { transform: translateY(-2px); }
+@media (max-width: 600px) {
+  #cookie-banner { padding: 1.2rem; }
+  .cookie-btns { width: 100%; }
+  .cookie-btn-accept, .cookie-btn-decline { flex: 1; text-align: center; }
 }

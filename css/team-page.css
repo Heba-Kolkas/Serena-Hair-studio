@@ -1,0 +1,243 @@
+/* ── TEAM PAGE — app-style cards, replaces the old bare hover-overlay grid ──
+   The founder gets a full-width featured card (.team-card-featured) above
+   this grid; everyone else renders here.
+   Mobile: a fixed (non-scrolling) 2-column grid. Tablet+/Desktop: a wrapping
+   grid (3 cols, then 4 cols at 1200px+). */
+.team-col { min-width: 0; }
+
+.team-page-grid {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+@media (min-width: 700px) {
+  .team-page-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding: 0 1.5rem 5rem;
+  }
+}
+@media (min-width: 1200px) {
+  .team-page-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+/* A trailing card left alone in the last row spans full width and centers,
+   instead of stranding it against empty columns. Not needed at 4-wide
+   desktop (exactly 4 remaining members). */
+@media (max-width: 699px) {
+  .team-page-grid > .team-card-app:last-child:nth-child(2n+1) {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 0.425rem);
+    justify-self: center;
+  }
+}
+@media (min-width: 700px) and (max-width: 1199px) {
+  .team-page-grid > .team-card-app:last-child:nth-child(3n+1) {
+    grid-column: 1 / -1;
+    max-width: calc(33.333% - 1rem);
+    justify-self: center;
+  }
+}
+
+.team-card-app {
+  background: var(--cream);
+  border: 1px solid var(--warmgrey);
+  border-radius: 18px;
+  padding: 0.9rem 0.9rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.team-card-app:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(44,36,32,0.1);
+  border-color: transparent;
+}
+.team-card-bio { flex: 1; }
+.team-card-cta { margin-top: auto; }
+
+.team-card-photo {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 0.6rem;
+  border: 3px solid var(--linen);
+  box-shadow: 0 6px 20px rgba(44,36,32,0.12);
+  background: var(--warmgrey);
+}
+.team-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.team-card-initial {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--taupe), var(--espresso));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 400;
+}
+
+.team-card-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--espresso);
+  margin-bottom: 0.3rem;
+}
+.team-card-role {
+  display: inline-block;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--espresso);
+  background: var(--blush);
+  padding: 0.24rem 0.65rem;
+  border-radius: 50px;
+  margin-bottom: 0.5rem;
+}
+.team-card-stars {
+  color: var(--gold);
+  font-size: 0.6rem;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.1em;
+}
+.team-card-bio {
+  font-size: 0.7rem;
+  color: var(--greige);
+  line-height: 1.5;
+  margin-bottom: 0.6rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.team-card-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--blush);
+  color: var(--espresso);
+  text-decoration: none;
+  font-size: 0.68rem;
+  margin-bottom: 0.5rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.team-card-social:hover { background: var(--taupe); color: #fff; }
+
+.team-card-cta {
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.58rem !important;
+  gap: 0.3rem !important;
+  display: inline-flex;
+}
+.team-card-cta i {
+  font-size: 0.7rem !important;
+}
+
+/* ── FOUNDER'S FEATURED CARD — a wide rectangle that sets Hassan apart
+   from the rest of the team grid below it. ── */
+.team-featured-wrap {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+.team-card-featured {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--linen);
+  border: 1px solid var(--gold);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 14px 36px rgba(44,36,32,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.team-card-featured:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 44px rgba(44,36,32,0.14);
+}
+.team-card-founder-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 2;
+  background: var(--gold);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.85rem;
+  border-radius: 50px;
+}
+.team-card-featured-photo {
+  width: 100%;
+  height: 200px;
+  background: var(--warmgrey);
+}
+.team-card-featured-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+  display: block;
+}
+.team-card-featured-photo .team-card-initial {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  font-size: 3.5rem;
+}
+.team-card-featured-info {
+  padding: 1.25rem 1.5rem 1.5rem;
+  text-align: center;
+}
+.team-card-featured .team-card-role { margin-left: auto; margin-right: auto; }
+.team-card-featured .team-card-bio {
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.team-card-featured-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.team-card-featured-actions .team-card-social { margin-bottom: 0; }
+
+@media (min-width: 700px) {
+  .team-card-featured { flex-direction: row; align-items: stretch; }
+  /* Explicit height, not auto — with align-items:stretch and no definite
+     parent height, the photo's percentage-sized <img> falls back to its
+     native aspect ratio instead of being cropped, ballooning the card. */
+  .team-card-featured-photo { width: 260px; height: 280px; flex-shrink: 0; }
+  .team-card-featured-info {
+    text-align: left;
+    padding: 1.5rem 2.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .team-card-featured .team-card-role,
+  .team-card-featured .team-card-bio { margin-left: 0; margin-right: 0; }
+  .team-card-featured .team-card-name { font-size: 1.35rem; }
+  .team-card-featured-actions { justify-content: flex-start; }
+}

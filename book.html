@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book an Appointment | Studio Serena</title>
+    <meta name="description" content="Book your appointment online at Studio Serena, Oslo — choose your service, stylist and time." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://studioserena.no/book.html" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="/style.css?v=10">
+    <link rel="stylesheet" href="/css/booking.css?v=8">
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#2C2420" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+</head>
+
+<body>
+    <div data-include="/partials/cookie-banner.html"></div>
+    <div data-include="/partials/nav.html"></div>
+
+    <main>
+        <div class="page-header">
+            <p class="section-eyebrow" data-en="Reserve Your Visit" data-no="Reserver Din Time">Reserve Your Visit</p>
+            <h1 class="section-title"><span data-en="Book an" data-no="Bestill en">Book an</span> <em data-en="Appointment" data-no="Time">Appointment</em></h1>
+        </div>
+
+        <div class="wizard" id="wizard">
+            <div class="wizard-steps" id="wizardSteps">
+                <span class="wizard-step-dot" data-step="1"><span data-en="1. Service" data-no="1. Tjeneste">1. Service</span></span>
+                <span class="wizard-step-dot" data-step="2"><span data-en="2. Stylist" data-no="2. Stylist">2. Stylist</span></span>
+                <span class="wizard-step-dot" data-step="3"><span data-en="3. Date & Time" data-no="3. Dato & Tid">3. Date &amp; Time</span></span>
+                <span class="wizard-step-dot" data-step="4"><span data-en="4. Details" data-no="4. Detaljer">4. Details</span></span>
+                <span class="wizard-step-dot" data-step="5"><span data-en="5. Confirm" data-no="5. Bekreft">5. Confirm</span></span>
+            </div>
+
+            <div class="wizard-error" id="wizardError"></div>
+
+            <!-- STEP 1: SERVICE -->
+            <section class="wizard-panel" data-panel="1">
+                <h2 class="wizard-panel-title"><span data-en="Choose a" data-no="Velg en">Choose a</span> <em data-en="Service" data-no="Tjeneste">Service</em></h2>
+                <div id="serviceGroups"><p style="text-align:center;color:var(--greige);" data-en="Loading services…" data-no="Laster tjenester…">Loading services…</p></div>
+                <div class="wizard-nav">
+                    <span></span>
+                    <button class="wizard-btn wizard-btn-next" id="next1" disabled data-en="Next" data-no="Neste">Next</button>
+                </div>
+            </section>
+
+            <!-- STEP 2: STAFF -->
+            <section class="wizard-panel" data-panel="2">
+                <h2 class="wizard-panel-title"><span data-en="Choose Your" data-no="Velg Din">Choose Your</span> <em data-en="Stylist" data-no="Stylist">Stylist</em></h2>
+                <div class="option-grid" id="staffGrid"></div>
+                <div class="wizard-nav">
+                    <button class="wizard-btn wizard-btn-back" data-back="1" data-en="Back" data-no="Tilbake">Back</button>
+                    <button class="wizard-btn wizard-btn-next" id="next2" disabled data-en="Next" data-no="Neste">Next</button>
+                </div>
+            </section>
+
+            <!-- STEP 3: DATE & TIME -->
+            <section class="wizard-panel" data-panel="3">
+                <h2 class="wizard-panel-title"><span data-en="Pick a" data-no="Velg">Pick a</span> <em data-en="Date & Time" data-no="Dato & Tid">Date &amp; Time</em></h2>
+                <div class="calendar-widget" id="calendarWidget">
+                    <div class="calendar-header">
+                        <button type="button" class="calendar-nav-btn" id="calPrev" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span class="calendar-month-label" id="calMonthLabel"></span>
+                        <button type="button" class="calendar-nav-btn" id="calNext" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <span data-en="Mon" data-no="Man">Mon</span><span data-en="Tue" data-no="Tir">Tue</span><span data-en="Wed" data-no="Ons">Wed</span><span data-en="Thu" data-no="Tor">Thu</span><span data-en="Fri" data-no="Fre">Fri</span><span data-en="Sat" data-no="Lør">Sat</span><span data-en="Sun" data-no="Søn">Sun</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+                <div class="slot-grid" id="slotGrid"></div>
+                <div class="wizard-nav">
+                    <button class="wizard-btn wizard-btn-back" data-back="2" data-en="Back" data-no="Tilbake">Back</button>
+                    <button class="wizard-btn wizard-btn-next" id="next3" disabled data-en="Next" data-no="Neste">Next</button>
+                </div>
+            </section>
+
+            <!-- STEP 4: CONTACT DETAILS -->
+            <section class="wizard-panel" data-panel="4">
+                <h2 class="wizard-panel-title"><span data-en="Your" data-no="Dine">Your</span> <em data-en="Details" data-no="Detaljer">Details</em></h2>
+                <div class="form-row"><label for="custName" data-en="Full name" data-no="Fullt navn">Full name</label><input type="text" id="custName" autocomplete="name"></div>
+                <div class="form-row"><label for="custEmail" data-en="Email" data-no="E-post">Email</label><input type="email" id="custEmail" autocomplete="email"></div>
+                <div class="form-row"><label for="custPhone" data-en="Phone" data-no="Telefon">Phone</label><input type="tel" id="custPhone" autocomplete="tel"></div>
+                <div class="form-row"><label for="custNotes" data-en="Notes (optional)" data-no="Notater (valgfritt)">Notes (optional)</label><textarea id="custNotes" placeholder="Anything we should know before your visit?" data-placeholder-en="Anything we should know before your visit?" data-placeholder-no="Noe vi bør vite før besøket ditt?"></textarea></div>
+                <div class="wizard-nav">
+                    <button class="wizard-btn wizard-btn-back" data-back="3" data-en="Back" data-no="Tilbake">Back</button>
+                    <button class="wizard-btn wizard-btn-next" id="next4" data-en="Review Booking" data-no="Se Gjennom Bestilling">Review Booking</button>
+                </div>
+            </section>
+
+            <!-- STEP 5: CONFIRM -->
+            <section class="wizard-panel" data-panel="5">
+                <h2 class="wizard-panel-title"><span data-en="Confirm Your" data-no="Bekreft Din">Confirm Your</span> <em data-en="Booking" data-no="Bestilling">Booking</em></h2>
+                <div class="summary-card" id="summaryCard"></div>
+                <div class="wizard-nav">
+                    <button class="wizard-btn wizard-btn-back" data-back="4" data-en="Back" data-no="Tilbake">Back</button>
+                    <button class="wizard-btn wizard-btn-next" id="confirmBtn" data-en="Confirm Booking" data-no="Bekreft Bestilling">Confirm Booking</button>
+                </div>
+            </section>
+
+            <!-- SUCCESS -->
+            <section class="wizard-panel" data-panel="success">
+                <div class="wizard-success">
+                    <div class="wizard-success-icon"><i class="fa-solid fa-check"></i></div>
+                    <h2 class="wizard-panel-title" style="margin-bottom:0.25rem;"><span data-en="You're" data-no="Du er">You're</span> <em data-en="Booked" data-no="Booket">Booked</em></h2>
+                    <p style="color:var(--greige);font-size:0.9rem;" data-en="A confirmation has been saved to your appointment." data-no="En bekreftelse er lagret på timen din.">A confirmation has been saved to your appointment.</p>
+                    <div class="wizard-success-ref" id="successRef"></div>
+                    <div class="wizard-success-actions">
+                        <a href="#" class="wizard-btn wizard-btn-back" id="icsDownload"><i class="fa-regular fa-calendar-plus"></i> <span data-en="Add to Calendar" data-no="Legg til i Kalender">Add to Calendar</span></a>
+                        <a href="/appointments.html" class="wizard-btn wizard-btn-next" style="margin-left:0;" data-en="View My Appointments" data-no="Se Mine Timer">View My Appointments</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- UNAVAILABLE FALLBACK -->
+            <section class="wizard-panel" data-panel="unavailable">
+                <div class="wizard-unavailable">
+                    <i class="fa-regular fa-clock"></i>
+                    <p data-en="Online booking is finishing setup and isn't quite ready yet. In the meantime, book directly via Instagram or give us a call — we'll get you sorted." data-no="Nettbestilling er under ferdigstillelse og er ikke helt klar ennå. I mellomtiden kan du bestille direkte via Instagram eller ringe oss.">
+                        Online booking is finishing setup and isn't quite ready yet. In the meantime, book directly via Instagram or give us a call — we'll get you sorted.
+                    </p>
+                    <div class="wizard-success-actions">
+                        <a href="https://www.instagram.com/studioserena.hair?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr" target="_blank" rel="noopener noreferrer" class="wizard-btn wizard-btn-next" style="margin-left:0;"><i class="fa-brands fa-instagram"></i> <span data-en="Message on Instagram" data-no="Send Melding på Instagram">Message on Instagram</span></a>
+                        <a href="tel:+4745397631" class="wizard-btn wizard-btn-back" data-en="Call +47 45 39 76 31" data-no="Ring +47 45 39 76 31">Call +47 45 39 76 31</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div data-include="/partials/footer.html"></div>
+
+    <script src="/js/include.js"></script>
+    <script src="/js/nav.js" defer></script>
+    <script src="/js/cookie-consent.js" defer></script>
+    <script type="module" src="/js/booking.js?v=20"></script>
+</body>
+
+</html>

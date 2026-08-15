@@ -1,0 +1,621 @@
+/* ── BOOKING WIZARD ── */
+.wizard {
+  position: relative;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 1.25rem 5rem;
+}
+/* Soft blurred color blobs behind the glass cards — gives the frosted-glass
+   effect something to actually show through, since the page itself is a
+   flat color. Contained to this stacking context via position:relative
+   above + z-index here, so they can't bleed behind the nav/footer. */
+.wizard::before,
+.wizard::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+}
+.wizard::before {
+  width: 260px; height: 260px;
+  background: var(--blush);
+  opacity: 0.65;
+  top: -20px; left: -40px;
+}
+.wizard::after {
+  width: 280px; height: 280px;
+  background: var(--gold);
+  opacity: 0.35;
+  top: 420px; right: -60px;
+}
+.wizard-steps, .wizard-panel { position: relative; z-index: 1; }
+
+.wizard-steps {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.wizard-step-dot {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--greige);
+  padding: 0.4rem 0.7rem;
+  border-radius: 50px;
+  border: 1px solid var(--warmgrey);
+}
+.wizard-step-dot.active {
+  color: #fff;
+  background: var(--taupe);
+  border-color: var(--taupe);
+}
+.wizard-step-dot.done {
+  color: var(--taupe);
+  border-color: var(--taupe);
+}
+
+/* .wizard-panel is a <section>, which picks up the generic mobile
+   "clear the fixed nav" section padding-top (5.5rem) meant for standalone
+   page sections — but these are nested step-panels well below the page
+   header already, so that padding just reads as a huge dead gap. */
+.wizard-panel { display: none; padding: 0; }
+.wizard-panel.active { display: block; animation: wizardFadeIn 0.35s ease; }
+@keyframes wizardFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wizard-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--espresso);
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+.wizard-panel-title em { font-style: italic; color: var(--taupe); }
+
+/* Service / staff option cards */
+.option-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+@media (min-width: 600px) {
+  .option-grid { grid-template-columns: 1fr 1fr; }
+}
+.option-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.38);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 26px rgba(44,36,32,0.06);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  transition: all 0.2s ease;
+}
+.option-card:hover { border-color: var(--taupe); transform: translateY(-2px); }
+.option-card.selected {
+  border-color: var(--taupe);
+  background: rgba(255,255,255,0.58);
+  box-shadow: 0 10px 28px rgba(181,168,154,0.3);
+}
+.option-card-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--warmgrey);
+}
+.option-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.option-card-body { flex: 1; min-width: 0; }
+.option-card-title { font-size: 0.9rem; font-weight: 500; color: var(--espresso); }
+.option-card-meta { font-size: 0.72rem; color: var(--greige); margin-top: 0.2rem; }
+.option-card-check {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1px solid var(--warmgrey); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: transparent; font-size: 0.6rem;
+}
+.option-card.selected .option-card-check {
+  background: var(--taupe); border-color: var(--taupe); color: #fff;
+}
+
+/* Services with an add-on/combo option are wrapped in .option-card-wrap so
+   the toggle can sit inside the same visual card, below the clickable
+   selection button — the wrap now owns the card's border/background, and
+   the nested .option-card becomes a plain unstyled clickable region. */
+.option-card-wrap {
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.38);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 26px rgba(44,36,32,0.06);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.option-card-wrap:hover { border-color: var(--taupe); }
+.option-card-wrap.selected {
+  border-color: var(--taupe);
+  background: rgba(255,255,255,0.58);
+  box-shadow: 0 10px 28px rgba(181,168,154,0.3);
+}
+.option-card-wrap .option-card {
+  border: none;
+  background: none;
+  box-shadow: none;
+  width: 100%;
+}
+.option-card-wrap .option-card:hover { transform: none; }
+
+.option-card-addon {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 1rem;
+  border-top: 1px dashed var(--warmgrey);
+  cursor: pointer;
+}
+.option-card-addon input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--warmgrey);
+  background: var(--cream);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.option-card-addon input:checked {
+  background: var(--taupe);
+  border-color: var(--taupe);
+}
+.option-card-addon input:checked::after {
+  content: '\f00c';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 0.55rem;
+  color: #fff;
+}
+.option-card-addon-body {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.76rem;
+  color: var(--espresso);
+}
+.option-card-addon-price { color: var(--taupe); font-weight: 600; white-space: nowrap; }
+
+.option-card-combos {
+  padding: 0.8rem 1rem;
+  border-top: 1px dashed var(--warmgrey);
+}
+.option-card-combos-label {
+  display: block;
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--greige);
+  margin-bottom: 0.5rem;
+}
+.combo-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.combo-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--warmgrey);
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.2s ease;
+}
+.combo-chip:hover { border-color: var(--taupe); }
+.combo-chip-name { font-size: 0.74rem; font-weight: 500; color: var(--espresso); }
+.combo-chip-price { font-size: 0.64rem; color: var(--greige); }
+.combo-chip.active {
+  border-color: var(--taupe);
+  background: var(--taupe);
+}
+.combo-chip.active .combo-chip-name { color: #fff; }
+.combo-chip.active .combo-chip-price { color: rgba(255,255,255,0.85); }
+
+.extensions-notice {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.9rem 1.1rem;
+  margin-top: -0.4rem;
+  border-radius: 14px;
+  background: rgba(212,175,55,0.1);
+  border: 1px solid rgba(212,175,55,0.35);
+  font-size: 0.78rem;
+  color: var(--espresso);
+  line-height: 1.5;
+}
+.extensions-notice i { color: var(--gold); margin-top: 0.15rem; flex-shrink: 0; }
+.extensions-notice-link {
+  display: inline-block;
+  margin-top: 0.4rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--taupe);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.category-group { margin-bottom: 1.75rem; }
+.category-group-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--greige);
+  margin-bottom: 0.75rem;
+}
+
+/* Service search + category filter dropdown */
+.service-filter-bar {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.75rem;
+}
+.service-search-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--greige);
+  font-size: 0.8rem;
+}
+.service-search-wrap input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--espresso);
+  outline: none;
+}
+/* Custom category dropdown — a real styled button + menu, since a native
+   <select>'s open popup is rendered by the OS and can't be themed. */
+.custom-select {
+  position: relative;
+  flex-shrink: 0;
+  max-width: 45%;
+}
+.custom-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--espresso);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.custom-select-trigger i { font-size: 0.6rem; color: var(--taupe); flex-shrink: 0; transition: transform 0.2s ease; }
+.custom-select.open .custom-select-trigger i { transform: rotate(180deg); }
+.custom-select-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 220px;
+  max-width: 80vw;
+  background: var(--cream);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--warmgrey);
+  border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(44,36,32,0.16);
+  padding: 0.4rem;
+  z-index: 20;
+}
+.custom-select.open .custom-select-menu { display: block; }
+.custom-select-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  color: var(--espresso);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.custom-select-option:hover { background: var(--blush); }
+.custom-select-option.active { background: var(--taupe); color: #fff; }
+@media (max-width: 480px) {
+  .service-filter-bar { flex-wrap: wrap; }
+  .service-search-wrap { flex-basis: 100%; }
+  .custom-select { flex: 1; max-width: none; }
+  .custom-select-menu { left: 0; right: 0; min-width: 0; }
+}
+
+/* Date + time */
+.calendar-widget {
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.55);
+  border-radius: 16px;
+  box-shadow: 0 8px 26px rgba(44,36,32,0.06);
+  padding: 0.8rem 0.8rem 0.9rem;
+  margin-bottom: 1.25rem;
+}
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.calendar-month-label {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: var(--espresso);
+}
+.calendar-nav-btn {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--warmgrey);
+  background: var(--cream);
+  color: var(--taupe);
+  cursor: pointer;
+  font-size: 0.62rem;
+  transition: all 0.2s ease;
+}
+.calendar-nav-btn:hover:not(:disabled) { background: var(--taupe); color: #fff; border-color: var(--taupe); }
+.calendar-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.15rem;
+  margin-bottom: 0.15rem;
+}
+.calendar-weekdays span {
+  text-align: center;
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--greige);
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.15rem;
+}
+.calendar-day {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--espresso);
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.calendar-day:hover:not(:disabled) { background: var(--blush); }
+.calendar-day:disabled { color: var(--warmgrey); cursor: not-allowed; }
+.calendar-day.selected { background: var(--taupe); color: #fff; }
+.calendar-day-blank { cursor: default; }
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.6rem;
+}
+.slot-btn {
+  padding: 0.6rem 0.4rem;
+  border: 1px solid rgba(255,255,255,0.55);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.38);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--espresso);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.slot-btn:hover { border-color: var(--taupe); }
+.slot-btn.selected { background: var(--taupe); border-color: var(--taupe); color: #fff; }
+.slot-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--greige);
+  font-size: 0.85rem;
+  padding: 1.5rem 0;
+}
+
+/* Contact form */
+.form-row { margin-bottom: 1.1rem; }
+.form-row label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--greige);
+  margin-bottom: 0.4rem;
+}
+.form-row input,
+.form-row textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(255,255,255,0.55);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 6px 20px rgba(44,36,32,0.05);
+  color: var(--espresso);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  transition: border-color 0.2s ease;
+}
+.form-row input:focus,
+.form-row textarea:focus { outline: none; border-color: var(--taupe); }
+.form-row textarea { resize: vertical; min-height: 80px; }
+
+/* Summary */
+.summary-card {
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.55);
+  box-shadow: 0 8px 26px rgba(44,36,32,0.06);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px dashed var(--warmgrey);
+  font-size: 0.85rem;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-row span:first-child { color: var(--greige); }
+.summary-row span:last-child { color: var(--espresso); font-weight: 500; text-align: right; }
+
+/* Nav buttons */
+.wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.wizard-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+.wizard-btn-back {
+  background: transparent;
+  border: 1px solid var(--warmgrey);
+  color: var(--greige);
+}
+.wizard-btn-back:hover { border-color: var(--taupe); color: var(--espresso); }
+.wizard-btn-next {
+  background: var(--taupe);
+  color: #fff;
+  margin-left: auto;
+}
+.wizard-btn-next:hover { background: var(--espresso); }
+.wizard-btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.wizard-error {
+  background: rgba(192,57,43,0.08);
+  border: 1px solid rgba(192,57,43,0.3);
+  color: #c0392b;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  margin-bottom: 1.25rem;
+  display: none;
+}
+.wizard-error.visible { display: block; }
+
+.wizard-unavailable {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--linen);
+  border-radius: 20px;
+}
+.wizard-unavailable i { font-size: 2rem; color: var(--taupe); margin-bottom: 1rem; }
+.wizard-unavailable p { color: var(--greige); font-size: 0.9rem; line-height: 1.7; max-width: 420px; margin: 0 auto 1.5rem; }
+
+/* Success screen */
+.wizard-success {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+.wizard-success-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--taupe); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; margin: 0 auto 1.5rem;
+}
+.wizard-success-ref {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--espresso);
+  letter-spacing: 0.1em;
+  margin: 0.5rem 0 1.5rem;
+}
+.wizard-success-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}

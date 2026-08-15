@@ -1,0 +1,804 @@
+/* ── HOME DASHBOARD — hero card, quick-action tiles, popular services, info strip ── */
+
+.hero-section {
+  padding: 6.5rem 1rem 1.5rem;
+}
+.hero-card {
+  max-width: 1080px;
+  margin: 0 auto;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--linen);
+  box-shadow: 0 20px 60px rgba(44,36,32,0.12);
+  display: flex;
+  flex-direction: column;
+}
+.hero-card-text {
+  padding: 2.2rem 1.8rem;
+  flex: 1 1 55%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.6rem;
+}
+.hero-card-eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--greige);
+}
+.hero-card-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.1rem, 7vw, 3rem);
+  line-height: 1.08;
+  color: var(--espresso);
+}
+.hero-card-title em {
+  font-style: italic;
+  color: var(--taupe);
+}
+.hero-card-sub {
+  font-size: 0.85rem;
+  color: var(--greige);
+  line-height: 1.6;
+  max-width: 340px;
+}
+.hero-card-cta {
+  margin-top: 0.6rem;
+  align-self: flex-start;
+  background: var(--taupe);
+  background-image: none;
+}
+.hero-card-photo {
+  position: relative;
+  flex: 1 1 45%;
+  min-height: 220px;
+  overflow: hidden;
+}
+.hero-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+@media (min-width: 480px) {
+  .hero-card { flex-direction: row; align-items: stretch; }
+  .hero-card-photo {
+    min-height: unset;
+  }
+  .hero-card-photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+      var(--linen) 0%,
+      rgba(255,247,247,0.95) 12%,
+      rgba(255,247,247,0.8) 24%,
+      rgba(255,247,247,0.55) 38%,
+      rgba(255,247,247,0.3) 52%,
+      rgba(255,247,247,0.12) 68%,
+      rgba(255,247,247,0) 85%);
+  }
+}
+@media (min-width: 900px) {
+  .hero-section { padding: 7.5rem 2rem 2rem; }
+  .hero-card {
+    max-width: none;
+    min-height: 480px;
+    display: block;
+    position: relative;
+  }
+  .hero-card-text {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    max-width: 480px;
+    padding: 3.5rem 3rem;
+    gap: 0.9rem;
+    background: none;
+  }
+  .hero-card-sub { max-width: 380px; font-size: 0.92rem; }
+  .hero-card-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .hero-card-photo::after {
+    background: linear-gradient(90deg,
+      var(--linen) 0%,
+      rgba(255,247,247,0.95) 18%,
+      rgba(255,247,247,0.75) 32%,
+      rgba(255,247,247,0.4) 48%,
+      rgba(255,247,247,0.15) 65%,
+      rgba(255,247,247,0) 80%);
+  }
+}
+
+/* ── QUICK-ACTION TILES ── */
+.quick-tiles-section {
+  padding: 1.75rem 1rem;
+}
+.quick-tiles {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: var(--cream);
+  border-radius: 24px;
+  padding: 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  box-shadow: 0 10px 40px rgba(44,36,32,0.08);
+}
+.quick-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 0.7rem;
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.quick-tile:hover {
+  background: var(--linen);
+  transform: translateY(-2px);
+}
+.quick-tile-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--blush);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--espresso);
+  font-size: 1.05rem;
+}
+.quick-tile-body { flex: 1; min-width: 0; }
+.quick-tile-label {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--espresso);
+}
+.quick-tile-desc {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--greige);
+  margin-top: 0.15rem;
+  line-height: 1.4;
+}
+.quick-tile-arrow {
+  color: var(--taupe);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+@media (max-width: 420px) {
+  .quick-tile-desc { display: none; }
+}
+@media (min-width: 900px) {
+  .quick-tiles {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .quick-tile {
+    padding: 1.25rem 1rem;
+    gap: 1rem;
+    background: var(--cream);
+    border-radius: 18px;
+    box-shadow: 0 8px 28px rgba(44,36,32,0.06);
+  }
+  .quick-tile:hover { box-shadow: 0 12px 34px rgba(44,36,32,0.1); }
+  .quick-tile-icon { width: 52px; height: 52px; font-size: 1.2rem; }
+  .quick-tile-label { font-size: 0.9rem; }
+}
+
+/* ── MINI SECTION TITLE (dashed, compact — for app-style headers) ── */
+.mini-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--espresso);
+  margin-bottom: 1.75rem;
+}
+.mini-section-title::before,
+.mini-section-title::after {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: var(--warmgrey);
+}
+.mini-section-heading {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 300;
+  color: var(--espresso);
+  margin-bottom: 1.75rem;
+}
+.mini-section-heading em { font-style: italic; color: var(--taupe); }
+
+/* ── POPULAR SERVICES ── */
+.popular-services-section {
+  padding: 2rem 1rem;
+}
+.popular-services-row {
+  display: flex;
+  gap: 1.4rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0.25rem 0.5rem 1rem;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.popular-services-row::-webkit-scrollbar { display: none; }
+.service-thumb {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 104px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+}
+.service-thumb-img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 0.6rem;
+  border: 3px solid var(--cream);
+  box-shadow: 0 6px 20px rgba(44,36,32,0.14);
+  background: var(--warmgrey);
+}
+.service-thumb-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.service-thumb:hover .service-thumb-img img { transform: scale(1.08); }
+.service-thumb-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--espresso);
+}
+.service-thumb-price {
+  display: block;
+  font-size: 0.66rem;
+  color: var(--greige);
+  margin-top: 0.15rem;
+}
+.service-thumb-book {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  color: var(--taupe);
+  margin-top: 0.6rem;
+  letter-spacing: 0.02em;
+}
+.service-thumb-book i { font-size: 0.6rem; transition: transform 0.2s ease; }
+.service-thumb:hover .service-thumb-book i { transform: translateX(3px); }
+@media (min-width: 700px) {
+  .popular-services-row {
+    justify-content: center;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+@media (min-width: 900px) {
+  .popular-services-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.25rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .service-thumb {
+    width: auto;
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 1.5rem 1rem 1.75rem;
+    box-shadow: 0 8px 28px rgba(44,36,32,0.06);
+  }
+  .service-thumb-img { width: 130px; height: 130px; }
+  .service-thumb-label { font-size: 0.92rem; }
+  .service-thumb-book { display: flex; }
+}
+
+.view-all-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  max-width: 1400px;
+  margin: 0.5rem auto 0;
+  padding: 0.9rem;
+  border: 1px solid var(--warmgrey);
+  border-radius: 50px;
+  color: var(--espresso);
+  text-decoration: none;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease;
+}
+.view-all-link:hover {
+  background: var(--linen);
+  border-color: var(--taupe);
+}
+
+/* ── BRAND / PRODUCTS SLIDESHOW BANNER (decorative — no shop, no checkout) ── */
+.brand-banner-section {
+  padding: 1.5rem 1rem;
+}
+/* Mobile: a single wide rectangular banner (2:1) with the video full-bleed
+   and the copy overlaid in a bottom scrim — deliberately not the "photo
+   stacked on top of a plain panel" shape the founder card already uses.
+   Desktop (≥600px) switches to a side-by-side card instead. */
+.brand-banner {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--linen);
+  box-shadow: 0 10px 40px rgba(44,36,32,0.06);
+}
+.brand-banner-text {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 2.5rem 1.5rem 1.25rem;
+  background: linear-gradient(to top, rgba(28,20,16,0.9) 0%, rgba(28,20,16,0.5) 55%, transparent 100%);
+}
+.brand-banner-eyebrow {
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 0.2rem;
+}
+.brand-banner-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 0.4rem;
+}
+.brand-banner-desc {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.6;
+  max-width: 400px;
+}
+.brand-slideshow {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1.15;
+  background: var(--warmgrey);
+  overflow: hidden;
+}
+.brand-slideshow img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.brand-slideshow img.active { opacity: 1; }
+.brand-slideshow-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Decorative only — no controls, no click-to-pause/fullscreen, no
+     browser-injected picture-in-picture hover button. */
+  pointer-events: none;
+}
+.brand-slideshow-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--greige);
+  font-size: 0.78rem;
+  text-align: center;
+  padding: 1rem;
+}
+.brand-slideshow-empty i { font-size: 1.4rem; color: var(--taupe); }
+.brand-slideshow-dots {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.brand-slideshow-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+.brand-slideshow-dots span.active {
+  background: #fff;
+  transform: scale(1.3);
+}
+@media (min-width: 600px) {
+  .brand-banner { display: flex; flex-direction: row-reverse; align-items: stretch; }
+  .brand-slideshow { width: 45%; aspect-ratio: auto; }
+  .brand-banner-text {
+    position: static;
+    flex: 1;
+    padding: 2.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: none;
+  }
+  .brand-banner-eyebrow { color: var(--taupe); }
+  .brand-banner-title { color: var(--espresso); }
+  .brand-banner-desc { color: var(--greige); max-width: 320px; }
+}
+
+/* ── TEAM + REVIEWS ROW (reviews sit beside the team grid, slideshow of 3) ── */
+.team-reviews-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+.team-reviews-row .team-page-grid,
+.team-reviews-row .team-featured-wrap { padding: 0; max-width: none; }
+.reviews-sidebar {
+  background: var(--linen);
+  border-radius: 20px;
+  padding: 1.5rem;
+}
+.mini-reviews-track {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: opacity 0.3s ease;
+}
+.mini-reviews-track.fading { opacity: 0; }
+.mini-review-card {
+  background: var(--cream);
+  border: 1px solid var(--warmgrey);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+}
+.mini-review-card .stars { color: var(--gold); font-size: 0.7rem; margin-bottom: 0.4rem; }
+.mini-review-card p { font-size: 0.78rem; color: var(--espresso); line-height: 1.5; margin-bottom: 0.4rem; }
+.mini-review-card span { font-size: 0.7rem; color: var(--greige); }
+.reviews-sidebar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+.reviews-nav-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--warmgrey);
+  background: var(--cream);
+  color: var(--taupe);
+  font-size: 0.7rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.reviews-nav-arrow:hover {
+  background: var(--taupe);
+  color: #fff;
+  border-color: var(--taupe);
+}
+.reviews-sidebar-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.reviews-sidebar-dots span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--warmgrey);
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+.reviews-sidebar-dots span.active { background: var(--taupe); transform: scale(1.3); }
+
+@media (min-width: 1024px) {
+  .team-reviews-row { flex-direction: row; align-items: flex-start; }
+  /* min-width:0 lets the nested grid actually shrink to fit — otherwise a
+     grid item's default min-width:auto refuses to shrink below its content's
+     natural size and the row overflows past the viewport instead of wrapping. */
+  .team-reviews-row .team-col { flex: 1; min-width: 0; }
+  .reviews-sidebar { flex: 0 0 300px; min-width: 0; }
+}
+@media (min-width: 1024px) and (max-width: 1349px) {
+  /* Not enough room for 5 full-size columns next to the sidebar — drop to 3
+     so cards stay a readable width instead of squeezing to nothing. */
+  .team-reviews-row .team-page-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .brand-reviews-row { flex-direction: row; align-items: stretch; }
+  .reviews-sidebar { flex: 0 0 320px; display: flex; flex-direction: column; }
+  .mini-reviews-track { flex: 1; }
+}
+
+/* ── WHY CHOOSE US (desktop only) ── */
+.why-choose-section { display: none; }
+@media (min-width: 900px) {
+  .why-choose-section {
+    display: block;
+    padding: 3rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .why-choose-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.5rem;
+    text-align: center;
+  }
+  .why-choose-item i { font-size: 1.3rem; color: var(--taupe); margin-bottom: 0.6rem; display: block; }
+  .why-choose-label { font-size: 0.8rem; font-weight: 500; color: var(--espresso); margin-bottom: 0.35rem; }
+  .why-choose-desc { font-size: 0.68rem; color: var(--greige); line-height: 1.5; }
+
+  /* Why Choose Us already carries its own bottom padding, so the generic
+     section top-padding right after it (up to 8rem at desktop-large) reads
+     as a huge dead gap before "Meet Our Stylists". Tighten just this seam. */
+  #team { padding-top: 3rem; }
+}
+/* Team's own bottom padding (up to 8rem at desktop-large) plus Gallery's
+   generic top padding stacked the same way going into the next section. */
+#team { padding-bottom: 3rem; }
+#gallery { padding-top: 3rem; }
+
+/* ── HOURS + MAP CARDS (restyled to match the app's card language) ── */
+.hours-card {
+  background: var(--cream);
+  border: 1px solid var(--warmgrey);
+  border-radius: 18px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 8px 28px rgba(44,36,32,0.05);
+  margin-top: 1.5rem;
+}
+.hours-card .hours-list { margin-top: 0; }
+.hours-card .hours-row:last-child { border-bottom: none; }
+
+/* Compact variant — Mon–Fri / Sat–Sun collapsed to 2 rounded "chip" rows
+   instead of a flat 7-row bordered list, with a circular icon badge and a
+   pill-shaped status indicator instead of the old sharp-cornered tag.
+   Stretched to match the map card's height alongside it (see
+   .location-inner below) instead of leaving a tall empty gap. */
+.hours-card-compact {
+  padding: 1.5rem 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.hours-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.hours-card-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--espresso);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.hours-card-label i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--blush);
+  color: var(--taupe);
+  font-size: 0.85rem;
+}
+.hours-card-compact .status-badge { margin: 0; }
+.hours-card-compact .hours-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.hours-card-compact .hours-row {
+  border-bottom: none;
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+  background: var(--linen);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.hours-card-compact .hours-row .hours-day { font-weight: 500; }
+.hours-card-compact .hours-row[data-active="true"] {
+  background: linear-gradient(135deg, var(--blush), #f2ddd4);
+  box-shadow: 0 6px 18px rgba(180,120,100,0.16);
+}
+.hours-card-compact .hours-row[data-active="true"] .hours-day,
+.hours-card-compact .hours-row[data-active="true"] .hours-time {
+  color: var(--espresso);
+  font-weight: 600;
+}
+.map-card {
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(44,36,32,0.06);
+  border: 1px solid var(--warmgrey);
+}
+.map-card .map-frame { border: none; display: block; }
+
+/* ── FAQ (restyled from bordered-list to app-style cards) ── */
+.faq-list {
+  max-width: 720px;
+  margin: 2rem auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+@media (min-width: 900px) {
+  .faq-list {
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: 0.85rem 1.25rem;
+  }
+  /* A lone last item (odd total) left stranded in column 1 — center it
+     across both columns instead. */
+  .faq-list > .faq-item:last-child:nth-child(2n+1) {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 0.625rem);
+    justify-self: center;
+  }
+}
+
+/* #location's own bottom padding plus the generic section top-padding right
+   after it (up to 8rem at desktop-large) stacked into a huge dead gap before
+   the FAQ heading — tighten just this seam, same fix as the team section.
+   Its own bottom padding (also up to 8rem) left the same dead space before
+   the info strip below, even though the info strip's own top padding is
+   already small. */
+#faq { padding-top: 3rem; padding-bottom: 3rem; }
+.faq-item {
+  background: var(--cream);
+  border: 1px solid var(--warmgrey);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.faq-item:has(.faq-q.open) { border-color: var(--taupe); }
+.faq-q {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.1rem 1.3rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.faq-q .faq-text { flex: 1; }
+.faq-q .faq-icon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--blush);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: transform 0.3s ease, background 0.2s ease, color 0.2s ease;
+}
+.faq-q.open .faq-icon { background: var(--taupe); color: #fff; }
+.faq-a p {
+  padding: 0 1.3rem 1.2rem 1.3rem;
+  font-size: 0.82rem;
+}
+
+/* ── SECONDARY PILL BUTTON (e.g. "View price list") ── */
+.btn-outline-taupe {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.6rem;
+  border: 1px solid var(--taupe);
+  border-radius: 50px;
+  color: var(--taupe);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.btn-outline-taupe:hover { background: var(--taupe); color: #fff; }
+.services-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.services-cta-row .view-all-link { flex: 1 1 220px; margin-top: 0; }
+
+/* ── INFO STRIP ── */
+.info-strip-section {
+  padding: 1.5rem 1rem 4rem;
+}
+.info-strip {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 1rem;
+  border-top: 1px solid var(--warmgrey);
+  padding: 1.75rem 0.25rem 0;
+}
+.info-strip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+.info-strip-icon {
+  color: var(--taupe);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  width: 1.2rem;
+  text-align: center;
+}
+.info-strip-label {
+  font-size: 0.85rem;
+  color: var(--espresso);
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+.info-strip-value {
+  font-size: 0.72rem;
+  color: var(--greige);
+  font-weight: 400;
+  line-height: 1.4;
+}
+.info-strip-value a { color: inherit; text-decoration: none; }
+.info-strip-value a:hover { color: var(--taupe); }
+@media (min-width: 900px) {
+  .info-strip { grid-template-columns: repeat(4, 1fr); padding: 2.25rem 0.5rem 0; }
+}

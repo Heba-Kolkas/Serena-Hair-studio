@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Team Schedule | Studio Serena</title>
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="/style.css?v=10">
+    <link rel="stylesheet" href="/css/schedule.css?v=37">
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#2C2420" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+</head>
+
+<body>
+    <header class="sched-topbar">
+        <div class="sched-topbar-logo"><span class="sched-topbar-logo-full">Studio <span class="sched-topbar-logo-accent">Serena</span> — Team Schedule</span><span class="sched-topbar-logo-short">Studio <span class="sched-topbar-logo-accent">Serena</span></span></div>
+        <div class="sched-topbar-actions" id="topbarActions" style="display:none;">
+            <button id="btnMoreMenu" class="topbar-menu-btn" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <div id="moreMenu" class="topbar-menu" style="display:none;">
+                <button id="btnServiceColors" class="topbar-menu-item"><i class="fa-solid fa-palette"></i> Colors</button>
+                <button id="btnBlockTime" class="topbar-menu-item"><i class="fa-solid fa-ban"></i> Block Time</button>
+                <button id="btnOwnerPanel" class="topbar-menu-item" style="display:none;"><i class="fa-solid fa-user-shield"></i> Owner Panel</button>
+                <button id="btnSwitchPin" class="topbar-menu-item"><i class="fa-solid fa-arrow-right-from-bracket"></i> Switch PIN</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- PIN GATE -->
+        <div id="pinScreen" class="pin-screen">
+            <form class="pin-card" id="pinForm">
+                <h1>Enter Team PIN</h1>
+                <p>Ask the salon owner if you don't have it.</p>
+                <input type="tel" inputmode="numeric" autocomplete="off" id="pinInput" class="pin-input" placeholder="••••" maxlength="8" />
+                <button type="submit" id="btnPinSubmit"><i class="fa-solid fa-lock-open"></i> Continue</button>
+                <div id="pinError" class="pin-error"></div>
+            </form>
+        </div>
+
+        <!-- IDENTITY PICKER (shown once per device, after the PIN) -->
+        <div id="identityScreen" class="pin-screen" style="display:none;">
+            <div class="pin-card">
+                <h1>Who's this?</h1>
+                <p>So we know who marked what — remembered on this device until you switch PIN.</p>
+                <div id="identityList" class="identity-list"></div>
+            </div>
+        </div>
+
+        <!-- SCHEDULE APP (shown after PIN) -->
+        <div id="scheduleApp" class="sched-app" style="display:none;">
+            <div class="sched-controls">
+                <div class="view-toggle" id="viewToggle">
+                    <button type="button" class="view-toggle-btn active" data-view="upcoming">Upcoming</button>
+                    <button type="button" class="view-toggle-btn" data-view="history">History</button>
+                </div>
+                <span id="staffPillsAnchor"></span>
+                <div class="staff-pills" id="staffPills"></div>
+            </div>
+
+            <div class="sched-toolbar" id="upcomingView">
+                <div class="day-strip-row">
+                    <button type="button" id="btnDayStripPrev" class="day-strip-nav-btn" aria-label="Previous days"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="day-strip" id="dayStrip"></div>
+                    <button type="button" id="btnDayStripNext" class="day-strip-nav-btn" aria-label="Next days"><i class="fa-solid fa-chevron-right"></i></button>
+                    <div class="calendar-pick-wrap">
+                        <button type="button" id="btnCalendarPick" class="calendar-pick-btn" aria-label="Jump to date"><i class="fa-regular fa-calendar-days"></i></button>
+                        <div id="calendarPopover" class="calendar-popover" style="display:none;">
+                            <div class="calendar-header">
+                                <button type="button" id="calPopPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                                <span class="calendar-month-label" id="calPopMonthLabel"></span>
+                                <button type="button" id="calPopNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            <div class="calendar-weekdays">
+                                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                            </div>
+                            <div class="calendar-grid" id="calPopGrid"></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="sched-day-label" id="todayLabel"></p>
+            </div>
+            <div id="gridWrap" class="sched-grid-wrap"></div>
+
+            <div id="historyView" style="display:none;">
+                <div class="history-search-row">
+                    <i class="fa-solid fa-magnifying-glass history-search-icon"></i>
+                    <input type="text" id="historySearchInput" class="history-search-input" placeholder="Search name, phone, or email…" />
+                    <button type="button" id="historySearchClear" class="history-search-clear" style="display:none;" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="history-date-filter-row">
+                    <div class="calendar-pick-wrap">
+                        <button type="button" id="btnHistoryDatePick" class="history-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="historyDatePickLabel">Filter by day</span></button>
+                        <div id="historyCalendarPopover" class="calendar-popover" style="display:none;">
+                            <div class="calendar-header">
+                                <button type="button" id="histCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                                <span class="calendar-month-label" id="histCalMonthLabel"></span>
+                                <button type="button" id="histCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            <div class="calendar-weekdays">
+                                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                            </div>
+                            <div class="calendar-grid" id="histCalGrid"></div>
+                        </div>
+                    </div>
+                    <button type="button" id="historyDateClear" class="history-date-clear" style="display:none;">Clear</button>
+                </div>
+                <div id="historyList"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- APPOINTMENT DETAIL POPUP -->
+    <div id="apptPopup" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup">
+            <button type="button" class="appt-popup-close" id="popupClose" aria-label="Close">&times;</button>
+            <div id="popupBody"></div>
+        </div>
+    </div>
+
+    <!-- BLOCK TIME MODAL -->
+    <div id="blockTimeModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup">
+            <button type="button" class="appt-popup-close" id="blockTimeClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Block Time Off</h3>
+            <p class="block-modal-sub">Marks you unavailable — clients won't be able to book this slot.</p>
+            <div class="block-field" id="blockStaffField" style="display:none;">
+                <label>Stylist</label>
+                <select id="blockStaffSelect"></select>
+            </div>
+            <div class="block-field"><label>Date</label><input type="date" id="blockDate" /></div>
+            <label class="block-allday-check">
+                <input type="checkbox" id="blockAllDay" />
+                All day
+            </label>
+            <div class="block-field-row" id="blockTimeFields">
+                <div class="block-field"><label>From</label><input type="time" id="blockStart" /></div>
+                <div class="block-field"><label>To</label><input type="time" id="blockEnd" /></div>
+            </div>
+            <div class="block-field"><label>Reason (optional)</label><input type="text" id="blockReason" placeholder="Break, appointment, sick…" /></div>
+            <button type="button" id="btnSaveBlock" class="block-save-btn"><i class="fa-solid fa-ban"></i> Block This Time</button>
+            <div id="blockStatus" class="block-status"></div>
+            <div id="blockExistingList" class="block-existing-list"></div>
+        </div>
+    </div>
+
+    <!-- SERVICE COLORS MODAL -->
+    <div id="colorsModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup">
+            <button type="button" class="appt-popup-close" id="colorsClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Service Colors</h3>
+            <p class="block-modal-sub">Pick any color per service — it updates the schedule grid for everyone.</p>
+            <div id="colorsList" class="colors-list"></div>
+        </div>
+    </div>
+
+    <!-- OWNER PANEL -->
+    <div id="ownerPanelModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup owner-panel">
+            <button type="button" class="appt-popup-close" id="ownerPanelClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Owner Panel</h3>
+            <div class="owner-tabs" id="ownerTabs">
+                <button type="button" class="owner-tab active" data-tab="services">Services</button>
+                <button type="button" class="owner-tab" data-tab="staff">Staff</button>
+                <button type="button" class="owner-tab" data-tab="bookings">Bookings</button>
+                <button type="button" class="owner-tab" data-tab="revenue">Revenue</button>
+                <button type="button" class="owner-tab" data-tab="hours">Hours</button>
+                <button type="button" class="owner-tab" data-tab="activity">Activity</button>
+                <button type="button" class="owner-tab" data-tab="settings">Settings</button>
+            </div>
+            <div class="owner-tab-content" id="ownerTabContent"></div>
+        </div>
+    </div>
+
+    <!-- MOVE (RESCHEDULE) BOOKING MODAL -->
+    <div id="rescheduleModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup">
+            <button type="button" class="appt-popup-close" id="rescheduleClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Move Appointment</h3>
+            <p class="block-modal-sub" id="rescheduleSub"></p>
+            <div class="block-field">
+                <label>New date</label>
+                <div class="calendar-pick-wrap">
+                    <button type="button" id="btnRescheduleDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="rescheduleDateLabel">Pick a date</span></button>
+                    <div id="rescheduleCalendarPopover" class="calendar-popover" style="display:none;">
+                        <div class="calendar-header">
+                            <button type="button" id="reschedCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span class="calendar-month-label" id="reschedCalMonthLabel"></span>
+                            <button type="button" id="reschedCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+                        <div class="calendar-grid" id="reschedCalGrid"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="block-field-row">
+                <div class="block-field"><label>New time</label><input type="time" id="rescheduleTime" /></div>
+                <div class="block-field"><label>Stylist</label><select id="rescheduleStaffSelect"></select></div>
+            </div>
+            <div id="rescheduleAvailability" class="reschedule-availability"></div>
+            <button type="button" id="btnSaveReschedule" class="block-save-btn"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move Appointment</button>
+            <div id="rescheduleStatus" class="block-status"></div>
+        </div>
+    </div>
+
+    <!-- COMPLETE BOOKING MODAL (captures amount charged) -->
+    <div id="completeModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup">
+            <button type="button" class="appt-popup-close" id="completeClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Complete Appointment</h3>
+            <p class="block-modal-sub" id="completeSub"></p>
+            <div class="block-field"><label>Amount charged (NOK)</label><input type="number" id="completeAmount" min="0" step="1" placeholder="e.g. 3500" /></div>
+            <button type="button" id="btnSaveComplete" class="block-save-btn"><i class="fa-solid fa-flag-checkered"></i> Mark Completed</button>
+            <div id="completeStatus" class="block-status"></div>
+        </div>
+    </div>
+
+    <!-- ADD BOOKING MODAL (manual entry for phone/walk-in clients) -->
+    <div id="addBookingModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup wide-popup">
+            <button type="button" class="appt-popup-close" id="addBookingClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Add Booking</h3>
+            <p class="block-modal-sub">For phone or walk-in clients — checked against the same rules as online bookings.</p>
+            <div class="block-field-row-3">
+                <div class="block-field"><label>Client name</label><input type="text" id="addBkName" /></div>
+                <div class="block-field"><label>Phone</label><input type="tel" id="addBkPhone" /></div>
+                <div class="block-field"><label>Email</label><input type="email" id="addBkEmail" /></div>
+            </div>
+            <div class="block-field-row">
+                <div class="block-field"><label>Service</label><select id="addBkService"></select></div>
+                <div class="block-field"><label>Stylist</label><select id="addBkStaff"></select></div>
+                <div class="block-field">
+                    <label>Date</label>
+                    <div class="calendar-pick-wrap">
+                        <button type="button" id="btnAddBkDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="addBkDateLabel">Pick a date</span></button>
+                        <div id="addBkCalendarPopover" class="calendar-popover" style="display:none;">
+                            <div class="calendar-header">
+                                <button type="button" id="addBkCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                                <span class="calendar-month-label" id="addBkCalMonthLabel"></span>
+                                <button type="button" id="addBkCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+                            <div class="calendar-grid" id="addBkCalGrid"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="block-field addbk-time-field"><label>Time</label><input type="time" id="addBkTime" /></div>
+            </div>
+            <div id="addBkAvailability" class="reschedule-availability compact"></div>
+            <div class="block-field"><label>Notes (optional)</label><input type="text" id="addBkNotes" placeholder="Allergies, preferences…" /></div>
+            <button type="button" id="btnSaveAddBooking" class="block-save-btn"><i class="fa-solid fa-plus"></i> Add Booking</button>
+            <div id="addBkStatus" class="block-status"></div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/schedule.js?v=23"></script>
+</body>
+
+</html>
