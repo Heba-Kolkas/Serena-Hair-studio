@@ -111,25 +111,6 @@ window.closeMob = function closeMob() {
   if (mobileMenu) mobileMenu.classList.remove('open');
 };
 
-// ── THEME TOGGLE ──
-const themeBtn = document.getElementById('themeToggle');
-if (themeBtn) {
-  function _syncThemeIcon(isDark) {
-    const moon = themeBtn.querySelector('.theme-icon-moon');
-    const sun  = themeBtn.querySelector('.theme-icon-sun');
-    if (moon) moon.style.display = isDark ? 'none' : '';
-    if (sun)  sun.style.display  = isDark ? ''     : 'none';
-  }
-  themeBtn.addEventListener('click', () => {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const newTheme = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    _syncThemeIcon(!isDark);
-    if (typeof window._bcRender === 'function') window._bcRender();
-  });
-  _syncThemeIcon(document.documentElement.getAttribute('data-theme') === 'dark');
-}
-
 // ── LANGUAGE TOGGLE ──
 let lang = 'en';
 const langBtn = document.getElementById('langToggle');

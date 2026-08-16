@@ -23,28 +23,9 @@ video::--internal-media-controls-button-panel { display: none !important; }
   --transition: 0.3s ease;
 }
 
-/* ───── REFINED LUXURY DARK THEME ───── */
-[data-theme="dark"] {
-  --cream: #12100e;
-  --linen: #1a1715;
-  --warmgrey: #2d2824;
-  --taupe: #d6bfa4;
-  --greige: #8a817c;
-  --espresso: #f4f0ec;
-  --white: #12100e;
-  --gold: #d4af37;
-  --blush: #3a2e2a;
-  --linen-rgb: 26, 23, 21;
-}
-
-/* Fix for anti-aliasing in dark mode */
-[data-theme="dark"] body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--cream);
-  color: var(--espresso);
-}
-
+/* The site is light-only — there is no dark theme. It previously followed
+   the device's prefers-color-scheme, so anyone browsing with their phone in
+   dark mode was served a near-black palette instead of the cream one. */
 
 *,
 *::before,
@@ -211,9 +192,6 @@ nav {
   border-bottom: 1px solid var(--warmgrey);
   box-shadow: 0 2px 20px rgba(44,36,32,0.06);
 }
-[data-theme="dark"] nav {
-  background: rgba(18,16,14,0.97);
-}
 nav.scrolled {
   background: rgba(250,248,245,0.97) !important;
   backdrop-filter: blur(16px) !important;
@@ -229,14 +207,6 @@ nav.scrolled {
 }
 
 /* Ensure Logo and Links adapt */
-[data-theme="dark"] nav.scrolled .nav-links a {
-  color: var(--greige);
-}
-
-[data-theme="dark"] .hamburger span {
-  background: rgba(255,255,255,0.9);
-}
-
 .nav-logo {
   font-family: var(--font-display);
   font-size: 1.4rem;
@@ -2635,7 +2605,7 @@ section {
   text-transform: uppercase;
   text-decoration: none;
   transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
-  /* Light theme: solid espresso pill — fully visible */
+  /* Solid espresso pill — fully visible */
   border: 1px solid transparent;
   background: var(--espresso);
   color: var(--cream) !important;
@@ -2645,19 +2615,6 @@ section {
   transform: translateY(-3px);
   background: var(--taupe);
   box-shadow: 0 8px 22px rgba(0,0,0,0.2);
-}
-
-/* Dark theme: flip to outlined ghost style */
-[data-theme="dark"] .social-link-btn {
-  background: transparent;
-  border-color: rgba(255,255,255,0.45);
-  color: #fff !important;
-}
-
-[data-theme="dark"] .social-link-btn:hover {
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.7);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.3);
 }
 
 .social-link-btn i {
@@ -2843,11 +2800,6 @@ nav:not(.scrolled) #scroll-progress {
 nav.scrolled #scroll-progress {
   opacity: 1;
   transition: width 0.08s linear, opacity 0.3s ease;
-}
-
-/* Dark mode — slightly brighter */
-[data-theme="dark"] #scroll-progress {
-  background: linear-gradient(90deg, #d6bfa4 0%, #C9A96E 60%, #e8d5b7 100%);
 }
 
 /* ═══════════════════════════════════════════════════

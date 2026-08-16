@@ -88,17 +88,12 @@ window._applyLang = applyLang;
 window._getLang = () => lang;
 applyLang();
 
-// ── THEME STATE (persisted, with prefers-color-scheme fallback) ──
-const savedTheme = localStorage.getItem('ss_theme');
-const initialTheme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-document.documentElement.setAttribute('data-theme', initialTheme);
-
-function syncThemeIcon(btn, isDark) {
-  const moon = btn.querySelector('.theme-icon-moon');
-  const sun = btn.querySelector('.theme-icon-sun');
-  if (moon) moon.style.display = isDark ? 'none' : '';
-  if (sun) sun.style.display = isDark ? '' : 'none';
-}
+// The site is light-only. There is deliberately no theme state here: this
+// used to read prefers-color-scheme and set data-theme="dark", which meant
+// anyone whose phone was in dark mode got a near-black palette instead of
+// the cream one. Any stale choice from that version is cleared below.
+try { localStorage.removeItem('ss_theme'); } catch (e) {}
+document.documentElement.removeAttribute('data-theme');
 
 // ── NAV/FOOTER-DEPENDENT WIRING ──
 function initChrome() {
@@ -135,18 +130,6 @@ function initChrome() {
   });
   if (mobileMenu) {
     mobileMenu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => mobileMenu.classList.remove('open')));
-  }
-
-  const themeBtn = document.getElementById('themeToggle');
-  if (themeBtn) {
-    syncThemeIcon(themeBtn, document.documentElement.getAttribute('data-theme') === 'dark');
-    themeBtn.addEventListener('click', () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const next = isDark ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('ss_theme', next);
-      syncThemeIcon(themeBtn, !isDark);
-    });
   }
 
   const langBtn = document.getElementById('langToggle');
