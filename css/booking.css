@@ -69,8 +69,15 @@
 /* .wizard-panel is a <section>, which picks up the generic mobile
    "clear the fixed nav" section padding-top (5.5rem) meant for standalone
    page sections — but these are nested step-panels well below the page
-   header already, so that padding just reads as a huge dead gap. */
-.wizard-panel { display: none; padding: 0; }
+   header already, so that padding just reads as a huge dead gap.
+
+   background:none matters as much as the padding: the same generic rule
+   sets background:var(--cream), and because the panel is inset by the
+   wizard's 20px side padding that opaque block cut a hard vertical seam
+   straight through the soft blurred blobs behind it — visible as a crisp
+   edge down both sides of the step content. Transparent lets the blobs
+   run behind the panel the way they were meant to. */
+.wizard-panel { display: none; padding: 0; background: none; }
 .wizard-panel.active { display: block; animation: wizardFadeIn 0.35s ease; }
 @keyframes wizardFadeIn {
   from { opacity: 0; transform: translateY(8px); }
