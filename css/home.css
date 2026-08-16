@@ -3,6 +3,11 @@
 .hero-section {
   padding: 6.5rem 1rem 1.5rem;
 }
+/* Side-by-side at every width, phones included — copy on the left, photo
+   fading in from the right. The phone tuning lives in the max-width:599px
+   block further down: at full desktop type sizes this shape squeezes the
+   copy column to ~180px and wraps the headline and button, so the type and
+   padding step down rather than the layout changing shape. */
 .hero-card {
   max-width: 1080px;
   margin: 0 auto;
@@ -11,7 +16,8 @@
   background: var(--linen);
   box-shadow: 0 20px 60px rgba(44,36,32,0.12);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
 }
 .hero-card-text {
   padding: 2.2rem 1.8rem;
@@ -53,7 +59,6 @@
 .hero-card-photo {
   position: relative;
   flex: 1 1 45%;
-  min-height: 220px;
   overflow: hidden;
 }
 .hero-card-photo img {
@@ -62,32 +67,44 @@
   object-fit: cover;
   display: block;
 }
-/* Side-by-side only once there is genuinely room for two columns. Below this
-   the card stays stacked (text over a full-width photo) — squeezing the copy
-   and the photo side by side on a phone wrapped every label and left the
-   photo as a washed-out sliver. */
-@media (min-width: 768px) {
-  .hero-card { flex-direction: row; align-items: stretch; }
-  .hero-card-photo {
-    min-height: unset;
+/* Dissolves the photo's left edge into the card background. Must be built
+   from --linen-rgb, not a hardcoded near-white — a fixed rgb(255,247,247)
+   lays a pink haze over the photo in light mode and fades to *white*
+   against the near-black card in dark mode. */
+.hero-card-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    var(--linen) 0%,
+    rgba(var(--linen-rgb),0.95) 12%,
+    rgba(var(--linen-rgb),0.8) 24%,
+    rgba(var(--linen-rgb),0.55) 38%,
+    rgba(var(--linen-rgb),0.3) 52%,
+    rgba(var(--linen-rgb),0.12) 68%,
+    rgba(var(--linen-rgb),0) 85%);
+}
+/* Phone tuning for the side-by-side hero. The copy column is only ~55% of a
+   390px screen, so the desktop type sizes have to come down or the headline,
+   the sub and the CTA all wrap. Layout shape is unchanged — only scale. */
+@media (max-width: 599px) {
+  .hero-section { padding: 5.5rem 0.75rem 1rem; }
+  .hero-card { border-radius: 20px; }
+  .hero-card-text { padding: 1.5rem 0.9rem 1.5rem 1.1rem; gap: 0.4rem; }
+  .hero-card-eyebrow { font-size: 0.55rem; letter-spacing: 0.22em; }
+  .hero-card-title { font-size: clamp(1.5rem, 8.5vw, 2.1rem); }
+  .hero-card-sub { font-size: 0.72rem; line-height: 1.5; }
+  .hero-card-cta {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    gap: 0.4rem;
   }
-  /* Dissolves the photo's left edge into the card background. Must be built
-     from --linen-rgb, not a hardcoded near-white — the old fixed rgb(255,247,247)
-     laid a pink haze over the photo in light mode and faded to *white* against
-     the near-black card in dark mode. */
-  .hero-card-photo::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg,
-      var(--linen) 0%,
-      rgba(var(--linen-rgb),0.95) 12%,
-      rgba(var(--linen-rgb),0.8) 24%,
-      rgba(var(--linen-rgb),0.55) 38%,
-      rgba(var(--linen-rgb),0.3) 52%,
-      rgba(var(--linen-rgb),0.12) 68%,
-      rgba(var(--linen-rgb),0) 85%);
-  }
+  .hero-card-cta i { font-size: 0.7rem; }
+  /* Give the copy a little more of the card than the photo — below ~400px an
+     even split leaves too little room for the headline. */
+  .hero-card-text { flex: 1 1 58%; }
+  .hero-card-photo { flex: 1 1 42%; }
 }
 @media (min-width: 900px) {
   .hero-section { padding: 7.5rem 2rem 2rem; }
@@ -128,9 +145,9 @@
 .quick-tiles-section {
   padding: 1.75rem 1rem;
 }
-/* One tile per row on phones. Two columns only leaves ~145px for the copy,
-   which broke "Book Appointment" / "My Appointments" across two lines and
-   pushed the description into a 3-line block. */
+/* Two across at every width, phones included (see the max-width:599px block
+   below, which shrinks the icon, type and gutters so the labels still fit on
+   one line at 320px rather than breaking mid-phrase). */
 .quick-tiles {
   max-width: 1400px;
   margin: 0 auto;
@@ -138,8 +155,8 @@
   border-radius: 24px;
   padding: 1.25rem;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.25rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
   box-shadow: 0 10px 40px rgba(44,36,32,0.08);
 }
 .quick-tile {
@@ -188,14 +205,29 @@
   font-size: 0.8rem;
   flex-shrink: 0;
 }
-/* Full-width rows read as a list, so give them a hairline separator rather
-   than floating them in whitespace. */
-.quick-tile + .quick-tile {
-  border-top: 1px solid var(--warmgrey);
+/* Phone tuning for the 2-up grid. At 390px each tile is ~153px wide, of which
+   the icon and chevron eat ~70px at desktop sizing — leaving too little for
+   "Book Appointment". Shrinking the icon, dropping the chevron and stepping
+   the type down buys the label enough room to stay on one line. */
+@media (max-width: 599px) {
+  .quick-tiles-section { padding: 1.25rem 0.75rem; }
+  .quick-tiles { padding: 0.9rem 0.75rem; gap: 0.3rem; border-radius: 20px; }
+  .quick-tile { padding: 0.6rem 0.4rem; gap: 0.5rem; border-radius: 12px; }
+  .quick-tile-icon { width: 34px; height: 34px; font-size: 0.8rem; }
+  .quick-tile-label { font-size: 0.72rem; line-height: 1.25; }
+  .quick-tile-desc { font-size: 0.6rem; line-height: 1.3; margin-top: 0.1rem; }
+  /* The whole tile is the tap target, so the chevron is decoration we can
+     afford to lose at this width. */
+  .quick-tile-arrow { display: none; }
 }
-@media (min-width: 600px) {
-  .quick-tiles { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-  .quick-tile + .quick-tile { border-top: none; }
+/* iPhone SE / older small Androids — one more step down, otherwise
+   "Book Appointment" and "My Appointments" still break across two lines. */
+@media (max-width: 359px) {
+  .quick-tiles { padding: 0.7rem 0.55rem; }
+  .quick-tile { padding: 0.5rem 0.28rem; gap: 0.38rem; }
+  .quick-tile-icon { width: 28px; height: 28px; font-size: 0.68rem; }
+  .quick-tile-label { font-size: 0.65rem; }
+  .quick-tile-desc { font-size: 0.54rem; }
 }
 /* From here up each tile becomes its own raised card rather than a row in a
    shared panel — but still only two across: four columns at this width leaves
