@@ -702,9 +702,12 @@
   transition: background 0.2s ease, transform 0.2s ease;
 }
 .hours-card-compact .hours-row .hours-day { font-weight: 500; }
+/* The gradient's second stop and this shadow are hardcoded, so they do not
+   follow --blush — both were rose and would have stayed pink on today's
+   open day while every other blush surface went beige. */
 .hours-card-compact .hours-row[data-active="true"] {
-  background: linear-gradient(135deg, var(--blush), #f2ddd4);
-  box-shadow: 0 6px 18px rgba(180,120,100,0.16);
+  background: linear-gradient(135deg, var(--blush), #e3d9ca);
+  box-shadow: 0 6px 18px rgba(150,130,100,0.16);
 }
 .hours-card-compact .hours-row[data-active="true"] .hours-day,
 .hours-card-compact .hours-row[data-active="true"] .hours-time {

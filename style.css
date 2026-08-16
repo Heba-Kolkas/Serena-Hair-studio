@@ -16,7 +16,12 @@ video::--internal-media-controls-button-panel { display: none !important; }
   --greige: #9f948e;
   --espresso: #3f3632;
   --gold: #C9A96E;
-  --blush: #f1ded8;
+  /* Beige, not pink. #f1ded8 had blue sitting level with green, which is
+     what made it read rose; blue now drops below green so it lands warm
+     neutral. Drives the homepage tile icons, the booking step dots and
+     calendar hover, and the team cards — so it is changed here rather than
+     per page, to stop those going pink while the price list goes beige. */
+  --blush: #ebe2d6;
   --white: #ffffffd7;
   /* --linen as a raw RGB triplet, for rgba() fades that must dissolve into
      the linen card background (see the hero photo gradient in home.css).
