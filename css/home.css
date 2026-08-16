@@ -62,23 +62,31 @@
   object-fit: cover;
   display: block;
 }
-@media (min-width: 480px) {
+/* Side-by-side only once there is genuinely room for two columns. Below this
+   the card stays stacked (text over a full-width photo) — squeezing the copy
+   and the photo side by side on a phone wrapped every label and left the
+   photo as a washed-out sliver. */
+@media (min-width: 768px) {
   .hero-card { flex-direction: row; align-items: stretch; }
   .hero-card-photo {
     min-height: unset;
   }
+  /* Dissolves the photo's left edge into the card background. Must be built
+     from --linen-rgb, not a hardcoded near-white — the old fixed rgb(255,247,247)
+     laid a pink haze over the photo in light mode and faded to *white* against
+     the near-black card in dark mode. */
   .hero-card-photo::after {
     content: '';
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg,
       var(--linen) 0%,
-      rgba(255,247,247,0.95) 12%,
-      rgba(255,247,247,0.8) 24%,
-      rgba(255,247,247,0.55) 38%,
-      rgba(255,247,247,0.3) 52%,
-      rgba(255,247,247,0.12) 68%,
-      rgba(255,247,247,0) 85%);
+      rgba(var(--linen-rgb),0.95) 12%,
+      rgba(var(--linen-rgb),0.8) 24%,
+      rgba(var(--linen-rgb),0.55) 38%,
+      rgba(var(--linen-rgb),0.3) 52%,
+      rgba(var(--linen-rgb),0.12) 68%,
+      rgba(var(--linen-rgb),0) 85%);
   }
 }
 @media (min-width: 900px) {
@@ -108,11 +116,11 @@
   .hero-card-photo::after {
     background: linear-gradient(90deg,
       var(--linen) 0%,
-      rgba(255,247,247,0.95) 18%,
-      rgba(255,247,247,0.75) 32%,
-      rgba(255,247,247,0.4) 48%,
-      rgba(255,247,247,0.15) 65%,
-      rgba(255,247,247,0) 80%);
+      rgba(var(--linen-rgb),0.95) 18%,
+      rgba(var(--linen-rgb),0.75) 32%,
+      rgba(var(--linen-rgb),0.4) 48%,
+      rgba(var(--linen-rgb),0.15) 65%,
+      rgba(var(--linen-rgb),0) 80%);
   }
 }
 
@@ -120,6 +128,9 @@
 .quick-tiles-section {
   padding: 1.75rem 1rem;
 }
+/* One tile per row on phones. Two columns only leaves ~145px for the copy,
+   which broke "Book Appointment" / "My Appointments" across two lines and
+   pushed the description into a 3-line block. */
 .quick-tiles {
   max-width: 1400px;
   margin: 0 auto;
@@ -127,8 +138,8 @@
   border-radius: 24px;
   padding: 1.25rem;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
   box-shadow: 0 10px 40px rgba(44,36,32,0.08);
 }
 .quick-tile {
@@ -177,12 +188,20 @@
   font-size: 0.8rem;
   flex-shrink: 0;
 }
-@media (max-width: 420px) {
-  .quick-tile-desc { display: none; }
+/* Full-width rows read as a list, so give them a hairline separator rather
+   than floating them in whitespace. */
+.quick-tile + .quick-tile {
+  border-top: 1px solid var(--warmgrey);
 }
+@media (min-width: 600px) {
+  .quick-tiles { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .quick-tile + .quick-tile { border-top: none; }
+}
+/* From here up each tile becomes its own raised card rather than a row in a
+   shared panel — but still only two across: four columns at this width leaves
+   ~65px of text per tile, which wrapped every label and description. */
 @media (min-width: 900px) {
   .quick-tiles {
-    grid-template-columns: repeat(4, 1fr);
     gap: 1.25rem;
     padding: 0;
     background: none;
@@ -198,6 +217,11 @@
   .quick-tile:hover { box-shadow: 0 12px 34px rgba(44,36,32,0.1); }
   .quick-tile-icon { width: 52px; height: 52px; font-size: 1.2rem; }
   .quick-tile-label { font-size: 0.9rem; }
+}
+/* Four across only once each tile clears ~300px, which is where the longest
+   label ("Book Appointment") and its description both hold one/two lines. */
+@media (min-width: 1200px) {
+  .quick-tiles { grid-template-columns: repeat(4, 1fr); }
 }
 
 /* ── MINI SECTION TITLE (dashed, compact — for app-style headers) ── */

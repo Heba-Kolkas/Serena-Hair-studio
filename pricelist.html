@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<!-- Without this, phones fall back to a 980px layout viewport and every
+     media query below is dead code — the page rendered as a shrunken
+     desktop poster that scrolled sideways. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Studio Serena — Price List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

@@ -4,6 +4,11 @@
   max-width: 780px;
   margin: 0 auto;
   padding: 0 1.25rem 5rem;
+  /* The ::after blob below sits at right:-60px by design, which added 60px of
+     horizontal scroll to the whole page at every width. `clip` (not `hidden`)
+     trims the decoration without turning this into a scroll container, so
+     sticky/absolute descendants keep behaving. */
+  overflow-x: clip;
 }
 /* Soft blurred color blobs behind the glass cards — gives the frosted-glass
    effect something to actually show through, since the page itself is a

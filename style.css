@@ -14,6 +14,10 @@ video::--internal-media-controls-button-panel { display: none !important; }
   --gold: #C9A96E;
   --blush: #f1ded8;
   --white: #ffffffd7;
+  /* --linen as a raw RGB triplet, for rgba() fades that must dissolve into
+     the linen card background (see the hero photo gradient in home.css).
+     Keep in sync with --linen above and in the dark theme below. */
+  --linen-rgb: 248, 240, 221;
   --font-display: 'Cormorant Garamond', serif;
   --font-body: 'Jost', sans-serif;
   --transition: 0.3s ease;
@@ -30,6 +34,7 @@ video::--internal-media-controls-button-panel { display: none !important; }
   --white: #12100e;
   --gold: #d4af37;
   --blush: #3a2e2a;
+  --linen-rgb: 26, 23, 21;
 }
 
 /* Fix for anti-aliasing in dark mode */
@@ -2275,6 +2280,27 @@ section {
     align-items: center;
   }
 
+  /* Absolute viewport-centering works on wide screens where there's slack on
+     both sides, but on a phone the wordmark is wider than the gap left by the
+     hamburger and the lang/bell controls, so it ran straight over "NO | EN".
+     Put it back in the flex flow here — it then centers in whatever space is
+     actually free and can never overlap its neighbours. */
+  .nav-wordmark {
+    position: static;
+    transform: none;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+/* Below ~400px even the freed-up space is narrower than the wordmark's
+   natural width, so step the type down rather than let it crowd the bell. */
+@media (max-width: 400px) {
+  .nav-wordmark-main { font-size: 0.98rem; letter-spacing: 0.08em; }
+  .nav-wordmark-sub { font-size: 0.48rem; letter-spacing: 0.3em; }
+  .nav-wordmark-sub::before,
+  .nav-wordmark-sub::after { width: 10px; }
+
   /* Show lang/theme toggles on mobile */
   .nav-controls .lang-toggle,
   .nav-controls .toggle-btn {
@@ -3612,7 +3638,21 @@ input, textarea, select {
 }
 .map-enable-btn:hover { transform: translateY(-2px); }
 @media (max-width: 600px) {
-  #cookie-banner { padding: 1.2rem; }
-  .cookie-btns { width: 100%; }
-  .cookie-btn-accept, .cookie-btn-decline { flex: 1; text-align: center; }
+  /* Stack outright on phones. Side by side, .cookie-text's 220px floor plus
+     two nowrap buttons had a min-content width wider than the screen, which
+     pushed the whole document to ~420px and made every page scroll sideways. */
+  #cookie-banner {
+    padding: 1.2rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .cookie-text { min-width: 0; }
+  .cookie-btns { width: auto; }
+  .cookie-btn-accept, .cookie-btn-decline {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.6rem 1rem;
+    text-align: center;
+  }
 }
