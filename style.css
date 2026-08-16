@@ -5,9 +5,14 @@ video::-webkit-media-controls { display: none !important; }
 video::--internal-media-controls-button-panel { display: none !important; }
 
 :root {
-  --cream: #f3e9d3;
-  --linen: #f8f0dd;
-  --warmgrey: #E0D8CF;
+  /* Warm off-white, not gold. These were ~55-64% saturation at a 41deg hue,
+     which read as distinctly yellow across the whole page. The blue channel
+     is now pulled up toward red, which removes the yellow cast while keeping
+     the red channel (and so the brightness) untouched — desaturating in HSL
+     instead would have dulled and darkened the surfaces. */
+  --cream: #f3efe5;
+  --linen: #f8f4ec;
+  --warmgrey: #e0dcd8;
   --taupe: #B5A89A;
   --greige: #9f948e;
   --espresso: #3f3632;
@@ -17,7 +22,7 @@ video::--internal-media-controls-button-panel { display: none !important; }
   /* --linen as a raw RGB triplet, for rgba() fades that must dissolve into
      the linen card background (see the hero photo gradient in home.css).
      Keep in sync with --linen above and in the dark theme below. */
-  --linen-rgb: 248, 240, 221;
+  --linen-rgb: 248, 244, 236;
   --font-display: 'Cormorant Garamond', serif;
   --font-body: 'Jost', sans-serif;
   --transition: 0.3s ease;
