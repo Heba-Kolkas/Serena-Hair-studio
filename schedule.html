@@ -1,266 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="no">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Team Schedule | Studio Serena</title>
-    <meta name="robots" content="noindex, nofollow" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Studio Serena | Vi pusser opp nettsiden</title>
+<meta name="description" content="Studio Serena oppdaterer nettsiden sin. Salongen er åpen som vanlig — kontakt oss på Instagram, telefon eller e-post for å bestille time." />
+<!-- noindex so Google does not cache the notice as the site's real content,
+     follow so the contact links below still carry weight. -->
+<meta name="robots" content="noindex, follow" />
+<link rel="canonical" href="https://studioserena.no/" />
+<meta name="theme-color" content="#faf6ef" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap" />
 
-    <link rel="stylesheet" href="/style.css?v=14">
-    <link rel="stylesheet" href="/css/schedule.css?v=37">
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#faf6ef" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="icon" type="image/x-icon" href="./favicon.ico" />
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+
+<style>
+:root{
+  --cream:#faf6ef; --linen:#fdfaf5; --blush:#ebe2d6; --warmgrey:#e9e3db;
+  --espresso:#3f3632; --taupe:#B5A89A; --greige:#7d736d;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ min-height:100%; background:var(--cream); font-family:'Jost',sans-serif; color:var(--espresso); -webkit-font-smoothing:antialiased; }
+.wrap{ min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2.5rem 1.25rem; }
+.card{
+  width:100%; max-width:520px; background:var(--linen); border:1px solid var(--warmgrey);
+  border-radius:24px; padding:2.75rem 1.6rem 2.25rem; box-shadow:0 18px 50px rgba(44,36,32,0.08);
+}
+.wordmark{ font-family:'Cormorant Garamond',serif; font-weight:400; font-size:clamp(1.35rem,5.5vw,1.7rem); letter-spacing:0.16em; }
+.rule{ display:flex; align-items:center; justify-content:center; gap:10px; margin:8px 0 26px; }
+.rule::before,.rule::after{ content:''; width:34px; height:1px; background:var(--espresso); opacity:0.35; }
+.rule span{ font-size:0.6rem; letter-spacing:0.4em; color:var(--greige); }
+h1{ font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(1.7rem,6.5vw,2.4rem); line-height:1.2; margin-bottom:0.5rem; }
+h1 em{ font-style:italic; color:var(--taupe); }
+.sub{ font-size:0.86rem; line-height:1.75; color:var(--greige); max-width:40ch; margin:0 auto; }
+.sub + .sub{ margin-top:0.6rem; }
+.lang{ font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--taupe); margin:1.6rem 0 0.5rem; }
+.contact{ margin-top:1.9rem; display:flex; flex-direction:column; gap:2px; text-align:left; }
+.row{
+  display:flex; align-items:center; gap:0.85rem; padding:0.85rem 1rem; border-radius:12px;
+  color:var(--espresso); text-decoration:none; font-size:0.85rem; transition:background .2s ease;
+}
+.row + .row{ border-top:1px solid var(--warmgrey); }
+a.row:hover{ background:var(--blush); }
+.row .ic{ width:34px; height:34px; flex-shrink:0; border-radius:50%; background:var(--blush); display:flex; align-items:center; justify-content:center; }
+.row svg{ width:15px; height:15px; stroke:var(--espresso); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.cta{
+  display:inline-flex; align-items:center; justify-content:center; gap:0.6rem; margin-top:1.9rem;
+  padding:0.85rem 1.8rem; border-radius:50px; background:var(--espresso); color:var(--linen);
+  text-decoration:none; font-size:0.72rem; font-weight:500; letter-spacing:0.14em; text-transform:uppercase;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.cta:hover{ transform:translateY(-2px); box-shadow:0 10px 26px rgba(44,36,32,0.22); }
+.cta svg{ width:15px; height:15px; stroke:var(--linen); }
+footer{ margin-top:2rem; font-size:0.66rem; letter-spacing:0.12em; color:var(--taupe); }
+@media (max-width:380px){ .card{ padding:2.2rem 1.1rem 1.9rem; } .row{ font-size:0.8rem; padding:0.75rem 0.6rem; } }
+</style>
 </head>
-
 <body>
-    <header class="sched-topbar">
-        <div class="sched-topbar-logo"><span class="sched-topbar-logo-full">Studio <span class="sched-topbar-logo-accent">Serena</span> — Team Schedule</span><span class="sched-topbar-logo-short">Studio <span class="sched-topbar-logo-accent">Serena</span></span></div>
-        <div class="sched-topbar-actions" id="topbarActions" style="display:none;">
-            <button id="btnMoreMenu" class="topbar-menu-btn" aria-label="More actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-            <div id="moreMenu" class="topbar-menu" style="display:none;">
-                <button id="btnServiceColors" class="topbar-menu-item"><i class="fa-solid fa-palette"></i> Colors</button>
-                <button id="btnBlockTime" class="topbar-menu-item"><i class="fa-solid fa-ban"></i> Block Time</button>
-                <button id="btnOwnerPanel" class="topbar-menu-item" style="display:none;"><i class="fa-solid fa-user-shield"></i> Owner Panel</button>
-                <button id="btnSwitchPin" class="topbar-menu-item"><i class="fa-solid fa-arrow-right-from-bracket"></i> Switch PIN</button>
-            </div>
-        </div>
-    </header>
+<div class="wrap">
+  <div class="card">
+    <div class="wordmark">STUDIO SERENA</div>
+    <div class="rule"><span>HAIR</span></div>
 
-    <main>
-        <!-- PIN GATE -->
-        <div id="pinScreen" class="pin-screen">
-            <form class="pin-card" id="pinForm">
-                <h1>Enter Team PIN</h1>
-                <p>Ask the salon owner if you don't have it.</p>
-                <input type="tel" inputmode="numeric" autocomplete="off" id="pinInput" class="pin-input" placeholder="••••" maxlength="8" />
-                <button type="submit" id="btnPinSubmit"><i class="fa-solid fa-lock-open"></i> Continue</button>
-                <div id="pinError" class="pin-error"></div>
-            </form>
-        </div>
+    <h1>Vi pusser opp <em>nettsiden</em></h1>
+    <p class="sub">Nettsiden vår er midlertidig nede mens vi oppdaterer den. <strong>Salongen er åpen som vanlig</strong> — ta kontakt for å bestille time.</p>
 
-        <!-- IDENTITY PICKER (shown once per device, after the PIN) -->
-        <div id="identityScreen" class="pin-screen" style="display:none;">
-            <div class="pin-card">
-                <h1>Who's this?</h1>
-                <p>So we know who marked what — remembered on this device until you switch PIN.</p>
-                <div id="identityList" class="identity-list"></div>
-            </div>
-        </div>
+    <p class="lang">In English</p>
+    <h1 style="font-size:clamp(1.35rem,5vw,1.7rem)">We're renovating <em>our website</em></h1>
+    <p class="sub">Our site is temporarily down while we update it. <strong>The salon is open as usual</strong> — get in touch to book your appointment.</p>
 
-        <!-- SCHEDULE APP (shown after PIN) -->
-        <div id="scheduleApp" class="sched-app" style="display:none;">
-            <div class="sched-controls">
-                <div class="view-toggle" id="viewToggle">
-                    <button type="button" class="view-toggle-btn active" data-view="upcoming">Upcoming</button>
-                    <button type="button" class="view-toggle-btn" data-view="history">History</button>
-                </div>
-                <span id="staffPillsAnchor"></span>
-                <div class="staff-pills" id="staffPills"></div>
-            </div>
-
-            <div class="sched-toolbar" id="upcomingView">
-                <div class="day-strip-row">
-                    <button type="button" id="btnDayStripPrev" class="day-strip-nav-btn" aria-label="Previous days"><i class="fa-solid fa-chevron-left"></i></button>
-                    <div class="day-strip" id="dayStrip"></div>
-                    <button type="button" id="btnDayStripNext" class="day-strip-nav-btn" aria-label="Next days"><i class="fa-solid fa-chevron-right"></i></button>
-                    <div class="calendar-pick-wrap">
-                        <button type="button" id="btnCalendarPick" class="calendar-pick-btn" aria-label="Jump to date"><i class="fa-regular fa-calendar-days"></i></button>
-                        <div id="calendarPopover" class="calendar-popover" style="display:none;">
-                            <div class="calendar-header">
-                                <button type="button" id="calPopPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
-                                <span class="calendar-month-label" id="calPopMonthLabel"></span>
-                                <button type="button" id="calPopNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
-                            <div class="calendar-weekdays">
-                                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-                            </div>
-                            <div class="calendar-grid" id="calPopGrid"></div>
-                        </div>
-                    </div>
-                </div>
-                <p class="sched-day-label" id="todayLabel"></p>
-            </div>
-            <div id="gridWrap" class="sched-grid-wrap"></div>
-
-            <div id="historyView" style="display:none;">
-                <div class="history-search-row">
-                    <i class="fa-solid fa-magnifying-glass history-search-icon"></i>
-                    <input type="text" id="historySearchInput" class="history-search-input" placeholder="Search name, phone, or email…" />
-                    <button type="button" id="historySearchClear" class="history-search-clear" style="display:none;" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div class="history-date-filter-row">
-                    <div class="calendar-pick-wrap">
-                        <button type="button" id="btnHistoryDatePick" class="history-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="historyDatePickLabel">Filter by day</span></button>
-                        <div id="historyCalendarPopover" class="calendar-popover" style="display:none;">
-                            <div class="calendar-header">
-                                <button type="button" id="histCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
-                                <span class="calendar-month-label" id="histCalMonthLabel"></span>
-                                <button type="button" id="histCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
-                            <div class="calendar-weekdays">
-                                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-                            </div>
-                            <div class="calendar-grid" id="histCalGrid"></div>
-                        </div>
-                    </div>
-                    <button type="button" id="historyDateClear" class="history-date-clear" style="display:none;">Clear</button>
-                </div>
-                <div id="historyList"></div>
-            </div>
-        </div>
-    </main>
-
-    <!-- APPOINTMENT DETAIL POPUP -->
-    <div id="apptPopup" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup">
-            <button type="button" class="appt-popup-close" id="popupClose" aria-label="Close">&times;</button>
-            <div id="popupBody"></div>
-        </div>
+    <div class="contact">
+      <a class="row" href="https://www.instagram.com/studioserena.hair" target="_blank" rel="noopener noreferrer">
+        <span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></span>
+        @studioserena.hair
+      </a>
+      <a class="row" href="tel:+4745397631">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span>
+        +47 45 39 76 31
+      </a>
+      <a class="row" href="mailto:info@studioserena.no">
+        <span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg></span>
+        info@studioserena.no
+      </a>
+      <div class="row" style="cursor:default">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        Torshovgata 5H, 0476 Oslo
+      </div>
     </div>
 
-    <!-- BLOCK TIME MODAL -->
-    <div id="blockTimeModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup">
-            <button type="button" class="appt-popup-close" id="blockTimeClose" aria-label="Close">&times;</button>
-            <h3 class="block-modal-title">Block Time Off</h3>
-            <p class="block-modal-sub">Marks you unavailable — clients won't be able to book this slot.</p>
-            <div class="block-field" id="blockStaffField" style="display:none;">
-                <label>Stylist</label>
-                <select id="blockStaffSelect"></select>
-            </div>
-            <div class="block-field"><label>Date</label><input type="date" id="blockDate" /></div>
-            <label class="block-allday-check">
-                <input type="checkbox" id="blockAllDay" />
-                All day
-            </label>
-            <div class="block-field-row" id="blockTimeFields">
-                <div class="block-field"><label>From</label><input type="time" id="blockStart" /></div>
-                <div class="block-field"><label>To</label><input type="time" id="blockEnd" /></div>
-            </div>
-            <div class="block-field"><label>Reason (optional)</label><input type="text" id="blockReason" placeholder="Break, appointment, sick…" /></div>
-            <button type="button" id="btnSaveBlock" class="block-save-btn"><i class="fa-solid fa-ban"></i> Block This Time</button>
-            <div id="blockStatus" class="block-status"></div>
-            <div id="blockExistingList" class="block-existing-list"></div>
-        </div>
-    </div>
-
-    <!-- SERVICE COLORS MODAL -->
-    <div id="colorsModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup">
-            <button type="button" class="appt-popup-close" id="colorsClose" aria-label="Close">&times;</button>
-            <h3 class="block-modal-title">Service Colors</h3>
-            <p class="block-modal-sub">Pick any color per service — it updates the schedule grid for everyone.</p>
-            <div id="colorsList" class="colors-list"></div>
-        </div>
-    </div>
-
-    <!-- OWNER PANEL -->
-    <div id="ownerPanelModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup owner-panel">
-            <button type="button" class="appt-popup-close" id="ownerPanelClose" aria-label="Close">&times;</button>
-            <h3 class="block-modal-title">Owner Panel</h3>
-            <div class="owner-tabs" id="ownerTabs">
-                <button type="button" class="owner-tab active" data-tab="services">Services</button>
-                <button type="button" class="owner-tab" data-tab="staff">Staff</button>
-                <button type="button" class="owner-tab" data-tab="bookings">Bookings</button>
-                <button type="button" class="owner-tab" data-tab="revenue">Revenue</button>
-                <button type="button" class="owner-tab" data-tab="hours">Hours</button>
-                <button type="button" class="owner-tab" data-tab="activity">Activity</button>
-                <button type="button" class="owner-tab" data-tab="settings">Settings</button>
-            </div>
-            <div class="owner-tab-content" id="ownerTabContent"></div>
-        </div>
-    </div>
-
-    <!-- MOVE (RESCHEDULE) BOOKING MODAL -->
-    <div id="rescheduleModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup">
-            <button type="button" class="appt-popup-close" id="rescheduleClose" aria-label="Close">&times;</button>
-            <h3 class="block-modal-title">Move Appointment</h3>
-            <p class="block-modal-sub" id="rescheduleSub"></p>
-            <div class="block-field">
-                <label>New date</label>
-                <div class="calendar-pick-wrap">
-                    <button type="button" id="btnRescheduleDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="rescheduleDateLabel">Pick a date</span></button>
-                    <div id="rescheduleCalendarPopover" class="calendar-popover" style="display:none;">
-                        <div class="calendar-header">
-                            <button type="button" id="reschedCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
-                            <span class="calendar-month-label" id="reschedCalMonthLabel"></span>
-                            <button type="button" id="reschedCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-                        <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-                        <div class="calendar-grid" id="reschedCalGrid"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="block-field-row">
-                <div class="block-field"><label>New time</label><input type="time" id="rescheduleTime" /></div>
-                <div class="block-field"><label>Stylist</label><select id="rescheduleStaffSelect"></select></div>
-            </div>
-            <div id="rescheduleAvailability" class="reschedule-availability"></div>
-            <button type="button" id="btnSaveReschedule" class="block-save-btn"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move Appointment</button>
-            <div id="rescheduleStatus" class="block-status"></div>
-        </div>
-    </div>
-
-    <!-- COMPLETE BOOKING MODAL (captures amount charged) -->
-    <div id="completeModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup">
-            <button type="button" class="appt-popup-close" id="completeClose" aria-label="Close">&times;</button>
-            <h3 class="block-modal-title">Complete Appointment</h3>
-            <p class="block-modal-sub" id="completeSub"></p>
-            <div class="block-field"><label>Amount charged (NOK)</label><input type="number" id="completeAmount" min="0" step="1" placeholder="e.g. 3500" /></div>
-            <button type="button" id="btnSaveComplete" class="block-save-btn"><i class="fa-solid fa-flag-checkered"></i> Mark Completed</button>
-            <div id="completeStatus" class="block-status"></div>
-        </div>
-    </div>
-
-    <!-- ADD BOOKING MODAL (manual entry for phone/walk-in clients) -->
-    <div id="addBookingModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup wide-popup">
-            <button type="button" class="appt-popup-close" id="addBookingClose" aria-label="Close">&times;</button>
-            <h3 class="block-modal-title">Add Booking</h3>
-            <p class="block-modal-sub">For phone or walk-in clients — checked against the same rules as online bookings.</p>
-            <div class="block-field-row-3">
-                <div class="block-field"><label>Client name</label><input type="text" id="addBkName" /></div>
-                <div class="block-field"><label>Phone</label><input type="tel" id="addBkPhone" /></div>
-                <div class="block-field"><label>Email</label><input type="email" id="addBkEmail" /></div>
-            </div>
-            <div class="block-field-row">
-                <div class="block-field"><label>Service</label><select id="addBkService"></select></div>
-                <div class="block-field"><label>Stylist</label><select id="addBkStaff"></select></div>
-                <div class="block-field">
-                    <label>Date</label>
-                    <div class="calendar-pick-wrap">
-                        <button type="button" id="btnAddBkDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="addBkDateLabel">Pick a date</span></button>
-                        <div id="addBkCalendarPopover" class="calendar-popover" style="display:none;">
-                            <div class="calendar-header">
-                                <button type="button" id="addBkCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
-                                <span class="calendar-month-label" id="addBkCalMonthLabel"></span>
-                                <button type="button" id="addBkCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
-                            <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-                            <div class="calendar-grid" id="addBkCalGrid"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="block-field addbk-time-field"><label>Time</label><input type="time" id="addBkTime" /></div>
-            </div>
-            <div id="addBkAvailability" class="reschedule-availability compact"></div>
-            <div class="block-field"><label>Notes (optional)</label><input type="text" id="addBkNotes" placeholder="Allergies, preferences…" /></div>
-            <button type="button" id="btnSaveAddBooking" class="block-save-btn"><i class="fa-solid fa-plus"></i> Add Booking</button>
-            <div id="addBkStatus" class="block-status"></div>
-        </div>
-    </div>
-
-    <script type="module" src="/js/schedule.js?v=23"></script>
+    <a class="cta" href="https://www.instagram.com/studioserena.hair" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/></svg>
+      Bestill på Instagram
+    </a>
+  </div>
+  <footer>&copy; 2026 STUDIO SERENA — SNART TILBAKE / BACK SOON</footer>
+</div>
 </body>
-
 </html>
