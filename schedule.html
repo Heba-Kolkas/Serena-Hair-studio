@@ -318,6 +318,21 @@
             </div>
             <div id="addBkAvailability" class="reschedule-availability compact"></div>
             <div class="block-field"><label>Notes (optional)</label><input type="text" id="addBkNotes" placeholder="Allergies, preferences…" /></div>
+
+            <!-- A walk-in is usually being written up after she has already
+                 paid. Without this the booking goes in as upcoming and has to
+                 be found and completed a second time, which is how takings go
+                 unrecorded. -->
+            <label class="block-allday-check">
+                <input type="checkbox" id="addBkPaid" />
+                She has already paid - record it now
+            </label>
+            <div class="block-field" id="addBkPaidAmountField" hidden>
+                <label>Amount charged (NOK)</label>
+                <input type="number" id="addBkAmount" min="0" step="1" placeholder="e.g. 1150" />
+                <span class="block-field-hint" id="addBkAmountHint"></span>
+            </div>
+
             <button type="button" id="btnSaveAddBooking" class="block-save-btn"><i class="fa-solid fa-plus"></i> Add Booking</button>
             <div id="addBkStatus" class="block-status"></div>
         </div>

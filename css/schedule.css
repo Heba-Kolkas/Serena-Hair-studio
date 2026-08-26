@@ -1601,3 +1601,37 @@ body.modal-open { overflow: hidden; }
 #extList, #extRisk {
   overflow-y: visible;
 }
+
+/* ── STYLIST FILTER: PILLS ON A LAPTOP, A DROPDOWN ON A PHONE ──
+   The pills sit in the topbar beside the day strip. Two stylists fit there on
+   a wide screen; on a phone the row is pushed past the right edge and the
+   stylist you wanted was the one you could not reach. The dropdown holds the
+   same choice in the width of one control. */
+.staff-pill-row { display: contents; }
+.staff-pill-select { display: none; }
+
+@media (max-width: 700px) {
+  .staff-pill-row { display: none; }
+  .staff-pill-select {
+    display: block;
+    max-width: 9.5rem;
+    padding: 0.34rem 1.6rem 0.34rem 0.8rem;
+    border-radius: 50px;
+    border: 1px solid var(--sched-border);
+    background: var(--sched-surface);
+    color: var(--sched-text);
+    font: inherit;
+    font-size: 0.76rem;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    /* The arrow the native control would have drawn, redrawn so the pill
+       shape survives appearance:none. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    background-size: 0.6rem;
+    text-overflow: ellipsis;
+  }
+  .sched-topbar .staff-pills { margin-right: 0.5rem; }
+}

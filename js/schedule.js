@@ -263,6 +263,10 @@ const addBkTime = document.getElementById('addBkTime');
 const addBkAvailability = document.getElementById('addBkAvailability');
 const addBkNotes = document.getElementById('addBkNotes');
 const btnSaveAddBooking = document.getElementById('btnSaveAddBooking');
+const addBkPaid = document.getElementById('addBkPaid');
+const addBkPaidAmountField = document.getElementById('addBkPaidAmountField');
+const addBkAmount = document.getElementById('addBkAmount');
+const addBkAmountHint = document.getElementById('addBkAmountHint');
 const addBkStatus = document.getElementById('addBkStatus');
 const historySearchInput = document.getElementById('historySearchInput');
 const historySearchClear = document.getElementById('historySearchClear');
@@ -511,19 +515,37 @@ btnDayStripPrev.addEventListener('click', async () => {
 });
 
 // ── STAFF FILTER PILLS ──
+function applyStaffFilter(value) {
+  staffFilter = value;
+  localStorage.setItem(STAFF_FILTER_KEY, staffFilter);
+  renderPills();
+  if (viewMode === 'upcoming') renderGrid(); else renderHistory();
+}
+
+// A row of pills and a dropdown carrying the same choice. Two stylists fit on
+// a laptop; on a phone the row is pushed off the right edge by the day strip
+// beside it, and the stylist you wanted was the one you could not see. CSS
+// shows whichever suits the width - both drive applyStaffFilter, so they never
+// disagree.
 function renderPills() {
-  const pills = ['<button type="button" class="staff-pill" data-staff="all">All Stylists</button>']
-    .concat(currentStaff.map((s) => `<button type="button" class="staff-pill" data-staff="${s.id}">${s.name}</button>`));
-  staffPillsEl.innerHTML = pills.join('');
+  const options = [{ id: 'all', name: 'All Stylists' }]
+    .concat(currentStaff.map((s) => ({ id: s.id, name: s.name })));
+
+  staffPillsEl.innerHTML =
+    '<div class="staff-pill-row">'
+    + options.map((o) => `<button type="button" class="staff-pill" data-staff="${o.id}">${o.name}</button>`).join('')
+    + '</div>'
+    + '<select class="staff-pill-select" aria-label="Filter by stylist">'
+    + options.map((o) => `<option value="${o.id}">${o.name}</option>`).join('')
+    + '</select>';
+
   staffPillsEl.querySelectorAll('.staff-pill').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.staff === staffFilter);
-    btn.addEventListener('click', () => {
-      staffFilter = btn.dataset.staff;
-      localStorage.setItem(STAFF_FILTER_KEY, staffFilter);
-      renderPills();
-      if (viewMode === 'upcoming') renderGrid(); else renderHistory();
-    });
+    btn.addEventListener('click', () => applyStaffFilter(btn.dataset.staff));
   });
+  const sel = staffPillsEl.querySelector('.staff-pill-select');
+  sel.value = staffFilter;
+  sel.addEventListener('change', () => applyStaffFilter(sel.value));
 }
 
 // ── OVERLAP-AWARE COLUMN LAYOUT ──
@@ -1367,15 +1389,68 @@ btnSaveAddBooking.addEventListener('click', async () => {
   // staffBookAppointment, not bookAppointment: same rules bar the overlap
   // check, which a booking entered here is allowed to break. The online
   // wizard still refuses overlaps for everything except consultations.
-  const { error } = await staffBookAppointment({
+  const { data, error } = await staffBookAppointment({
     pin: currentPin,
     serviceId: addBkService.value, staffId: addBkStaff.value, date, startTime: time,
     name, email, phone, notes: addBkNotes.value.trim(),
   });
   if (error) { addBkStatus.textContent = 'Error: ' + error.message; addBkStatus.style.color = '#dc2626'; return; }
+
+  // A walk-in written up after the fact is usually already paid. Completing it
+  // here is what puts the money into the revenue figures - otherwise the
+  // booking sits as upcoming and has to be found and completed a second time,
+  // which is how takings go unrecorded.
+  if (addBkPaid.checked) {
+    const amount = parseFloat(addBkAmount.value);
+    if (!Number.isFinite(amount) || amount < 0) {
+      addBkStatus.textContent = 'Booked, but the amount was not a number - complete it from the schedule to record what she paid.';
+      addBkStatus.style.color = '#b45309';
+      setTimeout(() => { closeAddBookingModal(); switchOwnerTab(ownerActiveTab); }, 2500);
+      return;
+    }
+    const created = (data && (Array.isArray(data) ? data[0] : data)) || null;
+    if (created && created.id) {
+      const { error: payErr } = await completeBookingAdmin({
+        pin: currentPin, bookingId: created.id, amountCharged: amount,
+      });
+      if (payErr) {
+        addBkStatus.textContent = 'Booked, but recording the payment failed: ' + payErr.message;
+        addBkStatus.style.color = '#b45309';
+        return;
+      }
+      addBkStatus.textContent = '✓ Booked and paid, ' + amount.toLocaleString('nb-NO') + ' NOK recorded.';
+      addBkStatus.style.color = '#059669';
+      setTimeout(() => { closeAddBookingModal(); switchOwnerTab(ownerActiveTab); }, 900);
+      return;
+    }
+  }
+
   addBkStatus.textContent = '✓ Booked.'; addBkStatus.style.color = '#059669';
   setTimeout(() => { closeAddBookingModal(); switchOwnerTab(ownerActiveTab); }, 500);
 });
+
+// The amount box only appears once she is marked as paid, and it is pre-filled
+// with the service's own price - except where that price is a "from" figure,
+// which is a floor rather than a real amount and must not sit there waiting to
+// be accepted by mistake.
+function syncAddBkPaidField() {
+  addBkPaidAmountField.hidden = !addBkPaid.checked;
+  if (!addBkPaid.checked) return;
+  const svc = (addBkServicesSource || []).find((x) => String(x.id) === String(addBkService.value));
+  if (!svc) { addBkAmount.value = ''; addBkAmountHint.textContent = ''; return; }
+  const isEstimate = svc.price_is_from || svc.price_on_consultation || svc.price_to != null;
+  if (isEstimate) {
+    addBkAmount.value = '';
+    addBkAmountHint.textContent = svc.price_on_consultation
+      ? 'Quoted at consultation - enter what she actually paid.'
+      : 'Listed from ' + Number(svc.price_from || 0).toLocaleString('nb-NO') + ' NOK - enter what she actually paid.';
+  } else {
+    addBkAmount.value = svc.price_from != null ? String(Number(svc.price_from)) : '';
+    addBkAmountHint.textContent = 'The listed price. Change it if she paid something else.';
+  }
+}
+addBkPaid.addEventListener('change', syncAddBkPaidField);
+addBkService.addEventListener('change', () => { if (addBkPaid.checked) syncAddBkPaidField(); });
 
 // ── SERVICE COLORS MODAL ──
 function renderColorsList() {
