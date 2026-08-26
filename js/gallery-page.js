@@ -306,14 +306,15 @@ window.closeLightbox = closeLightbox;
 // tap went straight past that to the lightbox and the cover was never seen at
 // all - the blurred version was the only version a phone user ever got.
 //
-// So on a touch device the first tap clears the blur and holds it for a
-// moment before opening. A second tap during that pause opens immediately:
-// someone who taps twice has seen it and is telling us to get on with it.
+// So on a touch device the first tap clears the blur and holds it for half a
+// second before opening - long enough to register the cover, short enough
+// that it never feels like a wait. A second tap during that pause opens at
+// once.
 //
 // Devices that can hover are untouched - the cover is already clear by the
 // time the pointer is over it, so a delay there would just be a delay.
 const CAN_HOVER = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-const REVEAL_PAUSE_MS = 2000;
+const REVEAL_PAUSE_MS = 500;
 
 document.querySelectorAll('.gallery-cat-card[data-cat]').forEach((card) => {
   let pending = null;

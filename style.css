@@ -3650,3 +3650,13 @@ body.cookie-banner-open .wizard-sticky-bar {
     text-align: center;
   }
 }
+/* ── THE TOUCH REVEAL HAS TO OUTRUN ITS OWN PAUSE ──
+   On a phone the tap clears the blur and opens the gallery half a second
+   later. The unblur transition is 0.4s, which would leave the cover sharp for
+   about a tenth of a second - technically revealed, not actually seen. So the
+   touch reveal is instant: the whole half second is spent looking at a clear
+   picture rather than watching it arrive. Hover keeps the slower, softer 0.4s
+   fade, because there is no deadline there. */
+.gallery-cat-card.touched .gallery-cat-img-wrap img {
+  transition: none;
+}

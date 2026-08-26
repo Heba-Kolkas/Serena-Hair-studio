@@ -3360,3 +3360,25 @@ document.getElementById('noShowSend').addEventListener('click', async () => {
     btn.disabled = false;
   }
 });
+
+// ── HOLD THE PAGE STILL BEHIND AN OPEN MODAL ──
+// Every modal here is shown by setting style.display on its overlay, so one
+// observer covers all of them and no open/close function has to remember to
+// do this. The alternative - touch-action:none on the overlay - also stops
+// the panel inside it from scrolling, because touch-action resolves down the
+// ancestor chain and cannot be won back by a child.
+(function holdPageBehindModals() {
+  const overlays = document.querySelectorAll('.appt-popup-overlay');
+  if (!overlays.length) return;
+  const sync = () => {
+    const anyOpen = [...overlays].some((o) => {
+      const d = o.style.display;
+      return d && d !== 'none';
+    });
+    document.body.classList.toggle('modal-open', anyOpen);
+  };
+  overlays.forEach((o) => {
+    new MutationObserver(sync).observe(o, { attributes: true, attributeFilter: ['style'] });
+  });
+  sync();
+})();

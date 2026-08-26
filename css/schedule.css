@@ -1587,12 +1587,13 @@ body { background: var(--sched-bg); }
   top: 0;
   z-index: 2;
 }
-/* touch-action:none here is what stops the drag reaching the page underneath.
-   The panel re-enables pan-y for itself above. */
-.appt-popup-overlay {
-  overscroll-behavior: contain;
-  touch-action: none;
-}
+/* touch-action does NOT work like a fence you can climb back over: it is
+   resolved down the ancestor chain, so `none` here disabled touch scrolling
+   for everything inside the overlay too - including the panel that needs to
+   scroll. Declaring pan-y on the panel could not win it back.
+   The page behind is held still by locking the body instead. */
+.appt-popup-overlay { overscroll-behavior: contain; }
+body.modal-open { overflow: hidden; }
 /* These were given their own scrollbars while the panel could not scroll.
    With the panel scrolling, a second scrolling box inside it just traps the
    gesture in whichever one the finger happens to land on. */
