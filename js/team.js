@@ -72,8 +72,7 @@ function cardHtml(member) {
       <div class="team-card-name">${member.name}</div>
       <div class="team-card-role">${role}</div>
       <div class="team-card-stars">★★★★★</div>
-      <div class="team-card-bio">${shortBio(bio)}</div>
-      ${isLongBio(bio) ? `<button type="button" class="team-card-more" data-bio="${member.name}">${lang() === 'no' ? 'Les mer' : 'Read more'}</button>` : ''}
+      <div class="team-card-bio">${shortBio(bio)}${moreLink(member, bio)}</div>
       ${member.instagram ? `<a href="${member.instagram}" class="team-card-social" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>` : ''}
       ${cta}
     </div>
@@ -85,13 +84,27 @@ function cardHtml(member) {
 // the grid or gets clipped mid-sentence by a line-clamp, and a bio cut off at
 // "I am passionate..." reads worse than no bio at all. So the card carries a
 // sentence that stands on its own, and the rest is a tap away.
-const SHORT_BIO_CHARS = 130;
+const SHORT_BIO_CHARS = 165;
+// Only worth cutting when there is a real amount left over. Truncating a bio
+// for the sake of seven characters costs a "Read more" and an ellipsis and
+// saves nothing, so a bio has to overrun by a clear margin before it is
+// shortened at all.
+const SHORT_BIO_SLACK = 1.25;
 
-function isLongBio(bio) { return (bio || '').length > SHORT_BIO_CHARS; }
+function isLongBio(bio) { return (bio || '').length > SHORT_BIO_CHARS * SHORT_BIO_SLACK; }
+
+/** Sits at the end of the sentence it continues, rather than floating below
+ *  the text with a gap around it. A trailing space keeps it from butting up
+ *  against the full stop. */
+function moreLink(member, bio) {
+  if (!isLongBio(bio)) return '';
+  return ` <button type="button" class="team-card-more" data-bio="${member.name}">`
+    + (lang() === 'no' ? 'Les mer' : 'Read more') + '</button>';
+}
 
 function shortBio(bio) {
   const t = (bio || '').trim();
-  if (!t || t.length <= SHORT_BIO_CHARS) return t;
+  if (!isLongBio(t)) return t;
   // Cut at a sentence end where there is one nearby, so the card shows a whole
   // thought rather than a fragment with dots after it.
   const window = t.slice(0, SHORT_BIO_CHARS + 60);
@@ -176,8 +189,7 @@ function featuredCardHtml(member) {
         <div class="team-card-name">${member.name}</div>
         <div class="team-card-role">${role}</div>
         <div class="team-card-stars">★★★★★</div>
-        <div class="team-card-bio">${shortBio(bio)}</div>
-        ${isLongBio(bio) ? `<button type="button" class="team-card-more" data-bio="${member.name}">${lang() === 'no' ? 'Les mer' : 'Read more'}</button>` : ''}
+        <div class="team-card-bio">${shortBio(bio)}${moreLink(member, bio)}</div>
         <div class="team-card-featured-actions">
           ${member.instagram ? `<a href="${member.instagram}" class="team-card-social" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>` : ''}
           ${cta}

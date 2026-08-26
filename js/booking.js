@@ -9,6 +9,7 @@ import {
   fetchBusySlotsRange,
   fetchBlockedSlotsRange,
   bookAppointment,
+  joinWaitlist,
   fetchBookingTerms,
   checkClientMustCall,
 } from '/js/supabase-client.js';
@@ -1480,6 +1481,125 @@ function switchToStylist(staffId, dateIso) {
   loadCalendarAvailability();
 }
 
+// ── THE WAITING LIST ──
+// Offered at the dead end, because that is the only moment a client is both
+// disappointed and still on the page. A link somewhere else on the site would
+// be found by nobody.
+//
+// The consent wording is sent with the request and stored verbatim against her
+// row. Norwegian law treats an unsolicited electronic message as marketing
+// needing prior consent; a message she asked for is not that - but only if the
+// asking was recorded, which is what makes the list an asset rather than a
+// liability.
+const WAITLIST_CONSENT = {
+  no: 'Jeg vil gjerne få beskjed på e-post hvis en time blir ledig. Jeg kan melde meg av når som helst.',
+  en: 'Please let me know by email if a time becomes free. I can unsubscribe at any time.',
+};
+const WAITLIST_CONSENT_SMS = {
+  no: 'Send meg gjerne SMS også - da rekker jeg å svare raskere.',
+  en: 'Text me as well, so I hear about it sooner.',
+};
+
+function renderWaitlistOffer(grid) {
+  if (!state.service || !state.staff) return;
+  if (document.getElementById('waitlistOffer')) return;
+  const no = lang() === 'no';
+  const el = document.createElement('div');
+  el.id = 'waitlistOffer';
+  el.className = 'waitlist-offer';
+  el.innerHTML = `
+    <button type="button" class="waitlist-open" id="waitlistOpen">
+      <i class="fa-regular fa-bell"></i>
+      ${no ? 'Si fra hvis noe blir ledig' : 'Tell me if something opens up'}
+    </button>
+    <div class="waitlist-form" id="waitlistForm" hidden>
+      <p class="waitlist-lead">${no
+        ? 'Blir en tid ledig som passer, sier vi fra med en gang.'
+        : 'If a time opens up that suits you, we will let you know straight away.'}</p>
+
+      <div class="waitlist-nudge">
+        <strong>${no ? 'Men vent med å regne med det' : 'One thing worth knowing'}</strong>
+        ${no
+          ? 'En plass på ventelisten er ikke en time. Det kan hende ingen avlyser. Vil du være sikker, book en tid som er ledig nå - står du på ventelisten i tillegg, tilbyr vi deg å bytte hvis noe bedre dukker opp.'
+          : 'A place on the list is not an appointment. It is possible that nobody cancels. If you want to be sure, book a time that is free now - stay on the list as well and we will offer you the swap if something better opens up.'}
+      </div>
+
+      <div class="waitlist-fields">
+        <label>${no ? 'Navn' : 'Name'}<input type="text" id="wlName" autocomplete="name" /></label>
+        <label>${no ? 'Telefon' : 'Phone'}<input type="tel" id="wlPhone" autocomplete="tel" placeholder="+47 …" /></label>
+        <label>${no ? 'E-post' : 'Email'}<input type="email" id="wlEmail" autocomplete="email" /></label>
+        <label>${no ? 'Fra dato' : 'From'}<input type="date" id="wlFrom" /></label>
+        <label>${no ? 'Til dato (valgfritt)' : 'Until (optional)'}<input type="date" id="wlTo" /></label>
+      </div>
+
+      <label class="waitlist-check">
+        <input type="checkbox" id="wlConsent" />
+        <span>${WAITLIST_CONSENT[no ? 'no' : 'en']}</span>
+      </label>
+      <label class="waitlist-check">
+        <input type="checkbox" id="wlConsentSms" />
+        <span>${WAITLIST_CONSENT_SMS[no ? 'no' : 'en']}</span>
+      </label>
+
+      <button type="button" class="waitlist-submit" id="wlSubmit">${no ? 'Sett meg på ventelisten' : 'Add me to the list'}</button>
+      <div class="waitlist-status" id="wlStatus"></div>
+    </div>`;
+  grid.appendChild(el);
+
+  document.getElementById('waitlistOpen').addEventListener('click', () => {
+    const f = document.getElementById('waitlistForm');
+    f.hidden = !f.hidden;
+    if (!f.hidden) {
+      // Anything already typed into the booking form belongs here too.
+      if (state.name) document.getElementById('wlName').value = state.name;
+      if (state.phone) document.getElementById('wlPhone').value = state.phone;
+      if (state.email) document.getElementById('wlEmail').value = state.email;
+      if (state.date) document.getElementById('wlFrom').value = state.date;
+      document.getElementById('wlName').focus();
+    }
+  });
+
+  document.getElementById('wlSubmit').addEventListener('click', async () => {
+    const status = document.getElementById('wlStatus');
+    const val = (id) => document.getElementById(id).value.trim();
+    if (!val('wlName') || !val('wlPhone')) {
+      status.textContent = no ? 'Vi trenger navn og telefonnummer.' : 'We need your name and a phone number.';
+      status.className = 'waitlist-status bad';
+      return;
+    }
+    if (!document.getElementById('wlConsent').checked) {
+      status.textContent = no
+        ? 'Kryss av for at vi får lov til å si fra.'
+        : 'Please tick the box so we are allowed to let you know.';
+      status.className = 'waitlist-status bad';
+      return;
+    }
+    status.textContent = no ? 'Sender…' : 'Sending…';
+    status.className = 'waitlist-status';
+
+    const { error } = await joinWaitlist({
+      name: val('wlName'), phone: val('wlPhone'), email: val('wlEmail'),
+      serviceId: state.service.id,
+      staffId: state.staff ? state.staff.id : null,
+      earliest: val('wlFrom') || null,
+      latest: val('wlTo') || null,
+      consentText: WAITLIST_CONSENT[no ? 'no' : 'en'],
+      consentSms: document.getElementById('wlConsentSms').checked,
+      lang: no ? 'no' : 'en',
+    });
+    if (error) {
+      status.textContent = (no ? 'Noe gikk galt: ' : 'Something went wrong: ') + error.message;
+      status.className = 'waitlist-status bad';
+      return;
+    }
+    document.getElementById('waitlistForm').innerHTML = `
+      <p class="waitlist-done"><i class="fa-solid fa-check"></i>
+        ${no
+          ? 'Du står på ventelisten. Vi sier fra så snart noe blir ledig.'
+          : 'You are on the list. We will tell you as soon as something opens up.'}</p>`;
+  });
+}
+
 async function renderDeadEndHelp(grid, dateIso, opts) {
   const alts = await findAlternatives(dateIso);
   const sameDay = alts.filter((a) => a.sameDay);
@@ -1525,6 +1645,7 @@ async function renderDeadEndHelp(grid, dateIso, opts) {
 
   wrap.innerHTML = bits.join('');
   grid.appendChild(wrap);
+  renderWaitlistOffer(grid);
 
   wrap.querySelectorAll('[data-staff]').forEach((btn) => {
     btn.addEventListener('click', () => switchToStylist(btn.dataset.staff, btn.dataset.date || null));

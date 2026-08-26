@@ -298,18 +298,19 @@
 .team-card-photo:focus-visible .team-card-photo-more,
 .team-card-featured-photo:focus-visible .team-card-photo-more { opacity: 1; transform: scale(1); }
 
+/* Part of the sentence, not a control below it. */
 .team-card-more {
+  display: inline;
   border: 0;
   background: none;
   padding: 0;
-  margin: 0.35rem 0 0.6rem;
+  margin: 0;
   font: inherit;
-  font-size: 0.76rem;
-  letter-spacing: 0.04em;
   color: var(--gold, #C9A96E);
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 2px;
   cursor: pointer;
+  white-space: nowrap;
 }
 .team-card-more:hover { color: var(--espresso, #3f3632); }
 
@@ -398,3 +399,15 @@ body.bio-modal-open { overflow: hidden; }
 .bio-modal-body { text-align: left; }
 .bio-modal-name, .bio-modal-role { text-align: left; }
 .bio-modal-links { justify-content: flex-start; }
+
+
+/* The founder's info column centres itself vertically, which left the short
+   bio marooned in the middle with dead space above and below. Packed to the
+   top instead, so name, role, bio and buttons read as one block. */
+/* Centring the info column left the short bio marooned in the middle of the
+   card with dead space above and below it. Packed to the top, and the buttons
+   follow the text instead of being pushed to the floor - the block reads as
+   one thing rather than two stranded at opposite ends. */
+.team-card-featured-info { justify-content: center; }
+.team-card-featured .team-card-bio { margin-bottom: 1.1rem; }
+.team-card-featured-actions { margin-top: 0; }

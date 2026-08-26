@@ -1447,3 +1447,105 @@ body.has-sticky-bar #back-top.visible {
   grid-column: 1 / -1;
   margin-top: 0;
 }
+
+/* ── WAITING LIST ──
+   Offered where a client has just been told there is nothing. Quiet by
+   default: a closed button, not a form, because most people who hit a dead end
+   simply pick another date and a form in their way would be noise. */
+.waitlist-offer { margin-top: 1.1rem; }
+.waitlist-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--warmgrey, #e9e3db);
+  background: rgba(255,255,255,0.55);
+  color: var(--espresso, #3f3632);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.waitlist-open:hover { border-color: var(--taupe, #B5A89A); background: rgba(255,255,255,0.8); }
+.waitlist-open i { color: var(--gold, #C9A96E); }
+
+.waitlist-form {
+  margin-top: 0.9rem;
+  padding: 1.1rem 1.15rem 1.2rem;
+  border: 1px solid var(--warmgrey, #e9e3db);
+  border-radius: 14px;
+  background: var(--linen, #fdfaf5);
+  text-align: left;
+}
+.waitlist-form[hidden] { display: none; }
+.waitlist-lead { font-size: 0.88rem; margin-bottom: 0.8rem; color: var(--espresso, #3f3632); }
+
+/* The honest warning. Prominent on purpose: a client who thinks the list is a
+   booking and turns up to nothing is worse off than one who never joined. */
+.waitlist-nudge {
+  background: rgba(201, 169, 110, 0.09);
+  border: 1px solid rgba(201, 169, 110, 0.3);
+  border-radius: 10px;
+  padding: 0.8rem 0.95rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--espresso, #3f3632);
+  margin-bottom: 1rem;
+}
+.waitlist-nudge strong { display: block; margin-bottom: 0.25rem; }
+
+.waitlist-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.6rem 0.8rem;
+  margin-bottom: 0.9rem;
+}
+.waitlist-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--greige, #9f948e);
+}
+.waitlist-fields input {
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--warmgrey, #e9e3db);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--espresso, #3f3632);
+}
+.waitlist-fields input:focus-visible { outline: 2px solid var(--gold, #C9A96E); outline-offset: 1px; }
+
+.waitlist-check {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin-bottom: 0.6rem;
+  cursor: pointer;
+  color: var(--espresso, #3f3632);
+}
+.waitlist-check input { margin-top: 0.15rem; accent-color: var(--gold, #C9A96E); flex: none; }
+
+.waitlist-submit {
+  font: inherit;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--espresso, #3f3632);
+  color: var(--linen, #fdfaf5);
+  cursor: pointer;
+  margin-top: 0.3rem;
+}
+.waitlist-submit:hover { background: var(--gold, #C9A96E); }
+.waitlist-status { font-size: 0.8rem; margin-top: 0.6rem; color: var(--greige, #9f948e); }
+.waitlist-status.bad { color: #C25E4B; }
+.waitlist-done { font-size: 0.9rem; color: #059669; display: flex; gap: 0.5rem; align-items: flex-start; }
