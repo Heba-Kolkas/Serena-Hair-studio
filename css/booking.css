@@ -1358,73 +1358,80 @@ body.has-sticky-bar #back-top.visible {
   #slotGrid { max-width: 20rem; }
 }
 
-/* ── ADD-ON DIALOG (wide screens only) ── */
-.addon-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 9600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  background: rgba(44, 36, 32, 0.32);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-.addon-modal[hidden] { display: none; }
-body.addon-modal-open { overflow: hidden; }
-.addon-modal-panel {
-  position: relative;
-  width: min(30rem, 100%);
-  max-height: 82vh;
-  overflow-y: auto;
-  background: var(--linen, #fdfaf5);
-  border: 1px solid var(--warmgrey, #e9e3db);
+/* ── THE CALENDAR, TIGHTENED ──
+   It was stretching to the full width of the step, so seven narrow columns sat
+   far apart with 32px-tall cells between them. A month reads as a block, not a
+   grid of distant numbers, so the widget is capped and centred and the cells
+   are square. */
+.calendar-widget,
+.wizard-panel[data-panel="3"] > .calendar-widget {
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1rem 1rem 1.1rem;
   border-radius: 18px;
-  padding: 1.5rem 1.5rem 1.2rem;
-  box-shadow: 0 24px 60px rgba(44, 36, 32, 0.22);
 }
-.addon-modal-close {
-  position: absolute;
-  top: 0.7rem;
-  right: 0.9rem;
-  border: none;
-  background: none;
-  font-size: 1.5rem;
-  line-height: 1;
-  color: var(--greige, #9f948e);
-  cursor: pointer;
+.calendar-header { margin-bottom: 0.85rem; }
+.calendar-month-label { font-size: 1.08rem; letter-spacing: 0.01em; }
+.calendar-nav-btn { width: 28px; height: 28px; font-size: 0.7rem; }
+.calendar-weekdays { gap: 0.25rem; margin-bottom: 0.35rem; }
+.calendar-weekdays span { font-size: 0.58rem; letter-spacing: 0.08em; }
+.calendar-grid { gap: 0.25rem; }
+.calendar-day {
+  /* Square, so the month keeps its shape at any width. */
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
 }
-.addon-modal-close:hover { color: var(--espresso, #3f3632); }
-.addon-modal-service {
-  font-family: var(--font-display, serif);
-  font-size: 1.3rem;
-  color: var(--espresso, #3f3632);
-  margin-bottom: 0.15rem;
-  padding-right: 1.5rem;
+.calendar-day.selected {
+  /* A filled circle, the way a date is marked on paper. */
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(181, 168, 154, 0.45);
 }
-/* The chips arrive already styled; inside the dialog they just need room. */
-.addon-modal-body .option-card-combos {
-  display: block !important;
-  border: none;
-  padding: 0.6rem 0 0;
-  background: none;
-}
-.addon-modal-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 1.2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--warmgrey, #e9e3db);
-}
-.addon-modal-total { font-size: 0.82rem; color: var(--greige, #9f948e); }
-.addon-modal-foot .wizard-btn { margin: 0; }
+.calendar-day:hover:not(:disabled) { border-radius: 50%; }
 
-/* On a wide screen the chips live in the dialog, so the card never expands and
-   the grid never shifts. Below the breakpoint the dialog is unused and the
-   phone behaviour (open on the tapped card) takes over. */
-@media (min-width: 820px) {
-  .option-card-wrap.selected .option-card-combos { display: none; }
+/* The slot buttons underneath belong to the calendar above them, so they get
+   the same width and centring rather than running the full step. */
+#slotGrid {
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 560px) {
+  .calendar-widget,
+  .wizard-panel[data-panel="3"] > .calendar-widget { max-width: 20rem; padding: 0.85rem; }
+  .calendar-day { font-size: 0.78rem; }
+  #slotGrid { max-width: 20rem; }
+}
+
+/* ── ADD-ON DIALOG (wide screens only) ── */
+}
+
+/* ── WHY THE SERVICE GRID KEPT BREAKING ──
+   Two separate bugs, both of them the grid's doing.
+
+   1. Grid items stretch to the height of their row by default. So one card
+      with five add-ons open made its two neighbours just as tall, and they sat
+      in a pool of empty space. align-items:start ends each card where its own
+      content ends.
+
+   2. The notices - the extensions confirmation warning and the hair-quality
+      note - are inserted straight after the card they belong to, which makes
+      them GRID ITEMS. They were being dealt into whatever cell came next, so a
+      warning about Half Head Foil appeared beside Full Head Foil. Spanning the
+      full row puts each one on its own line directly under its card, which is
+      where it was always meant to be. */
+.option-grid { align-items: start; }
+/* height:100% earlier in this file stretches the wrap to the grid AREA, which
+   is still the row height even once the grid stops stretching its items. Both
+   have to go for a card to end where its content ends. */
+.option-card-wrap { height: auto; }
+.option-grid > .notice-pending,
+.option-grid > .notice-quality,
+.option-grid > .notice-external {
+  grid-column: 1 / -1;
+  margin-top: 0;
 }

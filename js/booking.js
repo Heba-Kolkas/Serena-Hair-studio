@@ -552,7 +552,6 @@ function renderServices() {
       ).map((c) => offered.find((a) => String(a.id) === c.dataset.addonId)).filter(Boolean);
       renderConsultationNotice(svc); // an extensions add-on raises the notice too
       updateStickyBar(); // duration and total both move with the add-ons
-      updateAddonModalTotal();
     });
   });
 
@@ -630,69 +629,9 @@ function selectService(svc) {
   renderExternalNotice(svc);
   renderConsultationNotice(svc);
   updateStickyBar();
-  openAddonModal(svc);
   // An externally booked service has no stylist, date or slot to pick — the
   // only way forward is the hand-off link in its notice.
   document.getElementById('next1').disabled = !!svc.external_booking_url;
-}
-
-// ── ADD-ONS IN A DIALOG, ON A WIDE SCREEN ──
-// Inline expansion works on a phone, where cards are stacked full width. In a
-// three-column grid it does not: the row grows to match the tallest card, so
-// picking a service with five add-ons leaves its two neighbours sitting in a
-// pool of empty space. The chips move into a dialog instead and the grid never
-// moves.
-//
-// MOVED, not copied. The chips were given their click handlers when the list
-// was built; re-rendering them here would produce dead buttons, and copying
-// them would produce two sets fighting over the same state.
-const ADDON_MODAL_MIN_WIDTH = 820;
-let addonModalHome = null;
-
-function isWideScreen() {
-  return window.matchMedia(`(min-width: ${ADDON_MODAL_MIN_WIDTH}px)`).matches;
-}
-
-function openAddonModal(svc) {
-  const modal = document.getElementById('addonModal');
-  if (!modal) return;
-  closeAddonModal();
-  if (!isWideScreen() || !svc || svc.external_booking_url) return;
-
-  const wrap = document.querySelector(`#serviceGroups .option-card-wrap[data-service-id="${svc.id}"]`);
-  const combos = wrap && wrap.querySelector('.option-card-combos');
-  if (!combos) return;
-
-  addonModalHome = wrap;
-  document.getElementById('addonModalTitle').textContent = localName(svc, 'name');
-  const done = document.getElementById('addonModalDone');
-  done.textContent = lang() === 'no' ? 'Fortsett' : 'Continue';
-  document.getElementById('addonModalBody').appendChild(combos);
-  updateAddonModalTotal();
-  modal.hidden = false;
-  document.body.classList.add('addon-modal-open');
-  document.getElementById('addonModalClose').focus();
-}
-
-function closeAddonModal() {
-  const modal = document.getElementById('addonModal');
-  if (!modal || modal.hidden) return;
-  const combos = document.querySelector('#addonModalBody .option-card-combos');
-  // Put the chips back where they came from, so the phone layout and a later
-  // re-open both still find them.
-  if (combos && addonModalHome) addonModalHome.appendChild(combos);
-  addonModalHome = null;
-  modal.hidden = true;
-  document.body.classList.remove('addon-modal-open');
-}
-
-function updateAddonModalTotal() {
-  const el = document.getElementById('addonModalTotal');
-  if (!el || !state.service) return;
-  const no = lang() === 'no';
-  el.textContent = state.addons.length
-    ? (no ? `${state.addons.length} tillegg valgt` : `${state.addons.length} add-on${state.addons.length === 1 ? '' : 's'} chosen`)
-    : (no ? 'Ingen tillegg – helt greit' : 'No add-ons, that is fine too');
 }
 
 // Keratin Treatment and Hair Botox are still services the studio offers, but
@@ -2016,25 +1955,3 @@ initDateInput();
 loadBookingTerms();
 loadServices();
 showPanel('1');
-
-// ── ADD-ON DIALOG WIRING ──
-document.getElementById('addonModalClose').addEventListener('click', closeAddonModal);
-// Done both closes and moves on. The dialog covers the Continue button, so
-// without this the client closes it and then hunts for a button they were
-// already looking at a second ago.
-document.getElementById('addonModalDone').addEventListener('click', () => {
-  closeAddonModal();
-  const next = document.getElementById('next1');
-  if (next && !next.disabled) next.click();
-});
-document.getElementById('addonModal').addEventListener('click', (e) => {
-  if (e.target.id === 'addonModal') closeAddonModal();
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeAddonModal();
-});
-// Dragging the window across the breakpoint must not strand the chips inside a
-// hidden dialog.
-window.addEventListener('resize', () => {
-  if (!isWideScreen()) closeAddonModal();
-});

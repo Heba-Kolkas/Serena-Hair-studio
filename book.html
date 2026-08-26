@@ -97,23 +97,6 @@
             </section>
 
             <!-- STEP 5: CONFIRM -->
-            <!-- ADD-ONS, ON A WIDE SCREEN.
-                 The chips live inside their service card in the markup. On
-                 desktop they are MOVED into this dialog rather than copied, so
-                 the buttons keep the listeners they were given when the list
-                 was built, and moved back when it closes. -->
-            <div class="addon-modal" id="addonModal" hidden>
-              <div class="addon-modal-panel" role="dialog" aria-modal="true" aria-labelledby="addonModalTitle">
-                <button type="button" class="addon-modal-close" id="addonModalClose" aria-label="Close">&times;</button>
-                <div class="addon-modal-service" id="addonModalTitle"></div>
-                <div class="addon-modal-body" id="addonModalBody"></div>
-                <div class="addon-modal-foot">
-                  <span class="addon-modal-total" id="addonModalTotal"></span>
-                  <button type="button" class="wizard-btn wizard-btn-next" id="addonModalDone" data-en="Done" data-no="Ferdig">Done</button>
-                </div>
-              </div>
-            </div>
-
             <section class="wizard-panel" data-panel="5">
                 <h2 class="wizard-panel-title"><span data-en="Confirm Your" data-no="Bekreft Din">Confirm Your</span> <em data-en="Booking" data-no="Bestilling">Booking</em></h2>
                 <div class="summary-card" id="summaryCard"></div>
