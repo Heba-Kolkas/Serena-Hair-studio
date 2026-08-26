@@ -172,7 +172,7 @@ const BRIDAL_CATEGORIES = ['Bridal', 'Special Occasions'];
 // ── ADD-ONS ──
 // The printed price list names exactly two extras, both on colour work —
 // "a haircut added to a color service is an additional 500 kr" and "covering
-// grey hair in addition to balayage is an additional 1,200 kr" (the list is
+// grey hair in addition to balayage is an additional 1,000 kr" (the list is
 // written in kr; the site displays the same figures as NOK) — plus toner,
 // which the owner confirmed rides along at its standalone rate.
 //
@@ -182,7 +182,7 @@ const BRIDAL_CATEGORIES = ['Bridal', 'Special Occasions'];
 // bolted on ("+500 NOK"), 'combo' is a second full service in the same visit
 // ("From 1,250 NOK"). Both add to the total the same way.
 const ADDON_HAIRCUT = { id: 'addon-haircut', name: 'Haircut', name_no: 'Klipp', price: 500, kind: 'addon' };
-const ADDON_GREY = { id: 'addon-grey', name: 'Grey Coverage', name_no: 'Grådekking', price: 1200, kind: 'addon' };
+const ADDON_GREY = { id: 'addon-grey', name: 'Grey Coverage', name_no: 'Grådekking', price: 1000, kind: 'addon' };
 const ADDON_TONER = { id: 'addon-toner', name: 'Toner', name_no: 'Toner', price: 1250, price_is_from: true, kind: 'combo' };
 // Extensions fitted during the same visit. The colour's length doesn't
 // change — the fitting happens while it processes and after the rinse — and
@@ -192,7 +192,12 @@ const ADDON_TONER = { id: 'addon-toner', name: 'Toner', name_no: 'Toner', price:
 const ADDON_EXT_50 = { id: 'addon-ext-50', name: 'Extensions (50g)', name_no: 'Extensions (50g)', price: 0, price_on_consultation: true, kind: 'combo', exclusive_group: 'extensions', requires_confirmation: true, requiresStaff: STAFF_HASSAN };
 const ADDON_EXT_100 = { id: 'addon-ext-100', name: 'Extensions (100-150g)', name_no: 'Extensions (100-150g)', price: 0, price_on_consultation: true, kind: 'combo', exclusive_group: 'extensions', requires_confirmation: true, requiresStaff: STAFF_HASSAN };
 
-const LIGHTENING_ADDONS = [ADDON_HAIRCUT, ADDON_GREY, ADDON_TONER, ADDON_EXT_50, ADDON_EXT_100];
+// Balayage, half head and full head foil. No toner here: toning is part of
+// how the lightening is finished rather than something bolted on, so offering
+// it as a paid extra invited a client to buy a step that was happening anyway.
+const LIGHTENING_ADDONS = [ADDON_HAIRCUT, ADDON_GREY, ADDON_EXT_50, ADDON_EXT_100];
+// Reverse balayage is going darker, so a toner IS a separate choice there.
+const REVERSE_ADDONS = [ADDON_HAIRCUT, ADDON_GREY, ADDON_TONER, ADDON_EXT_50, ADDON_EXT_100];
 // Extensions can be fitted over a root touch-up or an all-over colour just as
 // they can over a balayage. Adding them turns the visit into a four-hour
 // appointment - see isFourHourBooking - so it is scheduled and capped exactly
@@ -303,7 +308,7 @@ const FALLBACK_SERVICES = [
   // Colour — root touch-up and all-over stretch to 120 min with any add-on.
   { id: 'svc-root', name: 'Root Touch-Up', name_no: 'Ansatsfarge', category: 'Color', price_from: 1600, price_is_from: true, duration_with_extensions_minutes: 240, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
   { id: 'svc-allover', name: 'All-Over Color', name_no: 'Helfarge', category: 'Color', price_from: 2100, price_is_from: true, duration_with_extensions_minutes: 240, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
-  { id: 'svc-reverse', name: 'Reverse Balayage', name_no: 'Omvendt Balayage', category: 'Color', price_from: 3000, duration_minutes: 240, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
+  { id: 'svc-reverse', name: 'Reverse Balayage', name_no: 'Omvendt Balayage', category: 'Color', price_from: 3000, duration_minutes: 240, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: REVERSE_ADDONS },
   { id: 'svc-toner', name: 'Toner', name_no: 'Toner', category: 'Color', price_from: 1250, price_is_from: true, duration_with_extensions_minutes: 120, duration_with_addons_minutes: 90, duration_minutes: 60, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: [ADDON_HAIRCUT, ADDON_EXT_50, ADDON_EXT_100] },
   // Haircuts — every combination is its own priced line, so nothing bolts on.
   { id: 'svc-cut-blowdry', name: 'Haircut + Blowdry (without wash)', name_no: 'Klipp + Føn (uten vask)', category: 'Haircuts & Styling', price_from: 950, duration_minutes: 60, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL },

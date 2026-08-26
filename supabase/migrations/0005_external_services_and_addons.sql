@@ -149,6 +149,7 @@ alter table bookings add column expected_total_is_estimate boolean not null defa
 --
 --   "A haircut added to a color service is an additional 500 kr."
 --   "Covering grey hair in addition to balayage is an additional 1,200 kr."
+--   (since reduced to 1,000 by the owner)
 --
 -- Everything the old catalog carried as an add-on (wash, wavy styling, and
 -- the colour combos) is gone: the new list prices every one of those
@@ -158,7 +159,7 @@ alter table bookings add column expected_total_is_estimate boolean not null defa
 -- attached to any more.
 insert into addons (name, name_no, price, price_is_from, price_on_consultation, kind, sort_order) values
   ('Haircut',       'Klipp',           500,  false, false, 'addon', 1),
-  ('Grey Coverage', 'Grådekking',      1200, false, false, 'addon', 2),
+  ('Grey Coverage', 'Grådekking',      1000, false, false, 'addon', 2),
   ('Toner',         'Toner',           1250, true,  false, 'combo', 3),
   -- Extensions fitted during the same visit as the colour. The colour's own
   -- length doesn't change: the fitting happens while it processes and after
@@ -190,9 +191,11 @@ where
   -- Grey coverage goes with the four colour-lightening services.
   or (a.name = 'Grey Coverage' and sv.name in (
      'Balayage / Highlights', 'Half Head Foil', 'Full Head Foil', 'Reverse Balayage'))
-  -- Toner can ride along on any other colour service (not on itself).
+  -- Toner rides along on the colour services where it is a real choice.
+  -- Deliberately NOT on balayage or the foils: toning is part of how that
+  -- lightening is finished, so charging for it as an extra sold the client a
+  -- step that was happening regardless.
   or (a.name = 'Toner' and sv.name in (
-     'Balayage / Highlights', 'Half Head Foil', 'Full Head Foil',
      'Root Touch-Up', 'All-Over Color', 'Reverse Balayage'))
   -- Extensions go alongside any colour work, lightening or not. Fitting them
   -- takes the afternoon whatever is underneath, so a root touch-up with
@@ -1448,3 +1451,12 @@ returns boolean language sql immutable set search_path = public as $$
   );
 $$;
 grant execute on function consultation_start_allowed to anon;
+
+-- Owner's revisions, 26 August 2026: grey coverage down to 1,000, and toner
+-- taken off the three lightening services.
+update addons set price = 1000 where name = 'Grey Coverage';
+delete from service_addons sa
+using addons a, services sv
+where sa.addon_id = a.id and sa.service_id = sv.id
+  and a.name = 'Toner'
+  and sv.name in ('Balayage / Highlights', 'Half Head Foil', 'Full Head Foil');
