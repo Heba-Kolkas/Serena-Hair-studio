@@ -300,8 +300,39 @@ function closeLightbox() {
 window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
 
+// ── TAP TO REVEAL, THEN OPEN ──
+// The tiles are blurred until hovered, which shows the client the cover
+// before they commit to opening a whole gallery. A phone has no hover, so a
+// tap went straight past that to the lightbox and the cover was never seen at
+// all - the blurred version was the only version a phone user ever got.
+//
+// So on a touch device the first tap clears the blur and holds it for a
+// moment before opening. A second tap during that pause opens immediately:
+// someone who taps twice has seen it and is telling us to get on with it.
+//
+// Devices that can hover are untouched - the cover is already clear by the
+// time the pointer is over it, so a delay there would just be a delay.
+const CAN_HOVER = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+const REVEAL_PAUSE_MS = 2000;
+
 document.querySelectorAll('.gallery-cat-card[data-cat]').forEach((card) => {
-  card.addEventListener('click', () => openLightbox(card.dataset.cat));
+  let pending = null;
+  card.addEventListener('click', () => {
+    if (CAN_HOVER) { openLightbox(card.dataset.cat); return; }
+    if (pending) {
+      clearTimeout(pending);
+      pending = null;
+      openLightbox(card.dataset.cat);
+      return;
+    }
+    card.classList.add('touched');
+    pending = setTimeout(() => {
+      pending = null;
+      openLightbox(card.dataset.cat);
+      // Re-blur behind the lightbox, so coming back the tile is as it was.
+      card.classList.remove('touched');
+    }, REVEAL_PAUSE_MS);
+  });
 });
 
 document.getElementById('lightboxCloseBtn').addEventListener('click', (e) => {
