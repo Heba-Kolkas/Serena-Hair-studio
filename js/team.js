@@ -24,8 +24,8 @@ const FALLBACK_STAFF = [
     bookable: false, external_booking_url: 'https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu',
     external_booking_label: 'Book on Instagram' },
   { name: 'Pati', role: 'Nail Artist', role_no: 'Neglekunstner',
-    bio_short: 'Ten years of gel, extensions and nail art, with an eye for precision.',
-    bio_short_no: 'Ti års erfaring med gele, neglforlengelse og neglekunst.',
+    bio_short: 'Ten years of gel, extensions and nail art.',
+    bio_short_no: 'Ti års erfaring med gele, forlengelse og neglekunst.',
     bio: [
       'With over 10 years of experience in the nail industry, I am passionate about creating beautiful, precise, and long-lasting nails tailored to each client.',
       'Throughout my career, I have completed several professional training courses and earned multiple certifications, continuously developing my skills and staying up to date with the latest techniques and trends.',

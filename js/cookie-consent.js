@@ -10,8 +10,28 @@ function initCookieConsent() {
   var consent = null;
   try { consent = localStorage.getItem(CONSENT_KEY); } catch (e) {}
 
+  // Anything else pinned to the bottom of the screen needs to know how tall
+  // the banner is, so it can sit above it rather than under it. Measured
+  // rather than hard-coded: the height changes with the viewport and with the
+  // length of the text.
+  function setBannerOffset() {
+    if (!banner) return;
+    var h = banner.classList.contains('visible') ? banner.offsetHeight : 0;
+    document.documentElement.style.setProperty('--cookie-banner-h', h + 'px');
+    document.body.classList.toggle('cookie-banner-open', h > 0);
+  }
+
+  function dismiss() {
+    if (banner) banner.classList.remove('visible');
+    setBannerOffset();
+  }
+
   if (!consent) {
-    if (banner) banner.classList.add('visible');
+    if (banner) {
+      banner.classList.add('visible');
+      setBannerOffset();
+      window.addEventListener('resize', setBannerOffset);
+    }
   } else if (consent === 'accepted') {
     loadMap();
   } else if (consent === 'declined') {
@@ -26,7 +46,7 @@ function initCookieConsent() {
       localStorage.setItem(CONSENT_KEY, 'accepted');
       localStorage.setItem(CONSENT_TS_KEY, new Date().toISOString());
     } catch (e) {}
-    if (banner) banner.classList.remove('visible');
+    dismiss();
     loadMap();
   });
 
@@ -35,7 +55,7 @@ function initCookieConsent() {
       localStorage.setItem(CONSENT_KEY, 'declined');
       localStorage.setItem(CONSENT_TS_KEY, new Date().toISOString());
     } catch (e) {}
-    if (banner) banner.classList.remove('visible');
+    dismiss();
     showMapBlocked();
   });
 

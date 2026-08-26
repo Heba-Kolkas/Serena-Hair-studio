@@ -450,3 +450,17 @@ body.bio-modal-open { overflow: hidden; }
 .team-card-featured-photo .team-card-photo-more { right: 12px; bottom: 12px; }
 .team-card-photo:hover .team-card-photo-more,
 .team-card-featured-photo:hover .team-card-photo-more { transform: scale(1.12); }
+
+/* The marker was gold, the same as every other accent on these pages, so it
+   read as decoration rather than as something to press - and it disappeared
+   entirely against blonde hair. A dark disc stands off a photo at any
+   brightness and looks like a control. */
+.team-card-photo-more,
+.team-card-featured-photo .team-card-photo-more {
+  background: var(--espresso, #3f3632);
+  color: #fff;
+}
+.team-card-photo:hover .team-card-photo-more,
+.team-card-featured-photo:hover .team-card-photo-more {
+  background: #000;
+}
