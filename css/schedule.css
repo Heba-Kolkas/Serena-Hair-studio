@@ -931,7 +931,6 @@ body { background: var(--sched-bg); }
 .block-field-row-3 { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .block-field-row-3 .block-field { flex: 1; min-width: 150px; }
 .appt-popup.wide-popup { max-width: 600px; }
-.addbk-time-field { max-width: 130px; }
 .block-field-row.disabled { opacity: 0.45; pointer-events: none; }
 .block-allday-check {
   display: flex; align-items: center; gap: 0.5rem;
@@ -1752,4 +1751,62 @@ body.modal-open { overflow: hidden; }
   .owner-panel.owner-viewing .owner-tabs { display: none; }
   .owner-panel.owner-viewing > .owner-body > .owner-tab-content { display: block; }
   .owner-panel.owner-viewing .owner-back { display: inline-flex; }
+}
+
+/* ── ADD BOOKING ──
+   The form is four kinds of question - who she is, what she is having and
+   with whom, when, and whether she has paid - so it is laid out as four
+   bands rather than one wrapping run of boxes.
+
+   It was a flexbox with wrap and a 130px floor. Service, Stylist and Date
+   filled the row and Time fell through to a line of its own, leaving three
+   empty columns beside it; Service was squeezed narrow enough to clip
+   "Balayage / Highlights" to "Balayage / Highligl". A six-column grid states
+   the pairing instead of leaving it to whatever the widths happen to allow. */
+.addbk-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: 0.7rem;
+}
+.addbk-grid > .block-field { grid-column: span 6; min-width: 0; }
+.addbk-grid > .addbk-span2 { grid-column: span 2; }
+.addbk-grid > .addbk-span3 { grid-column: span 3; }
+.addbk-grid > .addbk-full  { grid-column: 1 / -1; }
+/* A select in a grid cell must be allowed to be narrower than its longest
+   option, or the cell is widened to fit and the six columns stop being equal. */
+.addbk-grid select { max-width: 100%; }
+
+/* The date button has to match the height of the inputs beside it - it is a
+   field in the same row, not a button that happens to be nearby. */
+.addbk-grid .owner-date-pick-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+/* Marked-as-paid is a decision about money, set apart from the booking
+   details so it is never ticked by accident on the way past. */
+.addbk-paid-box {
+  border: 1px solid var(--sched-border);
+  border-radius: 12px;
+  padding: 0.85rem 0.95rem 0.1rem;
+  margin-bottom: 1rem;
+  background: var(--sched-bg);
+}
+.addbk-paid-box .block-allday-check { margin-bottom: 0.75rem; }
+.addbk-paid-box .block-field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--sched-text-muted);
+}
+
+@media (max-width: 560px) {
+  /* One question at a time on a phone. Three names across a 390px screen
+     leaves each about 100px, which is not a field anyone can read. */
+  .addbk-grid > .block-field,
+  .addbk-grid > .addbk-span2,
+  .addbk-grid > .addbk-span3 { grid-column: 1 / -1; }
 }

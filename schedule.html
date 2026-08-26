@@ -292,54 +292,69 @@
 
     <!-- ADD BOOKING MODAL (manual entry for phone/walk-in clients) -->
     <div id="addBookingModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup wide-popup">
+        <div class="appt-popup wide-popup addbk-popup">
             <button type="button" class="appt-popup-close" id="addBookingClose" aria-label="Close">&times;</button>
             <h3 class="block-modal-title">Add Booking</h3>
-            <p class="block-modal-sub">For phone or walk-in clients - checked against the same rules as online bookings.</p>
-            <div class="block-field-row-3">
-                <div class="block-field"><label>Client name</label><input type="text" id="addBkName" /></div>
-                <div class="block-field"><label>Phone</label><input type="tel" id="addBkPhone" /></div>
-                <div class="block-field"><label>Email</label><input type="email" id="addBkEmail" /></div>
-            </div>
-            <div class="block-field-row">
-                <div class="block-field"><label>Service</label><select id="addBkService"></select></div>
-                <div class="block-field"><label>Stylist</label><select id="addBkStaff"></select></div>
-                <div class="block-field">
-                    <label>Date</label>
-                    <div class="calendar-pick-wrap">
-                        <button type="button" id="btnAddBkDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="addBkDateLabel">Pick a date</span></button>
-                        <div id="addBkCalendarPopover" class="calendar-popover" style="display:none;">
-                            <div class="calendar-header">
-                                <button type="button" id="addBkCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
-                                <span class="calendar-month-label" id="addBkCalMonthLabel"></span>
-                                <button type="button" id="addBkCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+            <!-- Everything below the heading lives in one wrapper. The popup
+                 pads its own children, so a bare button as a direct child got
+                 that padding applied to its own box - the dark fill ran edge
+                 to edge instead of sitting inset like the fields above it. -->
+            <div class="addbk-body">
+                <p class="block-modal-sub">For phone or walk-in clients - checked against the same rules as online bookings.</p>
+
+                <!-- Six columns, so the fields pair the way they are read:
+                     who she is across the top, what and with whom, then when.
+                     As a wrapping flexbox this left Time stranded alone on a
+                     row of its own with a gap beside it. -->
+                <div class="addbk-grid">
+                    <div class="block-field addbk-span2"><label>Client name</label><input type="text" id="addBkName" /></div>
+                    <div class="block-field addbk-span2"><label>Phone</label><input type="tel" id="addBkPhone" /></div>
+                    <div class="block-field addbk-span2"><label>Email</label><input type="email" id="addBkEmail" /></div>
+
+                    <div class="block-field addbk-span3"><label>Service</label><select id="addBkService"></select></div>
+                    <div class="block-field addbk-span3"><label>Stylist</label><select id="addBkStaff"></select></div>
+
+                    <div class="block-field addbk-span3">
+                        <label>Date</label>
+                        <div class="calendar-pick-wrap">
+                            <button type="button" id="btnAddBkDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="addBkDateLabel">Pick a date</span></button>
+                            <div id="addBkCalendarPopover" class="calendar-popover" style="display:none;">
+                                <div class="calendar-header">
+                                    <button type="button" id="addBkCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <span class="calendar-month-label" id="addBkCalMonthLabel"></span>
+                                    <button type="button" id="addBkCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+                                <div class="calendar-grid" id="addBkCalGrid"></div>
                             </div>
-                            <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-                            <div class="calendar-grid" id="addBkCalGrid"></div>
                         </div>
                     </div>
+                    <div class="block-field addbk-span3"><label>Time</label><input type="time" id="addBkTime" /></div>
+
+                    <div class="block-field addbk-full"><label>Notes (optional)</label><input type="text" id="addBkNotes" placeholder="Allergies, preferences&hellip;" /></div>
                 </div>
-                <div class="block-field addbk-time-field"><label>Time</label><input type="time" id="addBkTime" /></div>
-            </div>
-            <div id="addBkAvailability" class="reschedule-availability compact"></div>
-            <div class="block-field"><label>Notes (optional)</label><input type="text" id="addBkNotes" placeholder="Allergies, preferences…" /></div>
 
-            <!-- A walk-in is usually being written up after she has already
-                 paid. Without this the booking goes in as upcoming and has to
-                 be found and completed a second time, which is how takings go
-                 unrecorded. -->
-            <label class="block-allday-check">
-                <input type="checkbox" id="addBkPaid" />
-                She has already paid - record it now
-            </label>
-            <div class="block-field" id="addBkPaidAmountField" hidden>
-                <label>Amount charged (NOK)</label>
-                <input type="number" id="addBkAmount" min="0" step="1" placeholder="e.g. 1150" />
-                <span class="block-field-hint" id="addBkAmountHint"></span>
-            </div>
+                <div id="addBkAvailability" class="reschedule-availability compact"></div>
 
-            <button type="button" id="btnSaveAddBooking" class="block-save-btn"><i class="fa-solid fa-plus"></i> Add Booking</button>
-            <div id="addBkStatus" class="block-status"></div>
+                <!-- A walk-in is usually being written up after she has already
+                     paid. Without this the booking goes in as upcoming and has
+                     to be found and completed a second time, which is how
+                     takings go unrecorded. -->
+                <div class="addbk-paid-box">
+                    <label class="block-allday-check">
+                        <input type="checkbox" id="addBkPaid" />
+                        She has already paid - record it now
+                    </label>
+                    <div class="block-field" id="addBkPaidAmountField" hidden>
+                        <label>Amount charged (NOK)</label>
+                        <input type="number" id="addBkAmount" min="0" step="1" placeholder="e.g. 1150" />
+                        <span class="block-field-hint" id="addBkAmountHint"></span>
+                    </div>
+                </div>
+
+                <button type="button" id="btnSaveAddBooking" class="block-save-btn"><i class="fa-solid fa-plus"></i> Add Booking</button>
+                <div id="addBkStatus" class="block-status"></div>
+            </div>
         </div>
     </div>
 
