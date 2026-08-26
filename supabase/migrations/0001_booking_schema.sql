@@ -29,6 +29,11 @@ create table services (
   -- usual case) means add-ons don't change the length at all, which is how
   -- balayage works: 4 hours whatever is added to it.
   duration_with_addons_minutes int,
+  -- How long the visit runs when extensions are fitted during it. Separate
+  -- from duration_with_addons_minutes because extensions are not a small
+  -- extra: over a colour they take the afternoon, over a toner they take two
+  -- hours. Null means extensions do not change the length.
+  duration_with_extensions_minutes int,
   -- Counts toward a stylist's per-day cap (staff_scheduled_service_limit).
   -- True for the four-hour lightening family only: Kani takes one of those a
   -- day on Mon/Wed/Fri, but any number of the shorter services around it.

@@ -1109,6 +1109,7 @@ declare
   v_expected numeric := 0; v_is_estimate boolean := false;
   v_addon_total numeric; v_addon_from boolean;
   v_duration_with_addons int; v_has_addons boolean;
+  v_duration_with_extensions int;
   v_day_limit int; v_scheduled_today int; v_daily_limited boolean;
   v_pol staff_day_policy%rowtype; v_has_pol boolean := false;
   v_requires_confirmation boolean;
@@ -1120,10 +1121,12 @@ declare
 begin
   perform pg_advisory_xact_lock(hashtext(p_staff_id::text || p_date::text));
 
-  select duration_minutes, duration_with_addons_minutes, fixed_times, category, name,
+  select duration_minutes, duration_with_addons_minutes, duration_with_extensions_minutes,
+         fixed_times, category, name,
          external_booking_url, price_from, price_to, price_on_consultation, daily_limited,
          requires_confirmation
-    into v_duration, v_duration_with_addons, v_fixed_times, v_category, v_service_name,
+    into v_duration, v_duration_with_addons, v_duration_with_extensions,
+         v_fixed_times, v_category, v_service_name,
          v_external, v_price_from, v_price_to, v_on_consultation, v_daily_limited,
          v_requires_confirmation
     from services where id = p_service_id and active;
@@ -1229,9 +1232,20 @@ begin
     select 1 from addons a
     where a.id = any(p_addon_ids) and a.exclusive_group = 'extensions'
   ) then
-    v_duration := greatest(v_duration, 240);
-    v_daily_limited := true;
+    -- How long depends on what they go over, so the service says its own
+    -- figure. Fitted during a colour they take the whole afternoon; fitted
+    -- over a toner the toner is nearly done before the fitting starts, so the
+    -- visit is two hours and is not a four-hour appointment at all.
+    if v_duration_with_extensions is not null then
+      v_duration := v_duration_with_extensions;
+    end if;
   end if;
+
+  -- One definition of "four-hour", applied to the length the booking actually
+  -- works out to. Everything downstream - the start times, the one-a-day
+  -- allowance, the overlap pairing - keys off this, so a toner with extensions
+  -- is correctly not one and a root touch-up with extensions correctly is.
+  if v_duration >= 240 then v_daily_limited := true; end if;
 
   v_end_time := p_start_time + (v_duration || ' minutes')::interval;
 
@@ -1377,3 +1391,19 @@ begin
     order by b.hold_expires_at nulls last, b.date;
 end; $$;
 grant execute on function admin_get_pending_bookings to anon;
+
+-- ── HOW LONG EXTENSIONS TAKE, PER SERVICE ──
+-- Over a colour the fitting fills the afternoon. Over a toner the colour work
+-- is nearly finished before it starts, so the visit is two hours and stays at
+-- the stylist's ordinary times rather than taking a four-hour slot.
+update services set duration_with_extensions_minutes = 240
+  where name in ('Balayage / Highlights', 'Half Head Foil', 'Full Head Foil',
+                 'Reverse Balayage', 'Root Touch-Up', 'All-Over Color');
+update services set duration_with_extensions_minutes = 120 where name = 'Toner';
+
+-- Toner joins the services extensions can be added to.
+insert into service_addons (service_id, addon_id, sort_order)
+select sv.id, a.id, a.sort_order
+from services sv join addons a on a.name like 'Extensions%'
+where sv.name = 'Toner'
+on conflict do nothing;

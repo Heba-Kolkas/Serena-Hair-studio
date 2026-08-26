@@ -209,7 +209,13 @@ function hasExtensionsAddon() {
 function effectiveDuration() {
   const svc = state.service;
   if (!svc) return 0;
-  if (hasExtensionsAddon()) return FOUR_HOUR_MINUTES;
+  // How long extensions take depends on what they go over. Fitted during a
+  // colour they use the whole afternoon; fitted over a toner the toner is
+  // nearly done by the time the fitting starts, so the visit is two hours.
+  // Each service says its own figure rather than one rule guessing.
+  if (hasExtensionsAddon() && svc.duration_with_extensions_minutes) {
+    return svc.duration_with_extensions_minutes;
+  }
   if (state.addons.length && svc.duration_with_addons_minutes) return svc.duration_with_addons_minutes;
   return svc.duration_minutes;
 }
@@ -217,10 +223,16 @@ function effectiveDuration() {
 // Whether THIS booking is a four-hour appointment, which is not the same
 // question as whether the service usually is. A root touch-up is ninety
 // minutes until someone adds extensions to it, and then it competes for the
-// day's four-hour slot exactly as a balayage does.
+// day's four-hour slot exactly as a balayage does - while a toner with the
+// same add-on is two hours and competes for nothing.
+//
+// Decided on the length the booking actually works out to, so there is one
+// definition of "four-hour" and it is the same one used to read the bookings
+// already on the day.
 function isFourHourBooking(svc) {
   if (!svc) return false;
-  return !!svc.balayageSchedule || svc.category === 'Bridal' || hasExtensionsAddon();
+  if (svc.category === 'Bridal') return true;
+  return effectiveDuration() >= FOUR_HOUR_MINUTES;
 }
 
 // What the visit is expected to cost: the service's own price plus every
@@ -262,10 +274,10 @@ const FALLBACK_SERVICES = [
   { id: 'svc-half-foil', name: 'Half Head Foil', name_no: 'Halv Folie', category: 'Balayage & Highlights', price_from: 3000, price_is_from: true, duration_minutes: 240, image_url: './html/Pics/Covers/balayage-and-highlights.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
   { id: 'svc-full-foil', name: 'Full Head Foil', name_no: 'Hel Folie', category: 'Balayage & Highlights', price_from: 3750, price_is_from: true, duration_minutes: 240, image_url: './html/Pics/Covers/balayage-and-highlights.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
   // Colour — root touch-up and all-over stretch to 120 min with any add-on.
-  { id: 'svc-root', name: 'Root Touch-Up', name_no: 'Ansatsfarge', category: 'Color', price_from: 1600, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
-  { id: 'svc-allover', name: 'All-Over Color', name_no: 'Helfarge', category: 'Color', price_from: 2100, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
+  { id: 'svc-root', name: 'Root Touch-Up', name_no: 'Ansatsfarge', category: 'Color', price_from: 1600, price_is_from: true, duration_with_extensions_minutes: 240, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
+  { id: 'svc-allover', name: 'All-Over Color', name_no: 'Helfarge', category: 'Color', price_from: 2100, price_is_from: true, duration_with_extensions_minutes: 240, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
   { id: 'svc-reverse', name: 'Reverse Balayage', name_no: 'Omvendt Balayage', category: 'Color', price_from: 3000, duration_minutes: 240, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
-  { id: 'svc-toner', name: 'Toner', name_no: 'Toner', category: 'Color', price_from: 1250, price_is_from: true, duration_minutes: 60, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: [ADDON_HAIRCUT] },
+  { id: 'svc-toner', name: 'Toner', name_no: 'Toner', category: 'Color', price_from: 1250, price_is_from: true, duration_with_extensions_minutes: 120, duration_minutes: 60, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: [ADDON_HAIRCUT, ADDON_EXT_50, ADDON_EXT_100] },
   // Haircuts — every combination is its own priced line, so nothing bolts on.
   { id: 'svc-cut-blowdry', name: 'Haircut + Blowdry (without wash)', name_no: 'Klipp + Føn (uten vask)', category: 'Haircuts & Styling', price_from: 950, duration_minutes: 60, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL },
   { id: 'svc-cut-wash-blowdry', name: 'Haircut + Wash + Blowdry', name_no: 'Klipp + Vask + Føn', category: 'Haircuts & Styling', price_from: 1150, duration_minutes: 60, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL },
@@ -1334,7 +1346,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
       : windowSlots(open, close, duration, dayOpen, allRanges);
   }
 
-  const candidates = (svc.balayageSchedule || (hasExtensionsAddon() && !isBridalService))
+  const candidates = (svc.balayageSchedule || (isFourHourBooking(svc) && !isBridalService))
     ? getBalayageTimes(staff.id, weekday).map(parseTime).filter((t) => t >= open)
     : policyWindows
       ? policyWindows
