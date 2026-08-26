@@ -289,34 +289,63 @@ h2 {
 }
 .book-cta:hover { background: var(--gold); }
 
-/* ── BELOW TABLET: the sheet breaks rather than shrinks ── */
+/* ── ON A PHONE ──
+   The sheet keeps its shape: photo strip down the left with the title still
+   set vertically, list to the right. Turning it into a banner made it a
+   different document; narrowing the strip keeps it the same one.
+
+   Everything else tightens rather than shrinks. A price list is scanned, not
+   read, so the win is fitting more sections in view at once - smaller gaps
+   between rows and sections, not smaller type, which would only make it
+   harder to read while still scrolling as far. */
 @media (max-width: 800px) {
-  .sheet {
-    grid-template-columns: 1fr;
-    min-height: 0;
-  }
-  .panel { height: 34vh; min-height: 180px; }
+  .sheet { grid-template-columns: 76px 1fr; min-height: 100vh; }
+  .panel img { object-position: 55% center; }
   .panel::after {
-    background: linear-gradient(180deg, rgba(30,24,21,0.15) 0%, rgba(30,24,21,0.55) 100%);
+    background: linear-gradient(180deg, rgba(30,24,21,0.6) 0%, rgba(30,24,21,0.25) 30%, rgba(30,24,21,0.1) 100%);
   }
+  /* The panel runs the whole height of the sheet, so a title anchored to its
+     bottom lands below the fold on a phone. Anchored near the top instead, it
+     is the first thing seen - which is what it is for. */
   .panel-title {
-    writing-mode: horizontal-tb;
-    transform: none;
     left: 50%;
     translate: -50% 0;
-    bottom: 1.1rem;
-    font-size: clamp(1.8rem, 8vw, 2.6rem);
-    letter-spacing: 0.3em;
-    /* The letter-spacing adds a trailing gap that breaks the centring. */
-    text-indent: 0.3em;
+    bottom: auto;
+    top: 2.5rem;
+    font-size: 1.5rem;
+    letter-spacing: 0.2em;
   }
-  .row { font-size: 0.95rem; }
-  .row .name { max-width: 66%; }
+  .list { padding: 1.5rem 1rem 1.75rem; }
+
+  .masthead { margin-bottom: 1.3rem; }
+  .masthead h1 { font-size: 1.5rem; letter-spacing: 0.1em; }
+  .masthead .disciplines { font-size: 0.56rem; letter-spacing: 0.28em; margin-top: 0.35rem; }
+  .diamond-rule { margin-top: 0.8rem; }
+
+  section { margin-bottom: 1.2rem; }
+  h2 { font-size: 0.66rem; letter-spacing: 0.18em; padding-bottom: 0.4rem; margin-bottom: 0.5rem; }
+
+  .row { font-size: 0.86rem; padding: 0.26rem 0; gap: 0.35rem; }
+  .row .name { max-width: 68%; }
+  /* The parenthetical qualifiers are the first thing to go: they are the
+     longest part of the row and the least needed at a glance. */
+  .row .name small { display: none; }
+
+  .notes { margin-top: 0.6rem; font-size: 0.78rem; line-height: 1.6; }
+  .bridal { margin: 1.1rem 0 1rem; padding: 0.85rem 1rem 0.95rem; }
+  .bridal p { font-size: 0.85rem; }
+  .smallprint { font-size: 0.52rem; line-height: 1.9; letter-spacing: 0.1em; }
+  .end-diamond { margin-top: 1rem; }
+  .book-cta { margin-top: 1.1rem; padding: 0.65rem 1.5rem; font-size: 0.68rem; }
+  .contact { margin-top: 1.3rem; padding-top: 1rem; gap: 0.4rem 1.1rem; font-size: 0.68rem; }
 }
-@media (max-width: 420px) {
-  .row { flex-wrap: wrap; gap: 0 0.4rem; }
-  .row .name { max-width: 100%; }
-  .row .leader { min-width: 0.8rem; }
+
+@media (max-width: 400px) {
+  .sheet { grid-template-columns: 60px 1fr; }
+  .panel-title { font-size: 1.2rem; letter-spacing: 0.16em; }
+  .list { padding: 1.25rem 0.8rem 1.5rem; }
+  .row { font-size: 0.82rem; }
+  .row .name { max-width: 64%; }
 }
 
 @media print {
