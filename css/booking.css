@@ -1288,7 +1288,19 @@ body.has-sticky-bar #back-top.visible {
    cards sit in a pool of empty space. Folded away, the list is a set of even
    rows you can scan; the add-ons arrive on the card you actually chose, which
    is the only moment they mean anything. */
-.option-card-wrap:not(.selected) .option-card-combos { display: none; }
+/* ── WHEN THE ADD-ONS ARE VISIBLE ──
+   On a wide screen they are always open. There is room for them, and a client
+   comparing three colour services wants to see that two of them take grey
+   coverage without tapping each one to find out. Cards no longer stretch to
+   match their row (see the grid note below), so an open card sitting beside a
+   shorter one costs nothing.
+
+   On a phone they stay folded until the card is tapped. There the list is a
+   single column, and five chips on every card turns a scannable list into a
+   long scroll where nothing can be compared at all. */
+@media (max-width: 819px) {
+  .option-card-wrap:not(.selected) .option-card-combos { display: none; }
+}
 .option-card-wrap.selected .option-card-combos { padding-top: 0.75rem; }
 
 /* ── TABS ON A WIDE SCREEN, DROPDOWN ON A PHONE ──
