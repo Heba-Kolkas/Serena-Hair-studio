@@ -1419,8 +1419,6 @@ body.has-sticky-bar #back-top.visible {
   #slotGrid { max-width: 20rem; }
 }
 
-/* ── ADD-ON DIALOG (wide screens only) ── */
-}
 
 /* ── WHY THE SERVICE GRID KEPT BREAKING ──
    Two separate bugs, both of them the grid's doing.
@@ -1441,11 +1439,26 @@ body.has-sticky-bar #back-top.visible {
    is still the row height even once the grid stops stretching its items. Both
    have to go for a card to end where its content ends. */
 .option-card-wrap { height: auto; }
+/* The notices live inside the card they belong to now, so they no longer need
+   to span the row - and must not, or they would stretch the card. Kept as a
+   selector so an older cached page still lays them out sensibly. */
 .option-grid > .notice-pending,
 .option-grid > .notice-quality,
 .option-grid > .notice-external {
   grid-column: 1 / -1;
   margin-top: 0;
+}
+/* Inside a card: flush to its edges, sitting under the add-ons rather than
+   floating in a gap of its own. */
+.option-card-wrap > .notice-pending,
+.option-card-wrap > .notice-quality,
+.option-card-wrap > .notice-external {
+  margin: 0;
+  border-radius: 0;
+  border-left-width: 3px;
+  border-right: none;
+  border-bottom: none;
+  font-size: 0.8rem;
 }
 
 /* ── WAITING LIST ──

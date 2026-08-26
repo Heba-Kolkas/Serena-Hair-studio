@@ -132,8 +132,23 @@ function getStaffCloseOverride(staffId, weekday) {
 // exact start time (already guaranteed by the same-slot uniqueness check),
 // capped at 17:00 and 2 per stylist per day.
 const CONSULTATION_LATEST_START = '17:00';
-const CONSULTATION_DAILY_CAP = 2;
+const CONSULTATION_DAILY_CAP = 4;
 const CONSULTATION_DURATION = 10;
+// The hours a real appointment starts on. A consultation nests inside other
+// bookings happily enough, but not at the moment one begins: that is when the
+// client is being greeted, gowned and taken to the chair, and a ten-minute
+// conversation on top of it delays the appointment it is sitting inside.
+// Half an hour in, the colour is already going on and the stylist is free to
+// talk - so the half hour after each of these is kept clear.
+const CONSULTATION_BLOCKED_STARTS = ['11:00', '13:00', '15:00', '16:30'];
+const CONSULTATION_CLEARANCE = 30;
+
+function consultationTimeAllowed(t) {
+  return !CONSULTATION_BLOCKED_STARTS.some((h) => {
+    const a = parseTime(h);
+    return t >= a && t < a + CONSULTATION_CLEARANCE;
+  });
+}
 // A 4-hour lightening appointment (240min, starting 11:00 or 15:00) doesn't
 // block its paired "second client" time for a stylist with
 // allow_overlap_booking — mirrors the exemption carved out in the
@@ -710,7 +725,7 @@ function renderExternalNotice(svc) {
       <a class="extensions-notice-link" href="${svc.external_booking_url}" target="_blank" rel="noopener noreferrer">${label} ↗</a>
     </span>
   `;
-  card.insertAdjacentElement('afterend', el);
+  card.appendChild(el);
 }
 
 // Extensions can't be confirmed on the spot: the salon has to check the
@@ -773,7 +788,7 @@ function renderExtensionsQuality(svc) {
   el.id = 'extensionsQuality';
   el.className = 'notice-quality';
   el.innerHTML = `<i class="fa-solid fa-certificate"></i><span>${EXTENSIONS_QUALITY[lang() === 'no' ? 'no' : 'en']}</span>`;
-  card.insertAdjacentElement('afterend', el);
+  card.appendChild(el);
 }
 
 function renderConsultationNotice(svc) {
@@ -793,7 +808,7 @@ function renderConsultationNotice(svc) {
       <button type="button" class="extensions-notice-link" id="switchToConsultation">${lang() === 'no' ? 'Ikke vært på konsultasjon ennå? Bestill en' : "Haven't had your consultation yet? Book one"}</button>
     </span>
   `;
-  card.insertAdjacentElement('afterend', el);
+  card.appendChild(el);
   document.getElementById('switchToConsultation').addEventListener('click', () => {
     const consultation = state.services.find((x) => x.consultationRule)
       || state.services.find((x) => /consultation/i.test(x.name || ''));
@@ -1367,7 +1382,14 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
         : staffFixed
           ? staffFixed.map(parseTime).filter((t) => t >= open)
           : svc.consultationRule
-            ? (() => { const arr = []; const latest = parseTime(CONSULTATION_LATEST_START); for (let t = open; t <= latest; t += 15) arr.push(t); return arr; })()
+            ? (() => {
+                const arr = [];
+                const latest = parseTime(CONSULTATION_LATEST_START);
+                for (let t = open; t <= latest; t += 15) {
+                  if (consultationTimeAllowed(t)) arr.push(t);
+                }
+                return arr;
+              })()
             : (() => { const arr = []; for (let t = open; t + duration <= close; t += 15) arr.push(t); return arr; })();
 
   // A stylist with allow_overlap_booking can take a second, non-bridal client

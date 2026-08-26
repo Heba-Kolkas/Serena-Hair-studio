@@ -245,8 +245,8 @@ begin
     select count(*) into v_consult_count from bookings
       where staff_id = p_staff_id and date = p_date and service_id = p_service_id
         and status <> 'cancelled';
-    if v_consult_count >= 2 then
-      raise exception 'This stylist already has 2 consultations booked today';
+    if v_consult_count >= 4 then
+      raise exception 'This stylist already has 4 consultations booked today';
     end if;
   end if;
 

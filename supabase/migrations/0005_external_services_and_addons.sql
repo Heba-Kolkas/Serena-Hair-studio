@@ -1252,16 +1252,20 @@ begin
   v_weekday := extract(dow from p_date);
 
   -- Consultation is a special case: any open slot works (handled by the
-  -- overlap exemption below), but capped at 17:00 and 2 per stylist/day.
+  -- overlap exemption below), but capped at 17:00, four per stylist per day,
+  -- and never in the half hour after an appointment starts.
   if v_service_name = 'Consultation' then
     if p_start_time > '17:00' then
       raise exception 'Consultations must start by 17:00';
     end if;
+    if not consultation_start_allowed(p_start_time) then
+      raise exception 'That is when an appointment starts - please pick a time at least half an hour later';
+    end if;
     select count(*) into v_consult_count from bookings
       where staff_id = p_staff_id and date = p_date and service_id = p_service_id
         and status <> 'cancelled';
-    if v_consult_count >= 2 then
-      raise exception 'This stylist already has 2 consultations booked today';
+    if v_consult_count >= 4 then
+      raise exception 'This stylist already has 4 consultations booked today';
     end if;
   end if;
 
@@ -1423,3 +1427,24 @@ on conflict do nothing;
 -- toner is a different figure again (two hours) and is set above - the
 -- extensions length wins where both are chosen.
 update services set duration_with_addons_minutes = 90 where name = 'Toner';
+
+-- ── CONSULTATIONS: FOUR A DAY, AND NEVER ON THE HOUR AN APPOINTMENT STARTS ──
+-- Replaces the two-a-day rule and the bare 17:00 cut-off from 0001.
+--
+-- A consultation is ten minutes and nests happily inside another booking - but
+-- not at the moment one begins. 11:00, 13:00, 15:00 and 16:30 are when a
+-- client is being greeted, gowned and taken to the chair; a conversation on
+-- top of that delays the very appointment it is sitting inside. Half an hour
+-- later the colour is going on and the stylist is free to talk, so the thirty
+-- minutes after each of those four times is kept clear.
+create or replace function consultation_start_allowed(p_start time)
+returns boolean language sql immutable set search_path = public as $$
+  select not exists (
+    select 1 from (values
+      (time '11:00'), (time '13:00'), (time '15:00'), (time '16:30')
+    ) as anchors(t)
+    where p_start >= anchors.t
+      and p_start < anchors.t + interval '30 minutes'
+  );
+$$;
+grant execute on function consultation_start_allowed to anon;
