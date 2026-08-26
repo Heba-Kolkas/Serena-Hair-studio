@@ -1418,3 +1418,8 @@ select sv.id, a.id, a.sort_order
 from services sv join addons a on a.name = 'Haircut'
 where sv.name in ('Hair Extensions (50g)', 'Hair Extensions (100-150g)')
 on conflict do nothing;
+
+-- A haircut alongside a toner runs to an hour and a half. Extensions on a
+-- toner is a different figure again (two hours) and is set above - the
+-- extensions length wins where both are chosen.
+update services set duration_with_addons_minutes = 90 where name = 'Toner';

@@ -3,11 +3,16 @@ import { fetchFeaturedServices, fetchProductImages } from '/js/supabase-client.j
 // Static fallback mirrors the real pricing on /pricelist.html so the homepage
 // still looks complete (and accurate) while the database is paused/unreachable,
 // or before it's been seeded.
+// The ids matter as much as the names: the card links to
+// /book.html?service=<id>, and the wizard opens on that service instead of
+// the full list. Without an id the link was "?service=" and every card landed
+// the client back on the catalogue to find what they had just clicked.
+// These must match the ids in js/booking.js's own fallback catalogue.
 const FALLBACK_SERVICES = [
-  { name: 'Balayage / Highlights', price_from: 3750, price_is_from: true, image_url: '/html/Pics/Covers/balayage-and-highlights.jpeg' },
-  { name: 'Haircut + Blowdry', price_from: 950, image_url: '/html/Pics/Covers/haircuts-and-styling.jpeg' },
-  { name: 'Keratin Treatment', price_label: 'Price on Consultation', image_url: '/html/Pics/Covers/keratin-and-treatments.jpeg' },
-  { name: 'Hair Extensions', price_from: 3000, image_url: '/html/Pics/Covers/hair-extensions.jpeg' },
+  { id: 'svc-balayage', name: 'Balayage / Highlights', price_from: 3750, price_is_from: true, image_url: '/html/Pics/Covers/balayage-and-highlights.jpeg' },
+  { id: 'svc-cut-blowdry', name: 'Haircut + Blowdry', price_from: 950, image_url: '/html/Pics/Covers/haircuts-and-styling.jpeg' },
+  { id: 'svc-keratin', name: 'Keratin Treatment', price_label: 'Price on Consultation', image_url: '/html/Pics/Covers/keratin-and-treatments.jpeg' },
+  { id: 'svc-ext-50', name: 'Hair Extensions', price_from: 3000, image_url: '/html/Pics/Covers/hair-extensions.jpeg' },
 ];
 
 function priceLabel(s) {
