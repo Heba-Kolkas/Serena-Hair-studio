@@ -195,8 +195,7 @@ where
   -- Deliberately NOT on balayage or the foils: toning is part of how that
   -- lightening is finished, so charging for it as an extra sold the client a
   -- step that was happening regardless.
-  or (a.name = 'Toner' and sv.name in (
-     'Root Touch-Up', 'All-Over Color', 'Reverse Balayage'))
+  or (a.name = 'Toner' and sv.name in ('Root Touch-Up', 'All-Over Color'))
   -- Extensions go alongside any colour work, lightening or not. Fitting them
   -- takes the afternoon whatever is underneath, so a root touch-up with
   -- extensions on it is a four-hour appointment and is scheduled as one - see
@@ -1459,4 +1458,5 @@ delete from service_addons sa
 using addons a, services sv
 where sa.addon_id = a.id and sa.service_id = sv.id
   and a.name = 'Toner'
-  and sv.name in ('Balayage / Highlights', 'Half Head Foil', 'Full Head Foil');
+  and sv.name in ('Balayage / Highlights', 'Half Head Foil', 'Full Head Foil',
+                  'Reverse Balayage');

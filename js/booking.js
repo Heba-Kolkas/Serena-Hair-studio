@@ -192,12 +192,13 @@ const ADDON_TONER = { id: 'addon-toner', name: 'Toner', name_no: 'Toner', price:
 const ADDON_EXT_50 = { id: 'addon-ext-50', name: 'Extensions (50g)', name_no: 'Extensions (50g)', price: 0, price_on_consultation: true, kind: 'combo', exclusive_group: 'extensions', requires_confirmation: true, requiresStaff: STAFF_HASSAN };
 const ADDON_EXT_100 = { id: 'addon-ext-100', name: 'Extensions (100-150g)', name_no: 'Extensions (100-150g)', price: 0, price_on_consultation: true, kind: 'combo', exclusive_group: 'extensions', requires_confirmation: true, requiresStaff: STAFF_HASSAN };
 
-// Balayage, half head and full head foil. No toner here: toning is part of
-// how the lightening is finished rather than something bolted on, so offering
-// it as a paid extra invited a client to buy a step that was happening anyway.
+// Every balayage service - the three lightening ones and reverse balayage.
+// No toner: toning is part of how the work is finished rather than something
+// bolted on, so offering it as a paid extra invited a client to buy a step
+// that was happening anyway.
 const LIGHTENING_ADDONS = [ADDON_HAIRCUT, ADDON_GREY, ADDON_EXT_50, ADDON_EXT_100];
-// Reverse balayage is going darker, so a toner IS a separate choice there.
-const REVERSE_ADDONS = [ADDON_HAIRCUT, ADDON_GREY, ADDON_TONER, ADDON_EXT_50, ADDON_EXT_100];
+// Reverse balayage takes the same list. Toner is off every balayage service.
+const REVERSE_ADDONS = LIGHTENING_ADDONS;
 // Extensions can be fitted over a root touch-up or an all-over colour just as
 // they can over a balayage. Adding them turns the visit into a four-hour
 // appointment - see isFourHourBooking - so it is scheduled and capped exactly

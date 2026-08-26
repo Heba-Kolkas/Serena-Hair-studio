@@ -1564,3 +1564,39 @@ body { background: var(--sched-bg); }
     padding-right: 1.1rem;
   }
 }
+
+/* ── MODALS MUST SCROLL, AND THE PAGE BEHIND MUST NOT ──
+   Capping the panel height stopped it overflowing the screen, but overflow
+   was set to hidden - so a form taller than the panel was simply cut off with
+   no way to reach the rest. Dragging then scrolled the schedule underneath
+   instead, which reads as the modal being stuck.
+
+   The panel scrolls itself now, the heading stays pinned to the top of it,
+   and the overlay refuses to pass the gesture through to the page behind. */
+.appt-popup {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  display: block;
+}
+.appt-popup > .block-modal-title,
+.appt-popup > .popup-name {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+/* touch-action:none here is what stops the drag reaching the page underneath.
+   The panel re-enables pan-y for itself above. */
+.appt-popup-overlay {
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+/* These were given their own scrollbars while the panel could not scroll.
+   With the panel scrolling, a second scrolling box inside it just traps the
+   gesture in whichever one the finger happens to land on. */
+.owner-panel #ownerTabContent,
+#extList, #extRisk {
+  overflow-y: visible;
+}
