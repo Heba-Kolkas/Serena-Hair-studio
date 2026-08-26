@@ -4,8 +4,8 @@ import { fetchFeaturedServices, fetchProductImages } from '/js/supabase-client.j
 // still looks complete (and accurate) while the database is paused/unreachable,
 // or before it's been seeded.
 const FALLBACK_SERVICES = [
-  { name: 'Highlights / Balayage', price_from: 3500, price_to: 4000, image_url: '/html/Pics/Balayage/Blayage12.jpeg' },
-  { name: 'Cut & Styling', price_from: 850, image_url: '/html/Pics/Haircut/Haircut5.jpeg' },
+  { name: 'Balayage / Highlights', price_from: 3750, price_is_from: true, image_url: '/html/Pics/Balayage/Blayage12.jpeg' },
+  { name: 'Haircut + Blowdry', price_from: 950, image_url: '/html/Pics/Haircut/Haircut5.jpeg' },
   { name: 'Keratin Treatment', price_label: 'Price on Consultation', image_url: '/html/Pics/Treatment/cover.jpeg' },
   { name: 'Hair Extensions', price_from: 3000, image_url: '/html/Pics/Extensions/cover.jpeg' },
 ];
@@ -15,7 +15,8 @@ function priceLabel(s) {
   if (s.price_from === 0) return 'Free';
   if (s.price_on_consultation) return 'Price on Consultation';
   if (s.price_to) return 'From ' + Number(s.price_from).toLocaleString('en-US') + '–' + Number(s.price_to).toLocaleString('en-US') + ' NOK';
-  return 'From ' + Number(s.price_from).toLocaleString('en-US') + ' NOK';
+  // Only say "from" where the price list does — a haircut is 950 NOK flat.
+  return (s.price_is_from ? 'From ' : '') + Number(s.price_from).toLocaleString('en-US') + ' NOK';
 }
 
 function renderServices(row, services) {

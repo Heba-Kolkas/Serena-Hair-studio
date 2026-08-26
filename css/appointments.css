@@ -77,3 +77,14 @@
   font-size: 0.85rem;
   padding: 1.5rem 0;
 }
+
+/* What they actually paid, on a past visit. Quiet — it is a record, not a
+   status, and it should not compete with the status chip beside it. */
+.appt-card-paid {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  color: var(--greige, #9f948e);
+  font-variant-numeric: tabular-nums;
+}

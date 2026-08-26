@@ -17,7 +17,22 @@ create table services (
   price_from numeric(10,2),
   price_to numeric(10,2),
   price_on_consultation boolean not null default false,
+  -- Whether price_from is a floor ("from 3,750 kr") or the actual figure
+  -- ("950 kr"). The printed price list draws this distinction explicitly and
+  -- it can't be inferred: a service with no price_to may be either. It also
+  -- decides whether a booking's expected_total counts as an estimate.
+  price_is_from boolean not null default false,
   duration_minutes int not null,
+  -- How long the appointment runs when the client picks ANY add-on. Flat, not
+  -- additive: a root touch-up is 90 minutes alone and 120 with a haircut or a
+  -- toner attached — 120 either way, not 90 + one delta per add-on. Null (the
+  -- usual case) means add-ons don't change the length at all, which is how
+  -- balayage works: 4 hours whatever is added to it.
+  duration_with_addons_minutes int,
+  -- Counts toward a stylist's per-day cap (staff_scheduled_service_limit).
+  -- True for the four-hour lightening family only: Kani takes one of those a
+  -- day on Mon/Wed/Fri, but any number of the shorter services around it.
+  daily_limited boolean not null default false,
   -- Set only for services that run at fixed times instead of the normal
   -- 15-minute grid across business hours (e.g. Balayage: 11:00 & 15:00 only).
   -- Null means "generate the normal dynamic grid."
@@ -52,6 +67,12 @@ create table staff (
   -- non-Bridal service with them at the paired time (13:00 or 16:30) —
   -- a deliberate, real overlap, not a scheduling bug. See book_appointment.
   allow_overlap_booking boolean not null default false,
+  -- Whether a booking entered BY HAND in the schedule tool may overlap this
+  -- stylist's existing ones. Separate from allow_overlap_booking above, which
+  -- is about the public wizard's balayage pairing: this is the stylist
+  -- judging their own day, and it's granted per person rather than to anyone
+  -- holding the staff PIN.
+  allow_manual_overlap boolean not null default false,
   active boolean not null default true,
   sort_order int not null default 0,
   created_at timestamptz not null default now()

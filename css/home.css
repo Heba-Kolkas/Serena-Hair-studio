@@ -68,7 +68,7 @@
   display: block;
 }
 /* Dissolves the photo's left edge into the card background. Must be built
-   from --linen-rgb, not a hardcoded near-white — a fixed rgb(255,247,247)
+   from --linen-rgb, not a hardcoded near-white - a fixed rgb(255,247,247)
    lays a pink haze over the photo in light mode and fades to *white*
    against the near-black card in dark mode. */
 .hero-card-photo::after {
@@ -86,7 +86,7 @@
 }
 /* Phone tuning for the side-by-side hero. The copy column is only ~55% of a
    390px screen, so the desktop type sizes have to come down or the headline,
-   the sub and the CTA all wrap. Layout shape is unchanged — only scale. */
+   the sub and the CTA all wrap. Layout shape is unchanged - only scale. */
 @media (max-width: 599px) {
   .hero-section { padding: 5.5rem 0.75rem 1rem; }
   .hero-card { border-radius: 20px; }
@@ -206,7 +206,7 @@
   flex-shrink: 0;
 }
 /* Phone tuning for the 2-up grid. At 390px each tile is ~153px wide, of which
-   the icon and chevron eat ~70px at desktop sizing — leaving too little for
+   the icon and chevron eat ~70px at desktop sizing - leaving too little for
    "Book Appointment". Shrinking the icon, dropping the chevron and stepping
    the type down buys the label enough room to stay on one line. */
 @media (max-width: 599px) {
@@ -230,7 +230,7 @@
   .quick-tile-desc { font-size: 0.54rem; }
 }
 /* From here up each tile becomes its own raised card rather than a row in a
-   shared panel — but still only two across: four columns at this width leaves
+   shared panel - but still only two across: four columns at this width leaves
    ~65px of text per tile, which wrapped every label and description. */
 @media (min-width: 900px) {
   .quick-tiles {
@@ -403,7 +403,7 @@
   padding: 1.5rem 1rem;
 }
 /* Mobile: a single wide rectangular banner (2:1) with the video full-bleed
-   and the copy overlaid in a bottom scrim — deliberately not the "photo
+   and the copy overlaid in a bottom scrim - deliberately not the "photo
    stacked on top of a plain panel" shape the founder card already uses.
    Desktop (≥600px) switches to a side-by-side card instead. */
 .brand-banner {
@@ -703,7 +703,7 @@
 }
 .hours-card-compact .hours-row .hours-day { font-weight: 500; }
 /* The gradient's second stop and this shadow are hardcoded, so they do not
-   follow --blush — both were rose and would have stayed pink on today's
+   follow --blush - both were rose and would have stayed pink on today's
    open day while every other blush surface went beige. */
 .hours-card-compact .hours-row[data-active="true"] {
   background: linear-gradient(135deg, var(--blush), #e3d9ca);
@@ -749,7 +749,7 @@
 
 /* #location's own bottom padding plus the generic section top-padding right
    after it (up to 8rem at desktop-large) stacked into a huge dead gap before
-   the FAQ heading — tighten just this seam, same fix as the team section.
+   the FAQ heading - tighten just this seam, same fix as the team section.
    Its own bottom padding (also up to 8rem) left the same dead space before
    the info strip below, even though the info strip's own top padding is
    already small. */

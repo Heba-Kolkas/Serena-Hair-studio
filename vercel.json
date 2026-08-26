@@ -1,4 +1,11 @@
 {
+  "_comment_maintenance": "THE SITE IS INTENTIONALLY DOWN. The rewrite below serves maintenance.html for every route while the real pages stay intact in the repo. TO BRING THE SITE BACK: delete the entire 'rewrites' block. Nothing else needs restoring. The exclusions keep the maintenance page's own assets, the search-engine verification files, and Vercel's internals reachable.",
+  "rewrites": [
+    {
+      "source": "/((?!maintenance\\.html|favicon\\.ico|icon-192\\.png|icon-512\\.png|manifest\\.json|robots\\.txt|sitemap\\.xml|BingSiteAuth\\.xml|google19500c3f386eb56a\\.html|5e060fce867946c4b3f54be6e43c1a47\\.txt|_vercel).*)",
+      "destination": "/maintenance.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

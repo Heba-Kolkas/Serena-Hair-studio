@@ -19,7 +19,7 @@ video::--internal-media-controls-button-panel { display: none !important; }
   /* Beige, not pink. #f1ded8 had blue sitting level with green, which is
      what made it read rose; blue now drops below green so it lands warm
      neutral. Drives the homepage tile icons, the booking step dots and
-     calendar hover, and the team cards — so it is changed here rather than
+     calendar hover, and the team cards - so it is changed here rather than
      per page, to stop those going pink while the price list goes beige. */
   --blush: #ebe2d6;
   --white: #ffffffd7;
@@ -63,7 +63,15 @@ body {
   font-family: var(--font-body);
   font-weight: 300;
   overflow-x: hidden;
+  /* Short pages used to leave the footer stranded mid-screen with empty
+     cream below it. This pins it to the bottom of the viewport without
+     making it fixed - it still scrolls away normally on a long page. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
+body > main { flex: 1 0 auto; }
+body > footer { flex-shrink: 0; }
 
 /* ── SHARED APP-PAGE UTILITIES ── */
 .container {
@@ -175,7 +183,7 @@ body {
 
 /* ───── NAV ───── */
 /* Anchor-jump targets (nav/footer links to #team, #gallery, #reviews,
-   #location, #faq) need clearance for the fixed nav above them — otherwise
+   #location, #faq) need clearance for the fixed nav above them - otherwise
    the heading scrolls to right under the bar and looks like it's missing. */
 #team, #gallery, #reviews, #location, #faq {
   scroll-margin-top: 90px;
@@ -230,7 +238,7 @@ nav.scrolled {
 /* ── NAV WORDMARK (replaces .nav-logo on the new app-style pages) ── */
 .nav-wordmark {
   /* True center regardless of how wide the hamburger vs. lang/bell controls
-     are — space-between alone drifts it toward whichever side is narrower. */
+     are - space-between alone drifts it toward whichever side is narrower. */
   position: absolute;
   left: 50%;
   top: 50%;
@@ -271,7 +279,7 @@ nav.scrolled {
 }
 
 /* The inline link row is retired in favor of the hamburger menu at every
-   width — kept as a plain list (not display:none) so its <a> tags stay
+   width - kept as a plain list (not display:none) so its <a> tags stay
    real, crawlable links for SEO even though they're visually hidden. */
 .nav-links {
   position: absolute;
@@ -407,7 +415,7 @@ nav.scrolled {
 }
 
 /* Compact anchored dropdown (below the hamburger) instead of a full-screen
-   takeover — same cream/espresso/taupe theme as the rest of the site. */
+   takeover - same cream/espresso/taupe theme as the rest of the site. */
 .mobile-menu {
   display: none;
   position: fixed;
@@ -892,7 +900,7 @@ section {
 /* Responsive Grid Logic */
 /* ── Gallery Category Cards ── */
 /* ══════════════════════════════════════════════════════
-   GALLERY — CATEGORY CARDS
+   GALLERY - CATEGORY CARDS
    4:5 ratio · blurred cover look · no interactions
    Desktop: 2 cols · Tablet: 2 cols · Mobile: 2→1 cols
    ══════════════════════════════════════════════════════ */
@@ -905,7 +913,7 @@ section {
   padding-right: clamp(16px, 4vw, 60px);
   /* The generic section bottom-padding (up to 8rem at desktop-large) plus
      .gallery-grid's own bottom padding stacked into a dead gap before
-     "Visit the Studio" — same fix as the other section seams. */
+     "Visit the Studio" - same fix as the other section seams. */
   padding-bottom: 3rem;
 }
 
@@ -919,7 +927,7 @@ section {
 }
 
 /* Desktop: 4 across (all 8 categories fill exactly 2 clean rows) with a
-   shorter, less portrait-heavy card — the 4:5 ratio read as a lot of
+   shorter, less portrait-heavy card - the 4:5 ratio read as a lot of
    scrolling once there was room for more columns. */
 @media (min-width: 1000px) {
   .gallery-grid {
@@ -1641,7 +1649,7 @@ section {
   background: var(--cream);
   /* Gallery's own bottom padding plus the generic section top/bottom padding
      (up to 8rem at desktop-large) stacked into dead gaps on both sides of
-     this section — same fix as the Team/Gallery/FAQ seams. */
+     this section - same fix as the Team/Gallery/FAQ seams. */
   padding-top: 3rem;
   padding-bottom: 3rem;
 }
@@ -2113,7 +2121,7 @@ section {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   FULL RESPONSIVE SYSTEM — All screens: phone, tablet, desktop
+   FULL RESPONSIVE SYSTEM - All screens: phone, tablet, desktop
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── DESKTOP LARGE (1200px+) ── */
@@ -2262,7 +2270,7 @@ section {
   /* Absolute viewport-centering works on wide screens where there's slack on
      both sides, but on a phone the wordmark is wider than the gap left by the
      hamburger and the lang/bell controls, so it ran straight over "NO | EN".
-     Put it back in the flex flow here — it then centers in whatever space is
+     Put it back in the flex flow here - it then centers in whatever space is
      actually free and can never overlap its neighbours. */
   .nav-wordmark {
     position: static;
@@ -2812,7 +2820,7 @@ nav.scrolled #scroll-progress {
 }
 
 /* ═══════════════════════════════════════════════════
-   NEW FEATURES — Fully responsive, bigger, polished
+   NEW FEATURES - Fully responsive, bigger, polished
    ═══════════════════════════════════════════════════ */
 
 /* ── HERO TIME GREETING ── */

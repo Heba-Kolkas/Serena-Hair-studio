@@ -1,7 +1,7 @@
 /* ── TEAM SCHEDULE (schedule.html) ── */
 /* This is an internal staff tool, not a customer-facing page, so it drops the
    site's ornate serif/parchment look (kept only on the topbar) for a cleaner
-   layout — but the accent is the brand's own gold/espresso, not a generic
+   layout - but the accent is the brand's own gold/espresso, not a generic
    indigo SaaS palette, and appointment blocks are colored per-service
    (owner-set in the Owner Panel's Services tab) rather than a generic
    status-color scheme. */
@@ -47,7 +47,7 @@
 .sched-topbar-actions { position: relative; display: flex; flex-shrink: 0; }
 
 /* Single "more" button + dropdown, not three separate buttons crowding the
-   bar — much less visual noise, and the logo never needs to truncate. */
+   bar - much less visual noise, and the logo never needs to truncate. */
 .topbar-menu-btn {
   width: 2.2rem;
   height: 2.2rem;
@@ -191,9 +191,19 @@ body { background: var(--sched-bg); }
 
 /* ── SCHEDULE APP ── */
 .sched-app {
+  /* 1100px left most of a desktop empty either side of the day grid, which
+     is the one screen that genuinely wants the room - more stylist columns
+     visible at once, and each appointment block wide enough to read the
+     client and service without hovering. */
   max-width: 1100px;
   margin: 0 auto;
   padding: 1.5rem 1rem 4rem;
+}
+@media (min-width: 1200px) {
+  .sched-app { max-width: 1500px; }
+}
+@media (min-width: 1650px) {
+  .sched-app { max-width: 1800px; }
 }
 /* One tight row: Upcoming/History toggle + staff pills side by side, so the
    header doesn't eat the screen before any appointment is visible. */
@@ -367,7 +377,7 @@ body { background: var(--sched-bg); }
 }
 .history-date-filter-row .calendar-pick-wrap { margin-left: 0; }
 /* This popover's trigger sits at the LEFT of its row (unlike the day-strip's
-   jump-to-date button, which sits at the right) — anchor it from the left
+   jump-to-date button, which sits at the right) - anchor it from the left
    edge too, or a right:0 anchor pushes the whole 260px panel off-screen. */
 .history-date-filter-row .calendar-popover { left: 0; right: auto; }
 .history-date-pick-btn,
@@ -470,8 +480,41 @@ body { background: var(--sched-bg); }
 .day-strip .day-cell:last-child { border-right: none; border-radius: 0 9px 9px 0; }
 .day-cell-weekday { font-size: 0.5rem; letter-spacing: 0.03em; text-transform: uppercase; color: var(--sched-text-muted); }
 .day-cell-num { font-family: var(--font-body); font-weight: 400; font-size: 0.82rem; color: var(--sched-text); }
-.day-cell-bar { width: 55%; height: 2px; border-radius: 2px; background: var(--sched-border); overflow: hidden; }
-.day-cell-bar-fill { height: 100%; background: var(--sched-accent); }
+/* How full the day is. Wider and thicker than it was: at 55% of a cell and
+   two pixels tall, a day that was a third booked drew a mark too small to
+   read, which is the one thing this is for. */
+.day-cell-bar {
+  width: 72%;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--sched-border);
+  overflow: hidden;
+}
+.day-cell-bar-fill {
+  /* display:block matters: a bare span is inline, and height has no effect on
+     an inline box - the fill was being given the right width all along and
+     rendering zero pixels tall, so the bar always looked empty. */
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--sched-accent);
+  transition: width 0.25s ease;
+}
+/* Colour carries the same message as the width, so a glance down the strip
+   reads without comparing lengths. */
+.day-cell-bar.free .day-cell-bar-fill { background: #6FAF7A; }
+.day-cell-bar.busy .day-cell-bar-fill { background: #E0A458; }
+.day-cell-bar.full .day-cell-bar-fill { background: #C25E4B; }
+/* A closed day has no capacity to fill, so it gets a track and no bar —
+   distinct from an open day that simply has nothing booked yet. */
+.day-cell-bar-closed {
+  width: 72%;
+  height: 3px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    90deg, var(--sched-border) 0 3px, transparent 3px 6px
+  );
+}
 
 .day-cell.weekend { background: #f7e8ec; }
 .day-cell:hover:not(.today):not(.active) { background: var(--sched-accent-light); }
@@ -492,7 +535,7 @@ body { background: var(--sched-bg); }
   gap: 0.35rem;
 }
 /* Relocated into the topbar on wide screens (see relocateStaffPills in
-   schedule.js) — pushed against the menu button, never wraps. */
+   schedule.js) - pushed against the menu button, never wraps. */
 .sched-topbar .staff-pills {
   margin-left: auto;
   margin-right: 0.75rem;
@@ -537,7 +580,7 @@ body { background: var(--sched-bg); }
   box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(20,20,30,0.06);
 }
 /* Centered within its own row box (via the inline height set in JS), not
-   nudged up from a line position — keeps every number visually anchored to
+   nudged up from a line position - keeps every number visually anchored to
    the row it belongs to instead of floating ambiguously between two rows. */
 .sched-hour-label {
   position: absolute;
@@ -594,13 +637,13 @@ body { background: var(--sched-bg); }
 }
 .sched-columns::-webkit-scrollbar { display: none; }
 /* Each column keeps a readable minimum width (grows to fill extra space on
-   wide screens, same as before) — on a narrow phone with 3+ stylists this
+   wide screens, same as before) - on a narrow phone with 3+ stylists this
    makes the whole grid scroll horizontally instead of squeezing names down
    to "S…"/"M…"/"T…", which is what actually looked broken. The gutter sits
    outside this scroll area, so times stay visible while you scroll sideways. */
 .sched-col { flex: 1 0 180px; min-width: 180px; }
 /* Fixed height (not content-based padding) so js/schedule.js's HEADER_OFFSET_PX
-   can line the hour-gutter labels up with each column's actual timeline —
+   can line the hour-gutter labels up with each column's actual timeline -
    stays constant across the narrow-screen font tweaks below on purpose. */
 .sched-col-header {
   height: 2rem;
@@ -717,7 +760,7 @@ body { background: var(--sched-bg); }
 }
 
 /* Narrow phones: columns still sit side-by-side (never stacked vertically),
-   just tighter — the grid itself may scroll horizontally now if 3 stylists
+   just tighter - the grid itself may scroll horizontally now if 3 stylists
    don't fit at their minimum readable width (see .sched-col above). */
 @media (max-width: 480px) {
   .sched-hour-gutter { width: 2.5rem; }
@@ -787,6 +830,20 @@ body { background: var(--sched-bg); }
   text-align: left;
 }
 .popup-notes i { margin-top: 0.15rem; flex-shrink: 0; }
+/* Add-ons attached to the booking. Deliberately not styled like .popup-notes
+   (amber = "read this before you touch the client") - this is just what's
+   on the ticket. */
+.popup-addons {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  color: var(--sched-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin: 0 0 0.6rem;
+}
+.popup-addons i { margin-top: 0.2rem; flex-shrink: 0; font-size: 0.65rem; }
+.popup-expected { font-weight: 600; color: var(--sched-text); }
 .popup-actions { display: flex; gap: 0.6rem; }
 .popup-history-btn {
   display: block;
@@ -1007,6 +1064,9 @@ body { background: var(--sched-bg); }
   padding: 0.3rem 0.55rem; margin-top: 0.4rem; display: inline-block;
 }
 .owner-booking-amount { font-size: 0.76rem; font-weight: 600; color: #059669; margin-top: 0.5rem; }
+/* Same slot as the charged figure, but this is a projection rather than
+   money taken - muted so a glance down the list still picks out real revenue. */
+.owner-booking-expected { color: var(--sched-text-muted); font-weight: 500; }
 .owner-booking-actions { display: flex; gap: 0.4rem; margin-top: 0.65rem; flex-wrap: wrap; }
 .owner-action-btn {
   display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; border-radius: 8px;
@@ -1122,3 +1182,302 @@ body { background: var(--sched-bg); }
 }
 .stf-service-cat-label:first-child { margin-top: 0; }
 .stf-service-checklist .owner-checkbox-row { margin-bottom: 0.4rem; }
+
+/* Per-service add-on price, shown beside the service in the Add-ons tab's
+   checklist. Read-only on purpose - these figures come straight off the
+   printed price list, so they shouldn't drift by an accidental keystroke. */
+.adn-override { color: var(--sched-text-muted); font-size: 0.72rem; font-style: italic; }
+
+
+/* Bookings that fall inside a just-blocked period. Amber rather than red:
+   nothing has gone wrong, but the owner has calls to make. */
+.block-clash-list {
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--sched-border);
+  padding-top: 0.5rem;
+}
+.block-clash-row {
+  font-size: 0.76rem;
+  color: var(--sched-text);
+  padding: 0.25rem 0;
+}
+.block-clash-row a { color: var(--sched-accent-strong); text-decoration: underline; }
+.block-clash-note { margin-top: 0.45rem; font-size: 0.72rem; color: var(--sched-text-muted); }
+
+
+/* ── BOOKING REQUESTS ── */
+.owner-booking-card.pending { border-left: 3px solid #C25E4B; }
+.req-hold {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--sched-text-muted);
+}
+.req-hold.urgent { color: #b45309; font-weight: 600; }
+.req-hold.lapsed { color: #C25E4B; font-weight: 600; }
+.owner-action-btn.confirm { border-color: #059669; color: #059669; }
+.owner-action-btn.confirm:hover { background: #059669; color: #fff; }
+.owner-action-btn.reject { border-color: #C25E4B; color: #C25E4B; }
+.owner-action-btn.reject:hover { background: #C25E4B; color: #fff; }
+.req-mail-warn { margin-top: 0.3rem; font-size: 0.72rem; color: var(--sched-text-muted); }
+.req-mail-warn a { color: var(--sched-accent-strong); text-decoration: underline; }
+
+/* ── EXPORT TAB ── */
+.export-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+.export-range label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--sched-text-muted);
+}
+.export-range input {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 6px;
+  background: var(--sched-surface);
+  color: var(--sched-text);
+}
+.export-card {
+  border: 1px solid var(--sched-border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  background: var(--sched-surface);
+}
+/* The client list is the one that carries personal data, and it should not
+   look like the everyday button sitting above it. */
+.export-card.personal { border-left: 3px solid #C25E4B; }
+.export-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+.export-card-note {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--sched-text-muted);
+  margin: 0 0 0.85rem;
+}
+.export-status {
+  display: inline-block;
+  margin-left: 0.7rem;
+  font-size: 0.76rem;
+  color: var(--sched-text-muted);
+}
+.export-day {
+  display: grid;
+  grid-template-columns: 7rem 1fr auto auto auto;
+  gap: 0.4rem 1rem;
+  align-items: baseline;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--sched-border);
+  font-size: 0.83rem;
+}
+.export-day-date { font-weight: 600; }
+.export-day-count { color: var(--sched-text-muted); font-size: 0.78rem; }
+.export-day-total { font-variant-numeric: tabular-nums; font-weight: 600; }
+.export-day-diff { font-variant-numeric: tabular-nums; font-size: 0.78rem; color: var(--sched-text-muted); }
+.export-day-diff.over { color: #b45309; font-weight: 600; }
+.export-day-diff.under { color: #C25E4B; font-weight: 600; }
+.export-day-flag { font-size: 0.74rem; color: #b45309; }
+@media (max-width: 34rem) {
+  .export-day { grid-template-columns: 1fr auto; }
+  .export-day-count, .export-day-flag { grid-column: 1 / -1; }
+}
+
+/* ── EXTENSIONS ORDER BOOK ── */
+.topbar-menu-badge {
+  display: inline-block;
+  min-width: 1.25rem;
+  padding: 0 0.3rem;
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  background: #C25E4B;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25rem;
+}
+.ext-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.ext-search {
+  flex: 1 1 14rem;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 8px;
+  background: var(--sched-surface);
+  color: var(--sched-text);
+}
+.ext-form {
+  border: 1px solid var(--sched-border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+  background: var(--sched-surface);
+}
+.ext-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem 0.8rem;
+}
+
+/* The warning sits above everything and is the only red thing on the screen,
+   so it cannot be mistaken for an ordinary row. */
+.ext-risk:not(:empty) {
+  border: 1px solid rgba(194, 94, 75, 0.35);
+  border-left: 3px solid #C25E4B;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.3rem;
+  background: rgba(194, 94, 75, 0.05);
+}
+.ext-risk-head {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #C25E4B;
+  margin-bottom: 0.7rem;
+}
+.ext-risk-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.6rem 0;
+  border-top: 1px solid rgba(194, 94, 75, 0.18);
+}
+.ext-risk-when {
+  margin-left: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #C25E4B;
+}
+.ext-risk-meta { font-size: 0.76rem; color: var(--sched-text-muted); margin-top: 0.15rem; }
+.ext-risk-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.ext-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--sched-text-muted);
+  margin: 1.4rem 0 0.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--sched-border);
+}
+.ext-group-title span {
+  font-size: 0.7rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--sched-border);
+  color: var(--sched-text);
+  letter-spacing: 0;
+}
+.ext-group-title em {
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  font-size: 0.74rem;
+  margin-left: auto;
+}
+.ext-group-title.ext-group-tell { color: #C25E4B; }
+.ext-group-title.ext-group-tell span { background: #C25E4B; color: #fff; }
+
+.ext-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 1rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
+  background: var(--sched-surface);
+}
+/* Only the group that needs action gets a marker. "Ready" is deliberately
+   plain - there is nothing to do about it. */
+.ext-card.ext-card-tell { border-left: 3px solid #C25E4B; }
+.ext-card.ext-card-done { opacity: 0.65; }
+.ext-card-name { font-weight: 600; font-size: 0.92rem; }
+.ext-waiting {
+  margin-left: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #b45309;
+}
+.ext-card-detail { font-size: 0.82rem; margin-top: 0.15rem; }
+.ext-card-detail em { color: var(--sched-text-muted); }
+.ext-card-meta { font-size: 0.75rem; color: var(--sched-text-muted); margin-top: 0.2rem; }
+.ext-booked { display: inline-block; margin-left: 0.5rem; }
+.ext-card-money { margin-top: 0.35rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.ext-deposit, .ext-balance {
+  font-size: 0.72rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid var(--sched-border);
+  font-variant-numeric: tabular-nums;
+}
+.ext-deposit.paid { color: #059669; border-color: rgba(5, 150, 105, 0.4); }
+.ext-deposit.unpaid { color: #C25E4B; border-color: rgba(194, 94, 75, 0.5); font-weight: 600; }
+.ext-card-notes { font-size: 0.76rem; color: var(--sched-text-muted); margin-top: 0.35rem; }
+.ext-card-actions { display: flex; flex-direction: column; gap: 0.35rem; align-items: stretch; }
+.ext-card-status { grid-column: 1 / -1; font-size: 0.76rem; }
+@media (max-width: 34rem) {
+  .ext-card { grid-template-columns: 1fr; }
+  .ext-card-actions { flex-direction: row; flex-wrap: wrap; }
+}
+
+/* ── UNPAID CANCELLATION FEE, AT THE TILL ── */
+.outstanding {
+  border: 1px solid rgba(194, 94, 75, 0.35);
+  border-left: 3px solid #C25E4B;
+  border-radius: 8px;
+  padding: 0.8rem 0.9rem;
+  margin-bottom: 0.9rem;
+  background: rgba(194, 94, 75, 0.05);
+}
+.outstanding-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #C25E4B;
+  margin-bottom: 0.5rem;
+}
+.outstanding-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+  padding: 0.2rem 0;
+}
+.outstanding-fee { font-variant-numeric: tabular-nums; font-weight: 600; }
+.outstanding-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.7rem;
+}
+.outstanding-added { font-size: 0.8rem; color: #059669; font-weight: 600; }
+
+/* ── NO-SHOW NOTICE ── */
+.noshow-fee { font-size: 0.8rem; color: var(--sched-text-muted); margin: 0.2rem 0 0.9rem; }
+.noshow-warn { font-size: 0.8rem; color: #C25E4B; margin: 0.4rem 0; }
+.noshow-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.9rem; }

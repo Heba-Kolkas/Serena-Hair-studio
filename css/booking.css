@@ -4,16 +4,19 @@
   max-width: 780px;
   margin: 0 auto;
   padding: 0 1.25rem 5rem;
-  /* The ::after blob below sits at right:-60px by design, which added 60px of
-     horizontal scroll to the whole page at every width. `clip` (not `hidden`)
-     trims the decoration without turning this into a scroll container, so
-     sticky/absolute descendants keep behaving. */
-  overflow-x: clip;
 }
 /* Soft blurred color blobs behind the glass cards — gives the frosted-glass
    effect something to actually show through, since the page itself is a
    flat color. Contained to this stacking context via position:relative
-   above + z-index here, so they can't bleed behind the nav/footer. */
+   above + z-index here, so they can't bleed behind the nav/footer.
+
+   Both blobs sit fully INSIDE the wizard's box horizontally (left/right: 0
+   rather than the -40px/-60px they used to use). That matters: hanging them
+   over the edge added 60px of horizontal scroll to every page width, and the
+   `overflow-x: clip` added to stop it then sliced the 60px blur off square,
+   leaving a hard vertical seam down the full height of the page at the
+   wizard's right edge. Keeping them inside means neither the scrollbar nor
+   the clip is needed, and the blur stays soft all the way out. */
 .wizard::before,
 .wizard::after {
   content: '';
@@ -27,13 +30,13 @@
   width: 260px; height: 260px;
   background: var(--blush);
   opacity: 0.65;
-  top: -20px; left: -40px;
+  top: -20px; left: 0;
 }
 .wizard::after {
   width: 280px; height: 280px;
   background: var(--gold);
   opacity: 0.35;
-  top: 420px; right: -60px;
+  top: 420px; right: 0;
 }
 .wizard-steps, .wizard-panel { position: relative; z-index: 1; }
 
@@ -68,13 +71,13 @@
 
 /* .wizard-panel is a <section>, which picks up the generic mobile
    "clear the fixed nav" section padding-top (5.5rem) meant for standalone
-   page sections — but these are nested step-panels well below the page
+   page sections - but these are nested step-panels well below the page
    header already, so that padding just reads as a huge dead gap.
 
    background:none matters as much as the padding: the same generic rule
    sets background:var(--cream), and because the panel is inset by the
    wizard's 20px side padding that opaque block cut a hard vertical seam
-   straight through the soft blurred blobs behind it — visible as a crisp
+   straight through the soft blurred blobs behind it - visible as a crisp
    edge down both sides of the step content. Transparent lets the blobs
    run behind the panel the way they were meant to. */
 .wizard-panel { display: none; padding: 0; background: none; }
@@ -99,15 +102,16 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
+  align-items: stretch;
 }
-@media (min-width: 600px) {
+@media (min-width: 820px) {
   .option-grid { grid-template-columns: 1fr 1fr; }
 }
 .option-card {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 0.9rem;
+  padding: 0.95rem 1rem;
   border: 1px solid rgba(255,255,255,0.5);
   border-radius: 16px;
   background: rgba(255,255,255,0.38);
@@ -120,6 +124,8 @@
   transition: all 0.2s ease;
 }
 .option-card:hover { border-color: var(--taupe); transform: translateY(-2px); }
+.option-card.external .option-card-check { color: var(--taupe); opacity: 0.85; }
+.option-card.external.selected { border-color: var(--taupe); }
 .option-card.selected {
   border-color: var(--taupe);
   background: rgba(255,255,255,0.58);
@@ -133,10 +139,51 @@
   flex-shrink: 0;
   background: var(--warmgrey);
 }
-.option-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.option-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.option-card-img-empty {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(140deg, var(--linen), var(--warmgrey));
+  color: var(--greige);
+  font-size: 0.85rem;
+}
 .option-card-body { flex: 1; min-width: 0; }
-.option-card-title { font-size: 0.9rem; font-weight: 500; color: var(--espresso); }
-.option-card-meta { font-size: 0.72rem; color: var(--greige); margin-top: 0.2rem; }
+.option-card-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--espresso);
+  line-height: 1.35;
+}
+/* Duration and price on their own line, separated by a dot that's drawn
+   rather than typed - so it disappears cleanly when the price wraps below
+   the duration on a narrow card. */
+.option-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.5rem;
+  margin-top: 0.3rem;
+}
+/* The add-on prompt goes on its own line under the price, so it reads as an
+   instruction rather than a third statistic in the same row. */
+.option-card-meta > .option-card-addcount { flex-basis: 100%; }
+.option-card-dur { font-size: 0.72rem; color: var(--greige); }
+.option-card-price {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--taupe);
+  position: relative;
+  padding-left: 0.65rem;
+}
+.option-card-price::before {
+  content: '';
+  position: absolute; left: 0; top: 50%;
+  width: 3px; height: 3px; border-radius: 50%;
+  background: var(--warmgrey);
+  transform: translateY(-50%);
+}
+.option-card-meta > .option-card-dur:only-child { font-size: 0.74rem; }
 .option-card-check {
   width: 20px; height: 20px; border-radius: 50%;
   border: 1px solid var(--warmgrey); flex-shrink: 0;
@@ -149,9 +196,12 @@
 
 /* Services with an add-on/combo option are wrapped in .option-card-wrap so
    the toggle can sit inside the same visual card, below the clickable
-   selection button — the wrap now owns the card's border/background, and
+   selection button - the wrap now owns the card's border/background, and
    the nested .option-card becomes a plain unstyled clickable region. */
 .option-card-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   border: 1px solid rgba(255,255,255,0.5);
   border-radius: 16px;
   background: rgba(255,255,255,0.38);
@@ -221,6 +271,7 @@
 .option-card-addon-price { color: var(--taupe); font-weight: 600; white-space: nowrap; }
 
 .option-card-combos {
+  margin-top: auto;
   padding: 0.8rem 1rem;
   border-top: 1px dashed var(--warmgrey);
 }
@@ -232,17 +283,24 @@
   color: var(--greige);
   margin-bottom: 0.5rem;
 }
+/* A responsive grid rather than free-flowing flex: chips end up the same
+   width, so the strip reads as a set of options instead of a ragged line
+   that re-flows differently on every card. The minimum is set by the longest
+   label a chip carries - "Extensions (100-150g)" over "Price on
+   consultation" - because anything narrower breaks those across lines. */
 .combo-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+  gap: 0.45rem;
 }
 .combo-chip {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.2rem;
-  padding: 0.55rem 0.85rem;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 46px;
+  padding: 0.5rem 0.7rem;
   border-radius: 12px;
   border: 1px solid var(--warmgrey);
   background: rgba(255,255,255,0.5);
@@ -251,8 +309,15 @@
   transition: all 0.2s ease;
 }
 .combo-chip:hover { border-color: var(--taupe); }
-.combo-chip-name { font-size: 0.74rem; font-weight: 500; color: var(--espresso); }
-.combo-chip-price { font-size: 0.64rem; color: var(--greige); }
+.combo-chip-name {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--espresso);
+  line-height: 1.25;
+}
+.combo-chip-price { font-size: 0.64rem; color: var(--greige); line-height: 1.25; }
+/* Long names shouldn't push a chip wider than its column. */
+.combo-chip-name, .combo-chip-price { max-width: 100%; overflow-wrap: anywhere; }
 .combo-chip.active {
   border-color: var(--taupe);
   background: var(--taupe);
@@ -467,6 +532,43 @@
 .calendar-day:disabled { color: var(--warmgrey); cursor: not-allowed; }
 .calendar-day.selected { background: var(--taupe); color: #fff; }
 .calendar-day-blank { cursor: default; }
+
+/* A day the salon works but has sold out. Deliberately distinct from a plain
+   disabled day (a Sunday, or a date out of range): those are simply not
+   working days and get no mark, while this one is worth telling the client
+   about so they stop tapping it. The number stays legible - struck through
+   rather than faded away - because "the 14th is gone" is the information. */
+/* .calendar-day:disabled sets --warmgrey and out-specifies a plain class, so
+   this needs the extra .calendar-day to win. Without it the date washes out
+   to near-invisible and the client can see that SOME day is full but not
+   which one - which is the whole point of marking it. */
+/* A sold-out day has to read as unavailable at a glance, and has to look
+   different from BOTH an open day and a past one. A past day is just pale
+   text; an open day is dark text on nothing. So this gets its own tinted
+   cell plus a strike through the number - three states, three appearances.
+   The date stays legible on purpose: "the 14th is gone" is the information. */
+.calendar-day.calendar-day-full,
+.calendar-day.calendar-day-full:disabled {
+  position: relative;
+  color: var(--greige);
+  background: rgba(181, 168, 154, 0.13);
+  font-weight: 500;
+}
+.calendar-day-full::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--taupe);
+  transform: translate(-50%, -50%);
+}
+/* Hover still does nothing (the button is disabled) but the cursor and the
+   tooltip both say why. */
+.calendar-day-full:disabled { cursor: not-allowed; }
+
 .slot-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -546,6 +648,18 @@
 .summary-row:last-child { border-bottom: none; }
 .summary-row span:first-child { color: var(--greige); }
 .summary-row span:last-child { color: var(--espresso); font-weight: 500; text-align: right; }
+
+/* Service price + every selected add-on, added up. Set apart from the rows
+   above it because it's the one number the client is actually agreeing to. */
+.summary-row-total {
+  margin-top: 0.35rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--warmgrey);
+  border-bottom: none;
+  font-size: 0.92rem;
+}
+.summary-row-total span:first-child { color: var(--espresso); font-weight: 500; }
+.summary-row-total span:last-child { color: var(--espresso); font-weight: 700; }
 
 /* Nav buttons */
 .wizard-nav {
@@ -630,4 +744,687 @@
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 1.5rem;
+}
+
+/* ── PHONE ── */
+/* Below 480px the cards are the whole screen, so the photo disc shrinks and
+   the type steps down a touch to keep long service names on two lines
+   rather than four. */
+@media (max-width: 479px) {
+  .option-card { gap: 0.75rem; padding: 0.85rem 0.9rem; }
+  .option-card-img { width: 44px; height: 44px; }
+  .option-card-title { font-size: 0.9rem; }
+  .option-card-combos { padding: 0.7rem 0.9rem; }
+  /* Two per row on a phone: three would put every label back on two lines. */
+  .combo-chip-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wizard { padding-left: 0.9rem; padding-right: 0.9rem; }
+  .wizard-panel-title { font-size: 1.35rem; margin-bottom: 1.35rem; }
+}
+
+/* ── STICKY CONFIRM BAR ── */
+.wizard-sticky {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: min(760px, calc(100% - 1.6rem));
+  margin-bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0.75rem 0.7rem 1.1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.6);
+  background: rgba(253,250,245,0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 12px 34px rgba(44,36,32,0.14);
+  animation: stickyRise 0.22s ease;
+}
+.wizard-sticky[hidden] { display: none; }
+@keyframes stickyRise {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.wizard-sticky-info { flex: 1; min-width: 0; }
+.wizard-sticky-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--espresso);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wizard-sticky-meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--greige);
+}
+/* .wizard-btn sets a display value, which beats the [hidden] attribute's
+   default display:none - so whichever of the two buttons is meant to be
+   hidden was still painting a stub. */
+.wizard-sticky-btn[hidden] { display: none; }
+.wizard-sticky-btn {
+  flex-shrink: 0;
+  margin-left: 0;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.78rem;
+}
+@media (max-width: 479px) {
+  .wizard-sticky { gap: 0.7rem; padding: 0.6rem 0.6rem 0.6rem 0.9rem; }
+  .wizard-sticky-btn { padding: 0.65rem 1.05rem; font-size: 0.74rem; }
+  .wizard-sticky-name { font-size: 0.8rem; }
+}
+
+/* #back-top is fixed bottom-left at z-index 9500 — the same corner the bar
+   occupies. Raise it above the bar while the bar is up, rather than hiding a
+   control the client may still want on a long list. The selector is scoped to
+   the body class so it only applies while the bar is actually showing. */
+body.has-sticky-bar #back-top.visible {
+  transform: translateY(-4.6rem);
+}
+
+
+/* ── DEAD-END HELP ──
+   Shown under the calendar when the chosen stylist has nothing on the day
+   picked: who else is free, or when that stylist is next open. Spans the
+   slot grid, which is otherwise a row of time buttons. */
+.slot-alt {
+  grid-column: 1 / -1;
+  margin-top: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--warmgrey);
+  background: rgba(255,255,255,0.5);
+  text-align: center;
+}
+.slot-alt-lead {
+  font-size: 0.8rem;
+  color: var(--espresso);
+  margin-bottom: 0.7rem;
+}
+.slot-alt-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.slot-alt-btn {
+  padding: 0.55rem 1.1rem;
+  border-radius: 50px;
+  border: 1px solid var(--taupe);
+  background: var(--taupe);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.slot-alt-btn:hover { background: var(--espresso); border-color: var(--espresso); }
+.slot-alt-link {
+  display: inline-block;
+  margin-top: 0.7rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--taupe);
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.slot-alt-link:hover { color: var(--espresso); }
+
+
+/* ── WIDE SCREENS ──
+   The wizard was pinned to 780px at every size, which on a 1900px monitor
+   left the service list as a narrow ribbon down the middle with acres of
+   empty page either side. Widen the shell on large screens and let the card
+   grid use it - but only the steps that are actually a grid. A contact form
+   or a summary read worse the wider they get, so those stay narrow and
+   centred inside the wider shell. */
+@media (min-width: 1100px) {
+  .wizard { max-width: 1080px; }
+  /* Blobs are positioned against the wizard box, so they grow with it. */
+  .wizard::before { width: 320px; height: 320px; }
+  .wizard::after { width: 340px; height: 340px; }
+}
+@media (min-width: 1240px) {
+  .wizard { max-width: 1180px; }
+  .option-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Steps whose content is prose, fields or a single card don't benefit from
+   the extra width - measure matters more than fill. */
+@media (min-width: 1100px) {
+  /* The calendar is capped much tighter further down (a month reads as a
+     block, not as seven distant columns), so it is deliberately not listed
+     here — this 760px would win on specificity and stretch it back out. */
+  .wizard-panel[data-panel="3"] > .slot-grid { max-width: 760px; margin-left: auto; margin-right: auto; }
+  .wizard-panel[data-panel="4"] .form-row,
+  .wizard-panel[data-panel="5"] .summary-card { max-width: 620px; margin-left: auto; margin-right: auto; }
+  .wizard-panel[data-panel="2"] .wizard-nav,
+  .wizard-panel[data-panel="3"] .wizard-nav,
+  .wizard-panel[data-panel="4"] .wizard-nav,
+  .wizard-panel[data-panel="5"] .wizard-nav { max-width: 760px; margin-left: auto; margin-right: auto; }
+  /* The salon has two or three stylists, never twenty — a grid as wide as the
+     service list leaves them stranded beside an empty column. */
+  .wizard-panel[data-panel="2"] > .option-grid {
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .wizard-success, .wizard-unavailable { max-width: 620px; margin-left: auto; margin-right: auto; }
+  /* The confirm bar mirrors step 1's Next button, so it should track the
+     shell it belongs to rather than staying at its phone width. */
+  .wizard-sticky { width: min(1080px, calc(100% - 1.6rem)); }
+}
+@media (min-width: 1240px) {
+  .wizard-sticky { width: min(1180px, calc(100% - 1.6rem)); }
+}
+
+
+
+/* Shown above the stylist list when an add-on has narrowed it — otherwise a
+   single card appears with no hint as to why the others went. */
+.staff-narrowed {
+  grid-column: 1 / -1;
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  color: var(--greige);
+  text-align: center;
+}
+
+
+/* ── PHONE / SMALL TABLET ──
+   Between 480 and 820px the service list is still one column, so each card is
+   nearly the full screen and its chips have room for two per row rather than
+   the three or four the auto-fit grid would otherwise squeeze in. */
+@media (min-width: 480px) and (max-width: 819px) {
+  .combo-chip-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+
+/* ── NEEDS-CONFIRMING NOTICE ──
+   Red enough to stop someone assuming their extensions slot is held, soft
+   enough to sit inside a cream page without shouting. A warm terracotta on a
+   pale wash rather than a browser-error red. */
+.notice-pending {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(166, 74, 58, 0.28);
+  background: rgba(166, 74, 58, 0.07);
+  color: #7d3a2e;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  text-align: left;
+}
+.notice-pending[hidden] { display: none; }
+.notice-pending i {
+  color: #a64a3a;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+.notice-pending strong { color: #8c3b2c; font-weight: 600; }
+.notice-pending .extensions-notice-link {
+  display: block;
+  margin-top: 0.45rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #a64a3a;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.notice-pending .extensions-notice-link:hover { color: #8c3b2c; }
+
+
+/* ── PHONE: COLLAPSE THE ADD-ONS UNTIL A SERVICE IS CHOSEN ──
+   Every card was carrying its full chip strip, so twenty-two services meant
+   twenty-two blocks a few hundred pixels tall and a very long scroll to find
+   anything. The chips only matter once a service is actually picked, so on a
+   phone they stay folded away until then and open on the selected card. The
+   list becomes scannable rows; the detail arrives when it's relevant. */
+@media (max-width: 819px) {
+  .option-card-wrap:not(.selected) .option-card-combos { display: none; }
+
+  /* With the chips gone the card is a row, so it can be tighter. */
+  .option-card { padding: 0.75rem 0.85rem; gap: 0.7rem; }
+  .option-card-img { width: 40px; height: 40px; }
+  .option-card-title { font-size: 0.88rem; }
+  .option-card-meta { margin-top: 0.2rem; }
+  .option-grid { gap: 0.6rem; }
+  .category-group { margin-bottom: 1.35rem; }
+
+  /* A quiet marker that a chosen card has more inside it. */
+  .option-card-wrap.selected .option-card-combos { padding-top: 0.75rem; }
+}
+
+/* Below 480 the same, a shade tighter again. */
+@media (max-width: 479px) {
+  .option-card { padding: 0.7rem 0.75rem; gap: 0.6rem; }
+  .option-card-img { width: 38px; height: 38px; }
+  .option-card-title { font-size: 0.85rem; }
+  .option-card-dur { font-size: 0.68rem; }
+  .option-card-price { font-size: 0.74rem; }
+  .wizard-sticky { padding: 0.55rem 0.55rem 0.55rem 0.85rem; }
+  .wizard-sticky-name { font-size: 0.78rem; }
+  .wizard-sticky-meta { font-size: 0.68rem; }
+}
+
+/* Tells a folded card it has options without opening them. Hidden once the
+   card is selected, because the chips themselves are then on screen. */
+.option-card-addcount {
+  display: inline-block;
+  margin-top: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--taupe);
+  text-decoration: underline;
+  text-decoration-color: var(--warmgrey);
+  text-underline-offset: 3px;
+}
+.option-card-wrap.selected .option-card-addcount { display: none; }
+@media (min-width: 820px) { .option-card-addcount { display: none; } }
+
+/* ── CANCELLATION POLICY TICK-BOX ──
+   Deliberately not styled as fine print. She has to read it for it to mean
+   anything, so it sits at full body size next to the Confirm button. */
+.terms-check {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  margin: 1.2rem 0 0.4rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--warmgrey, #e9e3db);
+  border-radius: 10px;
+  background: var(--linen, #fdfaf5);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  cursor: pointer;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.terms-check input {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  accent-color: var(--gold, #C9A96E);
+  cursor: pointer;
+}
+.terms-check:hover { border-color: var(--taupe, #B5A89A); }
+.terms-check:focus-within { outline: 2px solid var(--gold, #C9A96E); outline-offset: 2px; }
+.terms-check-missing {
+  border-color: #C25E4B;
+  background: rgba(194, 94, 75, 0.06);
+  animation: terms-nudge 0.35s ease;
+}
+@keyframes terms-nudge {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .terms-check-missing { animation: none; }
+}
+
+/* The earliest bookable day, when the chosen one is reserved for colour work.
+   This is the answer to the client's question, not a footnote, so it is a real
+   button rather than a link buried under the alternatives. */
+.slot-alt-primary {
+  display: block;
+  width: 100%;
+  margin: 0.9rem 0 0.2rem;
+  padding: 0.85rem 1rem;
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: center;
+  color: var(--espresso, #3f3632);
+  background: var(--linen, #fdfaf5);
+  border: 1px solid var(--gold, #C9A96E);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.slot-alt-primary strong { font-weight: 600; }
+.slot-alt-primary:hover { background: var(--blush, #ebe2d6); }
+.slot-alt-primary:active { transform: translateY(1px); }
+.slot-alt-primary:focus-visible { outline: 2px solid var(--gold, #C9A96E); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .slot-alt-primary { transition: none; }
+}
+
+/* ── CATEGORY TABS ──
+   Replaced the circular photo beside each heading. TO GO BACK TO CIRCLES:
+   restore .category-group-head / .category-group-img (git history has them),
+   put the head wrapper back in booking.js, and delete this block.
+
+   A scrolling row rather than a dropdown, so every category is visible without
+   a tap - a client who never thought to look for bridal work can see the salon
+   does it. */
+.category-tabs {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.2rem 0.1rem 0.6rem;
+  margin-bottom: 1.4rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+.category-tabs::-webkit-scrollbar { display: none; }
+.category-tab {
+  flex: none;
+  scroll-snap-align: start;
+  font: inherit;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--warmgrey);
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--greige);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.category-tab:hover { color: var(--espresso); border-color: var(--taupe); }
+.category-tab.active {
+  background: var(--espresso);
+  border-color: var(--espresso);
+  color: var(--linen);
+}
+.category-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .category-tab { transition: none; }
+}
+@media (max-width: 560px) {
+  .category-tab { font-size: 0.78rem; padding: 0.45rem 0.8rem; }
+}
+
+/* Cards are text only. */
+.option-card { align-items: center; }
+.option-card-body { flex: 1; min-width: 0; }
+.option-card-check { align-self: center; }
+
+/* The category's photo inside its tab. Small and circular so the row still
+   reads as tabs rather than a gallery. */
+.category-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.45rem;
+}
+.category-tab-img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: none;
+  background: var(--warmgrey);
+}
+.category-tab-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* "All categories" has no photo, so it keeps even padding. */
+.category-tab[data-value="all"] { padding-left: 0.95rem; }
+@media (max-width: 560px) {
+  .category-tab-img { width: 22px; height: 22px; }
+}
+
+/* ── WHAT THE EXTENSIONS ACTUALLY ARE ──
+   Informational, not a warning, so it is gold rather than terracotta and sits
+   apart from the red confirmation notice it appears alongside. */
+.notice-quality {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  margin: 0.7rem 0 0.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(201, 169, 110, 0.35);
+  border-left: 2px solid var(--gold, #C9A96E);
+  border-radius: 10px;
+  background: rgba(201, 169, 110, 0.07);
+  font-size: 0.83rem;
+  line-height: 1.6;
+  color: var(--espresso, #3f3632);
+}
+.notice-quality i { color: var(--gold, #C9A96E); margin-top: 0.15rem; flex: none; }
+.notice-quality strong { font-weight: 600; }
+
+/* ── CATEGORY HEADING PHOTO ──
+   Circular, beside the group heading. The same image appears smaller inside
+   that category's tab above, so the tab and the section it jumps to read as
+   the same thing. */
+.category-group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.9rem;
+}
+.category-group-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--warmgrey);
+  box-shadow: 0 6px 18px rgba(44, 36, 32, 0.10);
+}
+.category-group-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.category-group-head .category-group-title { margin-bottom: 0; }
+@media (max-width: 560px) {
+  .category-group-img { width: 52px; height: 52px; }
+  .category-group-head { gap: 0.7rem; }
+}
+
+/* ── THE CANCELLATION TICK-BOX ──
+   Warm red rather than the page's beige, because this is the one thing on the
+   step that carries a consequence - at beige it read as decoration and people
+   skimmed past it. Round to match the tick on the service and stylist cards,
+   so "chosen" looks the same everywhere on the site. */
+.terms-check {
+  border-color: rgba(194, 94, 75, 0.35);
+  background: rgba(194, 94, 75, 0.05);
+  color: var(--espresso, #3f3632);
+}
+.terms-check:hover { border-color: rgba(194, 94, 75, 0.6); }
+.terms-check input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.1rem;
+  border: 1.5px solid rgba(194, 94, 75, 0.55);
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-content: center;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.terms-check input[type="checkbox"]::after {
+  content: '';
+  width: 0.62rem;
+  height: 0.34rem;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translate(1px, -1px);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.terms-check input[type="checkbox"]:checked {
+  background: #C25E4B;
+  border-color: #C25E4B;
+}
+.terms-check input[type="checkbox"]:checked::after { opacity: 1; }
+.terms-check input[type="checkbox"]:focus-visible {
+  outline: 2px solid #C25E4B;
+  outline-offset: 2px;
+}
+.terms-check-missing {
+  border-color: #C25E4B;
+  background: rgba(194, 94, 75, 0.12);
+}
+@media (prefers-reduced-motion: reduce) {
+  .terms-check input[type="checkbox"],
+  .terms-check input[type="checkbox"]::after { transition: none; }
+}
+
+/* ── ADD-ONS OPEN ONLY ON THE CARD YOU TAP ──
+   This used to apply on phones alone. It belongs at every width: with the
+   chips always open, one card in a row carries five of them and its
+   neighbours carry two, so the row stretches to the tallest and the short
+   cards sit in a pool of empty space. Folded away, the list is a set of even
+   rows you can scan; the add-ons arrive on the card you actually chose, which
+   is the only moment they mean anything. */
+.option-card-wrap:not(.selected) .option-card-combos { display: none; }
+.option-card-wrap.selected .option-card-combos { padding-top: 0.75rem; }
+
+/* ── TABS ON A WIDE SCREEN, DROPDOWN ON A PHONE ──
+   A scrolling tab row only works when most of it is visible. On a phone it
+   shows two and a half categories and hides the rest off the right edge, which
+   is worse than a dropdown that lists them all. Same photos either way. */
+#categoryDropdown { display: none; }
+@media (max-width: 819px) {
+  .category-tabs { display: none; }
+  #categoryDropdown { display: block; }
+}
+.custom-select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: left;
+}
+.custom-select-option .category-tab-img { width: 30px; height: 30px; }
+.custom-select-trigger .custom-select-current { text-align: left; }
+
+/* ── THE CALENDAR, TIGHTENED ──
+   It was stretching to the full width of the step, so seven narrow columns sat
+   far apart with 32px-tall cells between them. A month reads as a block, not a
+   grid of distant numbers, so the widget is capped and centred and the cells
+   are square. */
+.calendar-widget,
+.wizard-panel[data-panel="3"] > .calendar-widget {
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1rem 1rem 1.1rem;
+  border-radius: 18px;
+}
+.calendar-header { margin-bottom: 0.85rem; }
+.calendar-month-label { font-size: 1.08rem; letter-spacing: 0.01em; }
+.calendar-nav-btn { width: 28px; height: 28px; font-size: 0.7rem; }
+.calendar-weekdays { gap: 0.25rem; margin-bottom: 0.35rem; }
+.calendar-weekdays span { font-size: 0.58rem; letter-spacing: 0.08em; }
+.calendar-grid { gap: 0.25rem; }
+.calendar-day {
+  /* Square, so the month keeps its shape at any width. */
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.calendar-day.selected {
+  /* A filled circle, the way a date is marked on paper. */
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(181, 168, 154, 0.45);
+}
+.calendar-day:hover:not(:disabled) { border-radius: 50%; }
+
+/* The slot buttons underneath belong to the calendar above them, so they get
+   the same width and centring rather than running the full step. */
+#slotGrid {
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 560px) {
+  .calendar-widget,
+  .wizard-panel[data-panel="3"] > .calendar-widget { max-width: 20rem; padding: 0.85rem; }
+  .calendar-day { font-size: 0.78rem; }
+  #slotGrid { max-width: 20rem; }
+}
+
+/* ── ADD-ON DIALOG (wide screens only) ── */
+.addon-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(44, 36, 32, 0.32);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.addon-modal[hidden] { display: none; }
+body.addon-modal-open { overflow: hidden; }
+.addon-modal-panel {
+  position: relative;
+  width: min(30rem, 100%);
+  max-height: 82vh;
+  overflow-y: auto;
+  background: var(--linen, #fdfaf5);
+  border: 1px solid var(--warmgrey, #e9e3db);
+  border-radius: 18px;
+  padding: 1.5rem 1.5rem 1.2rem;
+  box-shadow: 0 24px 60px rgba(44, 36, 32, 0.22);
+}
+.addon-modal-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.9rem;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--greige, #9f948e);
+  cursor: pointer;
+}
+.addon-modal-close:hover { color: var(--espresso, #3f3632); }
+.addon-modal-service {
+  font-family: var(--font-display, serif);
+  font-size: 1.3rem;
+  color: var(--espresso, #3f3632);
+  margin-bottom: 0.15rem;
+  padding-right: 1.5rem;
+}
+/* The chips arrive already styled; inside the dialog they just need room. */
+.addon-modal-body .option-card-combos {
+  display: block !important;
+  border: none;
+  padding: 0.6rem 0 0;
+  background: none;
+}
+.addon-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--warmgrey, #e9e3db);
+}
+.addon-modal-total { font-size: 0.82rem; color: var(--greige, #9f948e); }
+.addon-modal-foot .wizard-btn { margin: 0; }
+
+/* On a wide screen the chips live in the dialog, so the card never expands and
+   the grid never shifts. Below the breakpoint the dialog is unused and the
+   phone behaviour (open on the tapped card) takes over. */
+@media (min-width: 820px) {
+  .option-card-wrap.selected .option-card-combos { display: none; }
 }

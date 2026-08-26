@@ -6,9 +6,15 @@ import {
   fetchAllStaffAdmin, upsertStaffAdmin,
   fetchBookingsAdmin, updateBookingStatusAdmin, rescheduleBookingAdmin, completeBookingAdmin,
   upsertBusinessHoursAdmin, addBlockedSlotAdmin, removeBlockedSlotAdmin,
-  fetchActivityLogAdmin, setPinAdmin, fetchBusinessHours, uploadOwnerImage, bookAppointment,
+  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail,
+  exportAccounting, exportClients, fetchDailyTotals,
+  addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
+  markExtensionsNotified, setExtensionOrderStatus, fetchExtensionHistory,
+  fetchExtensionOrdersAtRisk, sendExtensionsArrived,
+  fetchBusinessHours, fetchStaffHoursOverrides, uploadOwnerImage, bookAppointment,
   fetchRevenueAdmin, fetchStaffServicesAdmin, setStaffServicesAdmin,
   fetchStaffHoursOverridesAdmin, upsertStaffHoursOverrideAdmin, deleteStaffHoursOverrideAdmin,
+  fetchAddonsAdmin, upsertAddonAdmin, deleteAddonAdmin, fetchServiceAddonsAdmin, setAddonServicesAdmin,
 } from '/js/supabase-client.js';
 
 const PIN_KEY = 'ss_staff_pin';
@@ -22,7 +28,21 @@ const PX_PER_MIN = PX_PER_HOUR / 60;
 const HEADER_OFFSET_PX = 40;
 const GRID_DEFAULT_START = 11 * 60; // 11:00, matches business_hours
 const GRID_DEFAULT_END = 17 * 60 + 30; // 17:30
-const DAYS_AHEAD = 13; // day-strip shows today + 13 more = 2 weeks
+// How far the day strip runs. Two weeks was set when the schedule was capped
+// at 1100px; on a wide monitor that left the strip half empty while the owner
+// swiped to reach next week. It now fills whatever width there is, keeping
+// cells wide enough to read, and still falls back to a fortnight on a laptop.
+const DAY_CELL_TARGET_PX = 74;
+const DAYS_AHEAD_MIN = 13;   // today + 13 = two weeks
+const DAYS_AHEAD_MAX = 34;   // today + 34 = five weeks; beyond that cells crowd
+let DAYS_AHEAD = DAYS_AHEAD_MIN;
+
+function computeDaysAhead() {
+  const el = document.getElementById('dayStrip');
+  const width = (el && el.clientWidth) || (window.innerWidth - 180);
+  const fits = Math.floor(width / DAY_CELL_TARGET_PX) - 1;
+  return Math.max(DAYS_AHEAD_MIN, Math.min(DAYS_AHEAD_MAX, fits));
+}
 const HISTORY_DAYS_BACK = 30;
 
 function toDateStr(d) {
@@ -77,10 +97,11 @@ function positionPopoverNear(triggerEl, popoverEl) {
 // Supabase is paused — fallback preview data mirrors the real seed/schema.
 const FALLBACK_PIN = '1234';
 const FALLBACK_OWNER_PIN = '9999';
+// Only bookable stylists get a column — Taniya books Keratin/Hair Botox
+// herself over Instagram now, and Heba/Pati never took appointments here.
 const FALLBACK_STAFF = [
-  { id: 'staff-hassan', name: 'Hassan K.', allow_overlap_booking: true },
-  { id: 'staff-kani', name: 'Kani M.', allow_overlap_booking: false },
-  { id: 'staff-taniya', name: 'Taniya S.', allow_overlap_booking: false },
+  { id: 'staff-hassan', name: 'Hassan K.', allow_overlap_booking: true, allow_manual_overlap: true },
+  { id: 'staff-kani', name: 'Kani M.', allow_overlap_booking: false, allow_manual_overlap: true },
 ];
 // Hassan's Balayage overlap pairing (mirrors book_appointment/booking.js): an
 // 11:00 or 15:00 Balayage always visually reserves the paired 13:00/16:30
@@ -89,63 +110,68 @@ const FALLBACK_STAFF = [
 const OVERLAP_ANCHORS = { 660: 780, 900: 990 };
 const BALAYAGE_DURATION = 240;
 const FALLBACK_SERVICES = [
-  { id: 'svc-balayage', name: 'Highlights / Balayage', category: 'Color Services', color: '#C9A96E' },
-  { id: 'svc-onecolor', name: 'One Color (All Hair)', category: 'Color Services', color: '#D68C3E' },
-  { id: 'svc-toner', name: 'Toner', category: 'Color Services', color: '#EAC17E' },
-  { id: 'svc-haircut-blowdry', name: 'Haircut + Blowdry', category: 'Haircuts & Styling', color: '#3D7A94' },
-  { id: 'svc-keratin', name: 'Keratin Treatment', category: 'Keratin & Hair Treatments', color: '#6FAF7A' },
+  { id: 'svc-balayage', name: 'Balayage / Highlights', category: 'Balayage & Highlights', color: '#C9A96E' },
+  { id: 'svc-allover', name: 'All-Over Color', category: 'Color', color: '#D68C3E' },
+  { id: 'svc-toner', name: 'Toner', category: 'Color', color: '#EAC17E' },
+  { id: 'svc-cut-blowdry', name: 'Haircut + Blowdry (without wash)', category: 'Haircuts & Styling', color: '#3D7A94' },
+  { id: 'svc-blowdry', name: 'Blowdry / Light Styling', category: 'Styling', color: '#7FB3C9' },
 ];
 function fallbackWindowBookings(today) {
   return [
-    { id: 'demo-1', date: today, start_time: '11:00:00', end_time: '15:00:00', status: 'confirmed', customer_name: 'Sara Nilsen', customer_phone: '+4791234567', customer_email: 'sara.nilsen@example.com', notes: null, service_name: 'Highlights / Balayage', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
-    { id: 'demo-2', date: today, start_time: '13:00:00', end_time: '14:00:00', status: 'confirmed', customer_name: 'Mona Iqbal', customer_phone: '+4790112233', customer_email: 'mona.iqbal@example.com', notes: 'Allergic to ammonia-based products — check before use.', service_name: 'Haircut + Blowdry', service_color: '#3D7A94', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
-    { id: 'demo-3', date: today, start_time: '11:00:00', end_time: '12:30:00', status: 'confirmed', customer_name: 'Julie Berg', customer_phone: '+4793344556', customer_email: 'julie.berg@example.com', notes: null, service_name: 'One Color (All Hair)', service_color: '#D68C3E', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
-    { id: 'demo-4', date: today, start_time: '14:30:00', end_time: '17:00:00', status: 'confirmed', customer_name: 'Amina Yusuf', customer_phone: '+4795566778', customer_email: 'amina.yusuf@example.com', notes: null, service_name: 'Keratin Treatment', service_color: '#6FAF7A', staff_id: FALLBACK_STAFF[2].id, staff_name: FALLBACK_STAFF[2].name },
-    { id: 'demo-8', date: today, start_time: '15:00:00', end_time: '19:00:00', status: 'confirmed', customer_name: 'Thea Lindberg', customer_phone: '+4792233445', customer_email: 'thea.lindberg@example.com', notes: null, service_name: 'Highlights / Balayage', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
+    { id: 'demo-1', date: today, start_time: '11:00:00', end_time: '15:00:00', status: 'confirmed', customer_name: 'Sara Nilsen', customer_phone: '+4791234567', customer_email: 'sara.nilsen@example.com', notes: null, service_name: 'Balayage / Highlights', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
+    { id: 'demo-2', date: today, start_time: '13:00:00', end_time: '14:00:00', status: 'confirmed', customer_name: 'Mona Iqbal', customer_phone: '+4790112233', customer_email: 'mona.iqbal@example.com', notes: 'Allergic to ammonia-based products - check before use.', service_name: 'Haircut + Blowdry (without wash)', service_color: '#3D7A94', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
+    { id: 'demo-3', date: today, start_time: '11:00:00', end_time: '12:30:00', status: 'confirmed', customer_name: 'Julie Berg', customer_phone: '+4793344556', customer_email: 'julie.berg@example.com', notes: null, service_name: 'All-Over Color', service_color: '#D68C3E', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
+    { id: 'demo-8', date: today, start_time: '15:00:00', end_time: '19:00:00', status: 'confirmed', customer_name: 'Thea Lindberg', customer_phone: '+4792233445', customer_email: 'thea.lindberg@example.com', notes: null, service_name: 'Balayage / Highlights', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
     { id: 'demo-5', date: addDays(today, 1), start_time: '11:00:00', end_time: '11:45:00', status: 'confirmed', customer_name: 'Ida Solberg', customer_phone: '+4796677889', customer_email: 'ida.solberg@example.com', notes: null, service_name: 'Toner', service_color: '#EAC17E', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
-    { id: 'demo-6', date: addDays(today, 1), start_time: '15:00:00', end_time: '19:00:00', status: 'confirmed', customer_name: 'Camilla Haugen', customer_phone: '+4798877665', customer_email: 'camilla.haugen@example.com', notes: null, service_name: 'Highlights / Balayage', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
-    { id: 'demo-7', date: addDays(today, 3), start_time: '13:00:00', end_time: '14:00:00', status: 'confirmed', customer_name: 'Nora Eide', customer_phone: '+4799001122', customer_email: 'nora.eide@example.com', notes: null, service_name: 'Haircut + Blowdry', service_color: '#3D7A94', staff_id: FALLBACK_STAFF[2].id, staff_name: FALLBACK_STAFF[2].name },
+    { id: 'demo-6', date: addDays(today, 1), start_time: '15:00:00', end_time: '19:00:00', status: 'confirmed', customer_name: 'Camilla Haugen', customer_phone: '+4798877665', customer_email: 'camilla.haugen@example.com', notes: null, service_name: 'Balayage / Highlights', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
+    { id: 'demo-7', date: addDays(today, 3), start_time: '13:00:00', end_time: '14:00:00', status: 'confirmed', customer_name: 'Nora Eide', customer_phone: '+4799001122', customer_email: 'nora.eide@example.com', notes: null, service_name: 'Haircut + Blowdry (without wash)', service_color: '#3D7A94', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
   ];
 }
 function fallbackHistoryBookings(today) {
   return [
-    { id: 'hist-1', date: addDays(today, -2), start_time: '11:00:00', end_time: '15:00:00', status: 'completed', amount_charged: 3800, customer_name: 'Marte Fossum', customer_phone: '+4790011223', customer_email: 'marte.fossum@example.com', notes: null, service_name: 'Highlights / Balayage', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
+    { id: 'hist-1', date: addDays(today, -2), start_time: '11:00:00', end_time: '15:00:00', status: 'completed', amount_charged: 3900, customer_name: 'Marte Fossum', customer_phone: '+4790011223', customer_email: 'marte.fossum@example.com', notes: null, service_name: 'Balayage / Highlights', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
     { id: 'hist-2', date: addDays(today, -2), start_time: '13:00:00', end_time: '14:00:00', status: 'no_show', customer_name: 'Tuva Lund', customer_phone: '+4790033445', customer_email: 'tuva.lund@example.com', notes: null, service_name: 'Toner', service_color: '#EAC17E', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
-    { id: 'hist-3', date: addDays(today, -6), start_time: '11:00:00', end_time: '13:30:00', status: 'completed', amount_charged: 1400, customer_name: 'Sofie Kristiansen', customer_phone: '+4790055667', customer_email: 'sofie.kristiansen@example.com', notes: null, service_name: 'Keratin Treatment', service_color: '#6FAF7A', staff_id: FALLBACK_STAFF[2].id, staff_name: FALLBACK_STAFF[2].name },
-    { id: 'hist-4', date: addDays(today, -10), start_time: '13:00:00', end_time: '14:00:00', status: 'completed', amount_charged: 850, customer_name: 'Live Andersen', customer_phone: '+4790077889', customer_email: 'live.andersen@example.com', notes: null, service_name: 'Haircut + Blowdry', service_color: '#3D7A94', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
-    { id: 'hist-5', date: addDays(today, -14), start_time: '11:00:00', end_time: '15:00:00', status: 'completed', amount_charged: 4000, customer_name: 'Selma Braaten', customer_phone: '+4790099001', customer_email: 'selma.braaten@example.com', notes: null, service_name: 'Highlights / Balayage', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
-    { id: 'hist-6', date: addDays(today, -20), start_time: '11:00:00', end_time: '12:30:00', status: 'completed', amount_charged: 2000, customer_name: 'Frida Moen', customer_phone: '+4790011009', customer_email: 'frida.moen@example.com', notes: null, service_name: 'One Color (All Hair)', service_color: '#D68C3E', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
+    { id: 'hist-3', date: addDays(today, -6), start_time: '11:00:00', end_time: '13:30:00', status: 'completed', amount_charged: 680, customer_name: 'Sofie Kristiansen', customer_phone: '+4790055667', customer_email: 'sofie.kristiansen@example.com', notes: null, service_name: 'Blowdry / Light Styling', service_color: '#7FB3C9', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
+    { id: 'hist-4', date: addDays(today, -10), start_time: '13:00:00', end_time: '14:00:00', status: 'completed', amount_charged: 950, customer_name: 'Live Andersen', customer_phone: '+4790077889', customer_email: 'live.andersen@example.com', notes: null, service_name: 'Haircut + Blowdry (without wash)', service_color: '#3D7A94', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
+    { id: 'hist-5', date: addDays(today, -14), start_time: '11:00:00', end_time: '15:00:00', status: 'completed', amount_charged: 3750, customer_name: 'Selma Braaten', customer_phone: '+4790099001', customer_email: 'selma.braaten@example.com', notes: null, service_name: 'Balayage / Highlights', service_color: '#C9A96E', staff_id: FALLBACK_STAFF[0].id, staff_name: FALLBACK_STAFF[0].name },
+    { id: 'hist-6', date: addDays(today, -20), start_time: '11:00:00', end_time: '12:30:00', status: 'completed', amount_charged: 2100, customer_name: 'Frida Moen', customer_phone: '+4790011009', customer_email: 'frida.moen@example.com', notes: null, service_name: 'All-Over Color', service_color: '#D68C3E', staff_id: FALLBACK_STAFF[1].id, staff_name: FALLBACK_STAFF[1].name },
   ];
 }
 
-// ── OWNER PANEL fallback data ──
-// Mirrors the *real* values in supabase/migrations/0002_seed_data.sql (not
-// the abbreviated FALLBACK_SERVICES/FALLBACK_STAFF above, which only carry
-// the few fields the main schedule grid needs) — so previewing the Owner
-// Panel locally, before Supabase is restored, shows the actual salon's
-// real services/staff/prices instead of blank/undefined fields.
+// Preview-mode mirror of the seeded catalog in 0002_seed_data.sql, which is
+// itself a transcription of the owner's printed price list. It had drifted to
+// the pre-price-list names and categories, which left most category headings
+// in the Owner Panel's add-on checklist standing empty with nothing to tick.
 const FALLBACK_SERVICES_ADMIN = [
-  { id: 'svc-onecolor-roots', name: 'One Color (Roots)', name_no: 'Én Farge (Røtter)', category: 'Color Services', price_from: 1500, price_to: null, price_on_consultation: false, duration_minutes: 90, image_url: './html/Pics/Farge/Farge1.jpeg', color: '#E0A458', featured: false, active: true, sort_order: 1 },
-  { id: 'svc-onecolor-all', name: 'One Color (All Hair)', name_no: 'Én Farge (Alt Hår)', category: 'Color Services', price_from: 2000, price_to: null, price_on_consultation: false, duration_minutes: 90, image_url: './html/Pics/Farge/Farge1.jpeg', color: '#D68C3E', featured: false, active: true, sort_order: 2 },
-  { id: 'svc-balayage', name: 'Highlights / Balayage', name_no: 'Striper / Balayage', category: 'Color Services', price_from: 3500, price_to: 4000, price_on_consultation: false, duration_minutes: 240, image_url: './html/Pics/Balayage/Blayage12.jpeg', color: '#C9A96E', featured: true, active: true, sort_order: 3 },
-  { id: 'svc-toner', name: 'Toner', name_no: 'Toner', category: 'Color Services', price_from: 1000, price_to: null, price_on_consultation: false, duration_minutes: 45, image_url: './html/Pics/Farge/Farge1.jpeg', color: '#EAC17E', featured: false, active: true, sort_order: 4 },
-  { id: 'svc-blowdry', name: 'Blowdry', name_no: 'Føn', category: 'Haircuts & Styling', price_from: 600, price_to: null, price_on_consultation: false, duration_minutes: 30, image_url: './html/Pics/Styling/styling4.jpeg', color: '#7FB3C9', featured: false, active: true, sort_order: 5 },
-  { id: 'svc-haircut-blowdry', name: 'Haircut + Blowdry', name_no: 'Klipp + Føn', category: 'Haircuts & Styling', price_from: 850, price_to: null, price_on_consultation: false, duration_minutes: 60, image_url: './html/Pics/Haircut/Haircut5.jpeg', color: '#3D7A94', featured: true, active: true, sort_order: 6 },
-  { id: 'svc-extensions-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, price_to: null, price_on_consultation: false, duration_minutes: 180, image_url: './html/Pics/Extensions/cover.jpeg', color: '#A97FC9', featured: true, active: true, sort_order: 7 },
-  { id: 'svc-extensions-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_from: null, price_to: null, price_on_consultation: true, duration_minutes: 240, image_url: './html/Pics/Extensions/cover.jpeg', color: '#8C5EAD', featured: false, active: true, sort_order: 8 },
-  { id: 'svc-keratin', name: 'Keratin Treatment', name_no: 'Keratinbehandling', category: 'Keratin & Hair Treatments', price_from: null, price_to: null, price_on_consultation: true, duration_minutes: 150, image_url: './html/Pics/Treatment/cover.jpeg', color: '#6FAF7A', featured: true, active: true, sort_order: 9 },
-  { id: 'svc-hairbotox', name: 'Hair Botox', name_no: 'Hår Botox', category: 'Keratin & Hair Treatments', price_from: null, price_to: null, price_on_consultation: true, duration_minutes: 120, image_url: './html/Pics/Treatment/cover.jpeg', color: '#549260', featured: false, active: true, sort_order: 10 },
-  { id: 'svc-half-updo', name: 'Half Updo', name_no: 'Halv Oppsett', category: 'Bridal & Special Occasion', price_from: 1500, price_to: null, price_on_consultation: false, duration_minutes: 45, image_url: './html/Pics/Brides/Bride5.jpeg', color: '#D98CA8', featured: false, active: true, sort_order: 11 },
-  { id: 'svc-full-updo', name: 'Full Updo', name_no: 'Helt Oppsett', category: 'Bridal & Special Occasion', price_from: 2000, price_to: null, price_on_consultation: false, duration_minutes: 75, image_url: './html/Pics/Brides/Bride5.jpeg', color: '#C46E8C', featured: false, active: true, sort_order: 12 },
-  { id: 'svc-bridal', name: 'Bridal Hair', name_no: 'Brudehår', category: 'Bridal & Special Occasion', price_from: 4000, price_to: null, price_on_consultation: false, duration_minutes: 120, image_url: './html/Pics/Brides/Bride5.jpeg', color: '#A8506E', featured: false, active: true, sort_order: 13 },
-  { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, price_to: null, price_on_consultation: false, duration_minutes: 10, image_url: './html/Pics/Haircut/Haircut5.jpeg', color: '#9a9aa2', featured: false, active: true, sort_order: 14 },
+  { id: 'svc-balayage', name: 'Balayage / Highlights', name_no: 'Balayage / Striper', category: 'Balayage & Highlights', price_from: 3750, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Balayage/Blayage12.jpeg', color: '#C9A96E', featured: true, active: true, sort_order: 1 },
+  { id: 'svc-half-foil', name: 'Half Head Foil', name_no: 'Halv Folie', category: 'Balayage & Highlights', price_from: 3000, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Balayage/Blayage12.jpeg', color: '#D4B87E', featured: false, active: true, sort_order: 2 },
+  { id: 'svc-full-foil', name: 'Full Head Foil', name_no: 'Hel Folie', category: 'Balayage & Highlights', price_from: 3750, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Balayage/Blayage12.jpeg', color: '#BF9A5E', featured: false, active: true, sort_order: 3 },
+  { id: 'svc-root', name: 'Root Touch-Up', name_no: 'Ansatsfarge', category: 'Color', price_from: 1600, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Farge/Farge1.jpeg', color: '#E0A458', featured: false, active: true, sort_order: 4 },
+  { id: 'svc-allover', name: 'All-Over Color', name_no: 'Helfarge', category: 'Color', price_from: 2100, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Farge/Farge1.jpeg', color: '#D68C3E', featured: false, active: true, sort_order: 5 },
+  { id: 'svc-reverse', name: 'Reverse Balayage', name_no: 'Omvendt Balayage', category: 'Color', price_from: 3000, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Farge/Farge1.jpeg', color: '#A8763E', featured: false, active: true, sort_order: 6 },
+  { id: 'svc-toner', name: 'Toner', name_no: 'Toner', category: 'Color', price_from: 1250, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 60, duration_with_addons_minutes: null, image_url: './html/Pics/Farge/Farge1.jpeg', color: '#EAC17E', featured: false, active: true, sort_order: 7 },
+  { id: 'svc-cut-blowdry', name: 'Haircut + Blowdry (without wash)', name_no: 'Klipp + Føn (uten vask)', category: 'Haircuts & Styling', price_from: 950, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 60, duration_with_addons_minutes: null, image_url: './html/Pics/Haircut/Haircut5.jpeg', color: '#3D7A94', featured: true, active: true, sort_order: 8 },
+  { id: 'svc-cut-wash-blowdry', name: 'Haircut + Wash + Blowdry', name_no: 'Klipp + Vask + Føn', category: 'Haircuts & Styling', price_from: 1150, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 60, duration_with_addons_minutes: null, image_url: './html/Pics/Haircut/Haircut5.jpeg', color: '#4A88A2', featured: false, active: true, sort_order: 9 },
+  { id: 'svc-cut-wash-blowdry-styling', name: 'Haircut + Wash + Blowdry + Styling', name_no: 'Klipp + Vask + Føn + Styling', category: 'Haircuts & Styling', price_from: 1250, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 60, duration_with_addons_minutes: null, image_url: './html/Pics/Haircut/Haircut5.jpeg', color: '#5796B0', featured: false, active: true, sort_order: 10 },
+  { id: 'svc-cut-wash-mask-blowdry', name: 'Haircut + Wash + Mask + Blowdry', name_no: 'Klipp + Vask + Maske + Føn', category: 'Haircuts & Styling', price_from: 1350, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 60, duration_with_addons_minutes: null, image_url: './html/Pics/Haircut/Haircut5.jpeg', color: '#2F6B84', featured: false, active: true, sort_order: 11 },
+  { id: 'svc-blowdry', name: 'Blowdry / Light Styling', name_no: 'Føn / Lett Styling', category: 'Styling', price_from: 680, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 60, duration_with_addons_minutes: null, image_url: './html/Pics/Styling/styling4.jpeg', color: '#7FB3C9', featured: false, active: true, sort_order: 12 },
+  { id: 'svc-wash-blowdry', name: 'Wash + Blowdry', name_no: 'Vask + Føn', category: 'Styling', price_from: 750, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 60, duration_with_addons_minutes: null, image_url: './html/Pics/Styling/styling4.jpeg', color: '#8FC0D4', featured: false, active: true, sort_order: 13 },
+  { id: 'svc-wash-blowdry-wavy', name: 'Wash + Blowdry + Wavy Styling', name_no: 'Vask + Føn + Bølgestyling', category: 'Styling', price_from: 890, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 60, duration_with_addons_minutes: null, image_url: './html/Pics/Styling/styling4.jpeg', color: '#6FA5BC', featured: false, active: true, sort_order: 14 },
+  { id: 'svc-half-updo', name: 'Half Updo', name_no: 'Halv Oppsett', category: 'Special Occasions', price_from: 1500, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: null, image_url: './html/Pics/Brides/Bride5.jpeg', color: '#D98CA8', featured: false, active: true, sort_order: 15 },
+  { id: 'svc-full-updo', name: 'Full Updo', name_no: 'Helt Oppsett', category: 'Special Occasions', price_from: 2500, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: null, image_url: './html/Pics/Brides/Bride5.jpeg', color: '#C46E8C', featured: false, active: true, sort_order: 16 },
+  { id: 'svc-bridal', name: 'Bridal Hair', name_no: 'Brudehår', category: 'Bridal', price_from: 4000, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Brides/Bride5.jpeg', color: '#A8506E', featured: false, active: true, sort_order: 17 },
+  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 180, duration_with_addons_minutes: null, image_url: './html/Pics/Extensions/cover.jpeg', color: '#A97FC9', featured: true, active: true, sort_order: 18 },
+  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_from: null, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Extensions/cover.jpeg', color: '#8C5EAD', featured: false, active: true, sort_order: 19 },
+  { id: 'svc-keratin', name: 'Keratin Treatment', name_no: 'Keratinbehandling', category: 'Keratin & Hair Treatments', price_from: null, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 150, duration_with_addons_minutes: null, image_url: './html/Pics/Treatment/cover.jpeg', color: '#6FAF7A', featured: false, active: true, sort_order: 20 },
+  { id: 'svc-botox', name: 'Hair Botox', name_no: 'Hår Botox', category: 'Keratin & Hair Treatments', price_from: null, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 120, duration_with_addons_minutes: null, image_url: './html/Pics/Treatment/cover.jpeg', color: '#549260', featured: false, active: true, sort_order: 21 },
+  { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 10, duration_with_addons_minutes: null, image_url: './html/Pics/Haircut/Haircut5.jpeg', color: '#9a9aa2', featured: false, active: true, sort_order: 22 },
 ];
 const FALLBACK_STAFF_ADMIN = [
-  { id: 'staff-hassan', name: 'Hassan K.', role: 'Founder & Master Stylist', role_no: 'Grunnlegger & Mesterstylisten', bio: '25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions, with an expert touch across every discipline.', bio_no: '25+ års luksuserfaring fra Oslo og Libanon. En mester innen balayage og extensions, med et ekspertblikk på alle faglige disipliner.', photo_url: './html/Pics/Team/Hasan.jpg', instagram: 'https://www.instagram.com/studioserena.hair', bookable: true, external_booking_url: null, allow_overlap_booking: true, sort_order: 1, active: true },
-  { id: 'staff-kani', name: 'Kani M.', role: 'Senior Stylist & Makeup Artist', role_no: 'Senior Stylisten & Makeup Artist', bio: '8+ years of experience. Specialist in balayage, bridal artistry, makeup, and styling for all—including hijabis.', bio_no: '8+ års erfaring. Spesialist på balayage brudestyling, makeup, og styling for alle – inkludert hijabis.', photo_url: './html/Pics/Team/Kani.jpg', instagram: 'https://www.instagram.com/hairgasmofficial', bookable: true, external_booking_url: null, allow_overlap_booking: false, sort_order: 2, active: true },
-  { id: 'staff-taniya', name: 'Taniya S.', role: 'Keratin & Hair Treatment Specialist', role_no: 'Keratin & Hårbehandlingsspesialist', bio: 'Extensive luxury experience. A highly talented specialist in Keratin and restorative hair treatments for all clients—including hijabis.', bio_no: 'Omfattende luksuserfaring. En svært talentfull spesialist på Keratin og gjenoppbyggende hårbehandlinger for alle – inkludert hijabis.', photo_url: './html/Pics/Team/Taniya.jpg', instagram: 'https://www.instagram.com/lavellaprofessional', bookable: true, external_booking_url: null, allow_overlap_booking: false, sort_order: 3, active: true },
-  { id: 'staff-heba', name: 'Heba K.', role: 'Creative Lead & Communications', role_no: 'Creative Lead & Kommunikasjon', bio: 'Specializing in digital artistry and high-end client relations. The architect of our online world and the voice behind every appointment.', bio_no: 'Spesialist innen digital kreativitet og førsteklasses kunderelasjoner. Arkitekten bak vår digitale verden og stemmen bak hver timebestilling.', photo_url: './html/Pics/Team/Heba.jpg', instagram: 'https://www.instagram.com/studioserena.hair', bookable: false, external_booking_url: null, allow_overlap_booking: false, sort_order: 4, active: true },
-  { id: 'staff-pati', name: 'Pati', role: 'Nail Artist', role_no: 'Neglekunstner', bio: 'Our talented nail artist, specializing in gel, nail extensions, and creative nail art. Book your appointment directly through Timma.', bio_no: 'Vår talentfulle neglekunstner, spesialist på gele, neglforlengelse og kreativ neglekunst. Bestill time direkte via Timma.', photo_url: null, instagram: 'https://www.instagram.com/studio.serena.nailsbypati', bookable: false, external_booking_url: 'https://timma.no/salong/patrycja-neglebar', allow_overlap_booking: false, sort_order: 5, active: true },
+  { id: 'staff-hassan', name: 'Hassan K.', role: 'Founder & Master Stylist', role_no: 'Grunnlegger & Mesterstylisten', bio: '25+ years of luxury experience across Oslo and Lebanon. A master of balayage and extensions, with an expert touch across every discipline.', bio_no: '25+ års luksuserfaring fra Oslo og Libanon. En mester innen balayage og extensions, med et ekspertblikk på alle faglige disipliner.', photo_url: './html/Pics/Team/Hassan.jpeg', instagram: 'https://www.instagram.com/studioserena.hair', bookable: true, external_booking_url: null, allow_overlap_booking: true, allow_manual_overlap: true, sort_order: 1, active: true },
+  { id: 'staff-kani', name: 'Kani M.', role: 'Senior Stylist & Makeup Artist', role_no: 'Senior Stylisten & Makeup Artist', bio: '8+ years of experience. Specialist in balayage, bridal artistry, makeup, and styling for all-including hijabis.', bio_no: '8+ års erfaring. Spesialist på balayage brudestyling, makeup, og styling for alle – inkludert hijabis.', photo_url: './html/Pics/Team/Kani.jpeg', instagram: 'https://www.instagram.com/hairgasmofficial', bookable: true, external_booking_url: null, allow_overlap_booking: false, allow_manual_overlap: true, sort_order: 2, active: true },
+  { id: 'staff-taniya', name: 'Taniya S.', role: 'Keratin & Hair Treatment Specialist', role_no: 'Keratin & Hårbehandlingsspesialist', bio: 'Extensive luxury experience. A highly talented specialist in Keratin and restorative hair treatments for all clients-including hijabis.', bio_no: 'Omfattende luksuserfaring. En svært talentfull spesialist på Keratin og gjenoppbyggende hårbehandlinger for alle – inkludert hijabis.', photo_url: './html/Pics/Team/Taniya.jpeg', instagram: 'https://www.instagram.com/lavellaprofessional', bookable: false, external_booking_url: 'https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu', external_booking_label: 'Book with Taniya on Instagram', allow_overlap_booking: false, sort_order: 3, active: true },
+  { id: 'staff-heba', name: 'Heba K.', role: 'Creative Lead & Communications', role_no: 'Creative Lead & Kommunikasjon', bio: 'Specializing in digital artistry and high-end client relations. The architect of our online world and the voice behind every appointment.', bio_no: 'Spesialist innen digital kreativitet og førsteklasses kunderelasjoner. Arkitekten bak vår digitale verden og stemmen bak hver timebestilling.', photo_url: './html/Pics/Team/Heba.jpeg', instagram: 'https://www.instagram.com/studioserena.hair', bookable: false, external_booking_url: null, allow_overlap_booking: false, sort_order: 4, active: true },
+  { id: 'staff-pati', name: 'Pati', role: 'Nail Artist', role_no: 'Neglekunstner', bio: 'Our talented nail artist, specializing in gel, nail extensions, and creative nail art. Book your appointment directly through Timma.', bio_no: 'Vår talentfulle neglekunstner, spesialist på gele, neglforlengelse og kreativ neglekunst. Bestill time direkte via Timma.', photo_url: null, instagram: 'https://www.instagram.com/studio.serena.nailsbypati', bookable: false, external_booking_url: 'https://timma.no/salong/patrycja-neglebar', external_booking_label: 'Book on Timma', allow_overlap_booking: false, sort_order: 5, active: true },
 ];
 function fallbackActivityLog(today) {
   const now = new Date(today + 'T00:00:00');
@@ -153,7 +179,7 @@ function fallbackActivityLog(today) {
   return [
     { id: 'act-1', actor_name: 'Hassan K.', subject_name: 'Hassan K.', action: 'arrived', detail: 'Sara Nilsen · Highlights / Balayage', created_at: at(0, 11, 5) },
     { id: 'act-2', actor_name: 'Kani M.', subject_name: 'Kani M.', action: 'no_show', detail: 'Tuva Lund · Toner', created_at: at(0, 13, 15) },
-    { id: 'act-3', actor_name: 'Taniya S.', subject_name: 'Taniya S.', action: 'block_created', detail: `${today} · 14:00–14:30 · Lunch`, created_at: at(0, 9, 0) },
+    { id: 'act-3', actor_name: 'Kani M.', subject_name: 'Kani M.', action: 'block_created', detail: `${today} · 14:00–14:30 · Lunch`, created_at: at(0, 9, 0) },
     { id: 'act-4', actor_name: 'Hassan K.', subject_name: 'Kani M.', action: 'block_removed', detail: `${addDays(today, 1)} · 11:00–12:00`, created_at: at(1, 10, 30) },
     { id: 'act-5', actor_name: 'Kani M.', subject_name: 'Kani M.', action: 'arrived', detail: 'Julie Berg · One Color (All Hair)', created_at: at(1, 11, 5) },
   ];
@@ -209,6 +235,7 @@ const blockStart = document.getElementById('blockStart');
 const blockEnd = document.getElementById('blockEnd');
 const blockReason = document.getElementById('blockReason');
 const btnSaveBlock = document.getElementById('btnSaveBlock');
+const blockDateTo = document.getElementById('blockDateTo');
 const blockStatus = document.getElementById('blockStatus');
 const blockExistingList = document.getElementById('blockExistingList');
 const rescheduleModal = document.getElementById('rescheduleModal');
@@ -257,6 +284,20 @@ let isOwnerMode = false;
 let currentActorStaffId = localStorage.getItem(IDENTITY_KEY) || null;
 let currentServices = FALLBACK_SERVICES;
 let currentStaff = FALLBACK_STAFF;
+const FALLBACK_BUSINESS_HOURS_SCHED = [
+  { weekday: 0, closed: true }, { weekday: 1, open_time: '11:00', close_time: '17:30', closed: false },
+  { weekday: 2, open_time: '11:00', close_time: '17:30', closed: false }, { weekday: 3, open_time: '11:00', close_time: '17:30', closed: false },
+  { weekday: 4, open_time: '11:00', close_time: '17:30', closed: false }, { weekday: 5, open_time: '11:00', close_time: '17:30', closed: false },
+  { weekday: 6, closed: true },
+];
+// Kani works to 18:00 on Mon/Wed/Fri.
+const FALLBACK_HOURS_OVERRIDES_SCHED = [
+  { staff_id: 'staff-kani', weekday: 1, close_time: '18:00' },
+  { staff_id: 'staff-kani', weekday: 3, close_time: '18:00' },
+  { staff_id: 'staff-kani', weekday: 5, close_time: '18:00' },
+];
+let currentBusinessHours = FALLBACK_BUSINESS_HOURS_SCHED;
+let currentHoursOverrides = FALLBACK_HOURS_OVERRIDES_SCHED;
 let currentBookings = [];
 let currentBlocked = [];
 let historyBookings = null;
@@ -295,6 +336,51 @@ viewToggle.querySelectorAll('.view-toggle-btn').forEach((btn) => {
 });
 
 // ── DAY STRIP ──
+// How full a day is, as a percentage of the chairs actually available that
+// day. It used to be bookings-divided-by-six, which meant a day with one
+// four-hour colour looked emptier than a day with two blowdries — the
+// opposite of the truth. Booked minutes over open minutes is what the owner
+// is really asking when they glance down the strip.
+//
+// Minutes are clamped to the salon's open window, so a 15:00 colour running
+// to 19:00 counts the hours it actually occupies a chair, not the ones after
+// closing.
+function dayLoadPct(dateStr) {
+  const weekday = new Date(dateStr + 'T00:00:00').getDay();
+  const bookable = (currentStaff || []).filter((st) => st.bookable !== false);
+  if (!bookable.length) return null;
+
+  const dayHours = (currentBusinessHours || []).find((h) => h.weekday === weekday);
+  if (!dayHours || dayHours.closed || !dayHours.open_time || !dayHours.close_time) return null;
+  const open = timeToMinutes(dayHours.open_time);
+
+  let capacity = 0;
+  const closeFor = {};
+  bookable.forEach((st) => {
+    const override = (currentHoursOverrides || []).find((o) => o.staff_id === st.id && o.weekday === weekday);
+    const close = timeToMinutes(override ? override.close_time : dayHours.close_time);
+    closeFor[st.id] = close;
+    capacity += Math.max(0, close - open);
+  });
+  if (!capacity) return null;
+
+  let booked = 0;
+  (currentBookings || []).forEach((b) => {
+    if (b.date !== dateStr) return;
+    const close = closeFor[b.staff_id];
+    if (close == null) return; // a stylist who no longer takes bookings
+    const from = Math.max(open, timeToMinutes(b.start_time));
+    const to = Math.min(close, timeToMinutes(b.end_time));
+    booked += Math.max(0, to - from);
+  });
+
+  const pct = Math.min(100, Math.round((booked / capacity) * 100));
+  // A single appointment in a long day rounds to a sliver too thin to see, so
+  // anything above zero gets a visible minimum. The point of the bar is "is
+  // there room here?", not a precise percentage.
+  return pct > 0 ? Math.max(pct, 12) : 0;
+}
+
 function renderDayStrip() {
   const today = todayStr();
   let html = '';
@@ -306,17 +392,22 @@ function renderDayStrip() {
     const d = new Date(dateStr + 'T00:00:00');
     const dow = d.getDay();
     const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
-    const count = currentBookings.filter((b) => b.date === dateStr).length;
-    const loadPct = Math.min(100, Math.round((count / 6) * 100));
+    const loadPct = dayLoadPct(dateStr);
+    // full / busy / free drive the colour, so the strip is readable at a
+    // glance rather than needing the widths compared to each other.
+    const loadClass = loadPct == null ? '' : loadPct >= 100 ? ' full' : loadPct >= 50 ? ' busy' : ' free';
     const classes = ['day-cell'];
     if (dateStr === today) classes.push('today');
     if (dow === 0 || dow === 6) classes.push('weekend');
     if (dateStr === selectedDate) classes.push('active');
     html += `
-      <button type="button" class="${classes.join(' ')}" data-date="${dateStr}">
+      <button type="button" class="${classes.join(' ')}" data-date="${dateStr}"${
+        loadPct == null ? ' title="Closed"' : ` title="${loadPct >= 100 ? 'Fully booked' : loadPct + '% booked'}"`}>
         <span class="day-cell-weekday">${weekday}</span>
         <span class="day-cell-num">${d.getDate()}</span>
-        <span class="day-cell-bar"><span class="day-cell-bar-fill" style="width:${loadPct}%;"></span></span>
+        ${loadPct == null
+          ? '<span class="day-cell-bar day-cell-bar-closed"></span>'
+          : `<span class="day-cell-bar${loadClass}"><span class="day-cell-bar-fill" style="width:${loadPct}%;"></span></span>`}
       </button>
     `;
   }
@@ -441,7 +532,12 @@ function renderPills() {
 // (11:00/15:00) always reserves its paired half-slot (13:00/16:30) — a
 // phantom entry forces the 50/50 split even when no second client has
 // actually booked that pairing yet; phantoms are filtered out before render.
-function layoutBlocks(bookings, allowOverlap) {
+// `allowOverlap` reserves the paired half-slot beside an online-overlap
+// stylist's four-hour colour, so the lane is visibly held open before anyone
+// books it. `splitOverlaps` is the separate question of whether genuinely
+// overlapping bookings sit side by side — true for everyone now, since any
+// stylist can be double-booked by hand, and stacking them would hide one.
+function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
   const entries = bookings.map((b) => ({ b, startMin: timeToMinutes(b.start_time), endMin: timeToMinutes(b.end_time) }));
   if (allowOverlap) {
     bookings.forEach((b) => {
@@ -465,8 +561,16 @@ function layoutBlocks(bookings, allowOverlap) {
   if (current.length) clusters.push(current);
   const positioned = [];
   clusters.forEach((cluster) => {
-    const n = cluster.length;
-    cluster.forEach((e, i) => { if (e.b) positioned.push({ ...e.b, widthPct: 100 / n, leftPct: (100 / n) * i }); });
+    // minLanes holds a second lane open for stylists who may be double-booked
+    // by hand, whether or not anything overlaps yet. Without it their column
+    // renders one block at full width and there's nowhere visible to drop a
+    // second appointment — the room has to be on screen before it's used.
+    const packed = (splitOverlaps || allowOverlap) ? cluster.length : 1;
+    const n = Math.max(packed, minLanes || 1);
+    cluster.forEach((e, i) => {
+      if (!e.b) return;
+      positioned.push({ ...e.b, widthPct: 100 / n, leftPct: (100 / n) * i });
+    });
   });
   return positioned;
 }
@@ -567,7 +671,12 @@ function nowLineHtml(gridStart, gridEnd) {
 
 function columnHtml(staff, bookings, blocked, gridStart, gridEnd) {
   const gridHeight = (gridEnd - gridStart) * PX_PER_MIN;
-  const positioned = layoutBlocks(bookings, !!staff.allow_overlap_booking);
+  // Hassan and Kani can both be double-booked by hand, so both columns keep
+  // a second lane open. Anyone else gets full-width blocks.
+  const positioned = layoutBlocks(
+    bookings, !!staff.allow_overlap_booking, true,
+    staff.allow_manual_overlap ? 2 : 1,
+  );
   return `
     <div class="sched-col" data-staff="${staff.id}">
       <div class="sched-col-header">${staff.name}</div>
@@ -623,6 +732,20 @@ function renderGrid() {
   });
 }
 
+// Add-ons ride along on every booking reader (get_staff_schedule,
+// search_staff_bookings, admin_get_bookings) as a pre-joined label plus the
+// expected total computed at booking time — see migration 0005. Both are
+// null for bookings made before that migration, so every use is guarded.
+function addonsLine(b) {
+  if (!b.addons) return '';
+  return `<div class="popup-addons"><i class="fa-solid fa-plus"></i> ${b.addons}</div>`;
+}
+function expectedLabel(b) {
+  if (b.expected_total == null) return '';
+  const num = Number(b.expected_total).toLocaleString('en-US') + ' NOK';
+  return b.expected_total_is_estimate ? 'From ' + num : num;
+}
+
 // ── DETAIL POPUP ──
 function openPopup(id) {
   const b = currentBookings.find((x) => x.id === id) || (historyBookings || []).find((x) => x.id === id) || (searchResults || []).find((x) => x.id === id);
@@ -634,6 +757,8 @@ function openPopup(id) {
     <div class="popup-name">${b.customer_name}</div>
     <div class="popup-meta">${b.service_name}${b.staff_name ? ' · ' + b.staff_name : ''}</div>
     <div class="popup-meta">${fmtTime(b.start_time)} – ${fmtTime(b.end_time)}</div>
+    ${addonsLine(b)}
+    ${expectedLabel(b) ? `<div class="popup-meta popup-expected">Expected ${expectedLabel(b)}</div>` : ''}
     ${b.customer_phone ? `<a class="popup-phone" href="tel:${b.customer_phone}"><i class="fa-solid fa-phone"></i> ${b.customer_phone}</a>` : '<div style="margin-bottom:1.25rem;"></div>'}
     ${b.notes ? `<div class="popup-notes"><i class="fa-solid fa-note-sticky"></i> ${b.notes}</div>` : ''}
     ${canAct
@@ -654,6 +779,12 @@ function openPopup(id) {
       else if (!error) b.status = status;
       closePopup();
       renderGrid();
+      // Marking the no-show and writing to the client are separate decisions.
+      // A missed appointment usually has a reason behind it, and a machine
+      // emailing an invoice to someone whose morning fell apart is how a salon
+      // loses a client it could have kept. So this asks, every time, and it is
+      // easy to say no.
+      if (status === 'no_show' && !error) openNoShowNotice(b);
     });
   });
   const historyBtn = document.getElementById('popupCheckHistory');
@@ -883,12 +1014,34 @@ blockStaffSelect.addEventListener('change', renderExistingBlocks);
 btnSaveBlock.addEventListener('click', async () => {
   const staffId = blockStaffSelect.value || null; // '' option value = Whole Salon
   const date = blockDate.value;
+  const dateTo = (blockDateTo && blockDateTo.value) || '';
   const start = blockAllDay.checked ? '00:00' : blockStart.value;
   const end = blockAllDay.checked ? '23:59' : blockEnd.value;
   if (!date || !start || !end) { blockStatus.textContent = 'Fill in date, start, and end time.'; blockStatus.style.color = '#dc2626'; return; }
   if (end <= start) { blockStatus.textContent = 'End time must be after start time.'; blockStatus.style.color = '#dc2626'; return; }
+  if (dateTo && dateTo < date) { blockStatus.textContent = 'The end date is before the start date.'; blockStatus.style.color = '#dc2626'; return; }
   blockStatus.textContent = 'Saving…'; blockStatus.style.color = 'var(--sched-text-muted)';
   const reason = blockReason.value.trim();
+
+  // A holiday is a range, not a day. Filling "Until" writes one row per
+  // working day in one call, so a fortnight off is a single entry to make
+  // and every one of those days comes back struck through in the booking
+  // calendar.
+  if (dateTo && dateTo !== date) {
+    const { data, error } = await addBlockedRangeAdmin({
+      pin: currentPin, staffId, dateFrom: date, dateTo, startTime: start, endTime: end, reason,
+    });
+    if (error) { blockStatus.textContent = 'Error: ' + error.message; blockStatus.style.color = '#dc2626'; return; }
+    const madeCount = Number(data) || 0;
+    blockStatus.textContent = `✓ Blocked ${madeCount} day${madeCount === 1 ? '' : 's'}.`;
+    blockStatus.style.color = '#059669';
+    await reloadBlockedForRange(date, dateTo);
+    renderExistingBlocks();
+    renderGrid();
+    reportBlockClashes({ date, dateTo, staffId, start, end });
+    return;
+  }
+
   const { data, error } = staffId === null
     ? await addBlockedSlotAdmin({ pin: currentPin, staffId: null, date, startTime: start, endTime: end, reason })
     : await addStaffUnavailable({ pin: currentPin, staffId, date, startTime: start, endTime: end, reason, actorStaffId: currentActorStaffId });
@@ -897,7 +1050,44 @@ btnSaveBlock.addEventListener('click', async () => {
   blockStatus.textContent = '✓ Blocked.'; blockStatus.style.color = '#059669';
   renderExistingBlocks();
   renderGrid();
+  reportBlockClashes({ date, staffId, start, end });
 });
+
+// The range RPC returns only a count, so pull the rows back to keep the
+// on-screen list and the day grid in step with what was actually written.
+async function reloadBlockedForRange(from, to) {
+  const { data, error } = await fetchBlockedSlotsRange(from, to);
+  if (error || !data) return;
+  const known = new Set(currentBlocked.map((b) => b.id));
+  data.forEach((b) => { if (!known.has(b.id)) currentBlocked.push(b); });
+}
+
+// Blocking time stops NEW bookings; it deliberately doesn't touch ones
+// already made — cancelling somebody's appointment without a word would be
+// worse than the clash. So list them instead, with phone numbers, so the
+// owner can ring those clients themselves.
+async function reportBlockClashes({ date, dateTo, staffId, start, end }) {
+  const { data, error } = await fetchBookingsInRangeAdmin({
+    pin: currentPin, dateFrom: date, dateTo: dateTo || date, staffId: staffId || null,
+  });
+  if (error || !data || !data.length) return;
+
+  const toMin = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
+  const from = toMin(start);
+  const to = toMin(end);
+  const clashes = data.filter((b) => toMin(b.start_time) < to && toMin(b.end_time) > from);
+  if (!clashes.length) return;
+
+  const list = clashes.map((b) =>
+    `<div class="block-clash-row"><strong>${new Date(b.date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} ${fmtTime(b.start_time)}</strong> ${b.customer_name} · ${b.service_name}`
+    + (b.customer_phone ? ` · <a href="tel:${b.customer_phone}">${b.customer_phone}</a>` : '')
+    + `${staffId ? '' : ' · ' + b.staff_name}</div>`).join('');
+
+  blockStatus.innerHTML = `✓ Blocked - but ${clashes.length} booking${clashes.length === 1 ? ' is' : 's are'} already inside that time:`
+    + `<div class="block-clash-list">${list}</div>`
+    + `<div class="block-clash-note">These stay on the schedule. Call them to move or cancel.</div>`;
+  blockStatus.style.color = '#b45309';
+}
 
 // ── SHARED AVAILABILITY-CHECK PRIMITIVES ── (used by Move, Add Booking)
 // Busy ranges = existing bookings + blocked time for one stylist on one day,
@@ -913,15 +1103,15 @@ async function fetchBusyRangesFor(date, staffId, excludeBookingId) {
   return [
     ...bookings
       .filter((b) => b.staff_id === staffId && b.status !== 'cancelled' && b.id !== excludeBookingId)
-      .map((b) => ({ startMin: timeToMinutes(fmtTime(b.start_time)), endMin: timeToMinutes(fmtTime(b.end_time)), label: `${b.customer_name} — ${b.service_name}`, isBlock: false })),
+      .map((b) => ({ startMin: timeToMinutes(fmtTime(b.start_time)), endMin: timeToMinutes(fmtTime(b.end_time)), label: `${b.customer_name} - ${b.service_name}`, isBlock: false })),
     ...blocked
       .filter((b) => b.staff_id === staffId || b.staff_id === null)
-      .map((b) => ({ startMin: timeToMinutes(fmtTime(b.start_time)), endMin: timeToMinutes(fmtTime(b.end_time)), label: b.reason ? `Blocked — ${b.reason}` : 'Blocked', isBlock: true })),
+      .map((b) => ({ startMin: timeToMinutes(fmtTime(b.start_time)), endMin: timeToMinutes(fmtTime(b.end_time)), label: b.reason ? `Blocked - ${b.reason}` : 'Blocked', isBlock: true })),
   ].sort((a, b) => a.startMin - b.startMin);
 }
 function renderBusyRangesInto(el, busyRanges) {
   if (!busyRanges.length) {
-    el.innerHTML = '<p class="reschedule-availability-title">Availability that day</p><p class="reschedule-free-note"><i class="fa-solid fa-circle-check"></i> Wide open — nothing else booked.</p>';
+    el.innerHTML = '<p class="reschedule-availability-title">Availability that day</p><p class="reschedule-free-note"><i class="fa-solid fa-circle-check"></i> Wide open - nothing else booked.</p>';
   } else {
     el.innerHTML = '<p class="reschedule-availability-title">Already busy that day</p>' + busyRanges.map((r) => `
       <div class="reschedule-busy-row" data-start="${r.startMin}" data-end="${r.endMin}">
@@ -931,21 +1121,28 @@ function renderBusyRangesInto(el, busyRanges) {
     `).join('');
   }
 }
-// Highlights conflicting rows + shows a warning inside `el`, disables
-// `saveBtn` while a conflict exists. Returns the list of conflicts found.
-// 13:00 and 16:30 are Hassan-style overlap-pairing's designated slots (a
-// Balayage at 11:00/15:00 legitimately shares the chair with a second quick
-// service exactly there — see OVERLAP_ANCHORS). Those two times stay hard-
-// blocked even for an overlap-eligible stylist, so that pairing can't be
-// triple-booked. Any OTHER time is left to the owner's judgment — an
-// overlap-eligible stylist can be manually double-booked there if needed.
-const PROTECTED_OVERLAP_TIMES = [780, 990]; // 13:00, 16:30 in minutes
-function markConflictsIn(el, busyRanges, newStart, newEnd, saveBtn, allowOverlap) {
+// Which stylist the open modal is about — Add Booking and Move each have
+// their own picker, so read whichever is on screen.
+function staffAllowsManualOverlap() {
+  const sel = document.getElementById('addBkStaff');
+  const resel = document.getElementById('rescheduleStaffSelect');
+  const id = (resel && resel.offsetParent && resel.value)
+    || (sel && sel.offsetParent && sel.value)
+    || null;
+  if (!id) return false;
+  const st = (currentStaff || []).find((x) => x.id === id);
+  return !!(st && st.allow_manual_overlap);
+}
+
+function markConflictsIn(el, busyRanges, newStart, newEnd, saveBtn) {
   el.querySelectorAll('.reschedule-busy-row').forEach((row) => row.classList.remove('conflict', 'conflict-allowed'));
   const existingWarn = el.querySelector('.reschedule-conflict-warning');
   if (existingWarn) existingWarn.remove();
   const conflicts = busyRanges.filter((r) => newStart < r.endMin && newEnd > r.startMin);
-  const canOverride = allowOverlap && !PROTECTED_OVERLAP_TIMES.includes(newStart);
+  // Overlapping by hand is granted per stylist (Hassan and Kani), so a clash
+  // is information for them and a refusal for anyone else. The rows are
+  // highlighted either way, so one can't be created without seeing it.
+  const canOverride = !!(staffAllowsManualOverlap());
   if (conflicts.length) {
     el.querySelectorAll('.reschedule-busy-row').forEach((row) => {
       if (conflicts.some((c) => c.startMin === Number(row.dataset.start) && c.endMin === Number(row.dataset.end))) {
@@ -955,8 +1152,8 @@ function markConflictsIn(el, busyRanges, newStart, newEnd, saveBtn, allowOverlap
     const warn = document.createElement('p');
     warn.className = 'reschedule-conflict-warning';
     warn.innerHTML = canOverride
-      ? '<i class="fa-solid fa-circle-info"></i> Overlaps an existing appointment — allowed for this stylist, double-check before saving.'
-      : '<i class="fa-solid fa-triangle-exclamation"></i> That time overlaps something already booked — pick another time.';
+      ? '<i class="fa-solid fa-circle-info"></i> Overlaps the appointment(s) highlighted above - you can still save.'
+      : '<i class="fa-solid fa-triangle-exclamation"></i> That time overlaps something already booked - pick another time.';
     if (!canOverride) warn.classList.add('blocking');
     el.appendChild(warn);
   }
@@ -994,12 +1191,12 @@ function checkRescheduleConflict() {
   const duration = timeToMinutes(fmtTime(rescheduleBookingTarget.end_time)) - timeToMinutes(fmtTime(rescheduleBookingTarget.start_time));
   const newStart = timeToMinutes(time);
   const staff = currentStaff.find((s) => s.id === rescheduleStaffSelect.value);
-  return markConflictsIn(rescheduleAvailability, rescheduleBusyRanges, newStart, newStart + duration, btnSaveReschedule, staff?.allow_overlap_booking);
+  return markConflictsIn(rescheduleAvailability, rescheduleBusyRanges, newStart, newStart + duration, btnSaveReschedule);
 }
 
 function openRescheduleModal(booking) {
   rescheduleBookingTarget = booking;
-  rescheduleSub.textContent = `${booking.customer_name} — ${booking.service_name}`;
+  rescheduleSub.textContent = `${booking.customer_name} - ${booking.service_name}`;
   rescheduleDatePicker.setValue(booking.date);
   rescheduleTime.value = booking.start_time.slice(0, 5);
   rescheduleStaffSelect.innerHTML = currentStaff.map((s) => `<option value="${s.id}"${s.id === booking.staff_id ? ' selected' : ''}>${s.name}</option>`).join('');
@@ -1018,7 +1215,7 @@ btnSaveReschedule.addEventListener('click', async () => {
   const time = rescheduleTime.value;
   if (!date || !time) { rescheduleStatus.textContent = 'Pick a date and time.'; rescheduleStatus.style.color = '#dc2626'; return; }
   if (checkRescheduleConflict().length) {
-    rescheduleStatus.textContent = 'That time overlaps something already booked — pick another time.';
+    rescheduleStatus.textContent = 'That time overlaps something already booked - pick another time.';
     rescheduleStatus.style.color = '#dc2626';
     return;
   }
@@ -1031,16 +1228,66 @@ btnSaveReschedule.addEventListener('click', async () => {
   setTimeout(() => { closeRescheduleModal(); switchOwnerTab(ownerActiveTab); }, 500);
 });
 
+// Minimal escaping for anything a client typed. See the audit note about
+// unescaped innerHTML in this file — it needs a pass, and new code must not
+// add to the problem.
+function escHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+// ── AFTER A NO-SHOW ──
+// Nothing is sent unless someone here says so.
+let noShowTarget = null;
+function openNoShowNotice(booking) {
+  noShowTarget = booking;
+  const modal = document.getElementById('noShowModal');
+  if (!modal) return;
+  document.getElementById('noShowWho').textContent =
+    `${booking.customer_name} · ${booking.service_name} · ${fmtTime(booking.start_time)}`;
+  document.getElementById('noShowNote').value = '';
+  document.getElementById('noShowStatus').textContent = '';
+  const feeEl = document.getElementById('noShowFee');
+  // The fee was written by the database the moment the status changed. Shown
+  // here so whoever decides can see what the email would actually say.
+  const fee = booking.expected_total != null
+    ? Math.round(Number(booking.expected_total) / 2)
+    : null;
+  feeEl.textContent = fee != null
+    ? `The email would mention the ${fee.toLocaleString('nb-NO')} NOK policy charge.`
+    : 'This service has no fixed price, so the email would not name an amount.';
+  const mail = document.getElementById('noShowSend');
+  mail.disabled = !booking.customer_email;
+  document.getElementById('noShowNoEmail').hidden = !!booking.customer_email;
+  modal.style.display = 'flex';
+}
+function closeNoShowNotice() {
+  const modal = document.getElementById('noShowModal');
+  if (modal) modal.style.display = 'none';
+  noShowTarget = null;
+}
+
 // ── COMPLETE BOOKING MODAL ── (captures amount_charged — see 0001's comment on that column)
 let completeBookingTarget = null;
 function openCompleteModal(booking) {
   completeBookingTarget = booking;
-  completeSub.textContent = `${booking.customer_name} — ${booking.service_name}`;
-  completeAmount.value = '';
+  const addonPart = booking.addons ? ` + ${booking.addons}` : '';
+  const expected = expectedLabel(booking);
+  completeSub.textContent = `${booking.customer_name} - ${booking.service_name}${addonPart}`
+    + (expected ? ` · expected ${expected}` : '');
+  // Prefilled with what the booking said it would cost, so completing a
+  // normal visit is one click and anything that differs is a deliberate
+  // edit rather than a number typed from memory. Estimates (consultation or
+  // range-priced work) are left blank — their floor isn't a real quote.
+  completeAmount.value = (booking.expected_total != null && !booking.expected_total_is_estimate)
+    ? String(Number(booking.expected_total))
+    : '';
   completeStatus.textContent = '';
   completeModal.style.display = 'flex';
   completeAmount.focus();
 }
+
 function closeCompleteModal() { completeModal.style.display = 'none'; completeBookingTarget = null; }
 completeClose.addEventListener('click', closeCompleteModal);
 completeModal.addEventListener('click', (e) => { if (e.target === completeModal) closeCompleteModal(); });
@@ -1077,7 +1324,7 @@ function checkAddBookingConflict() {
   if (!time || !service) return markConflictsIn(addBkAvailability, [], 0, 0, btnSaveAddBooking);
   const newStart = timeToMinutes(time);
   const staff = currentStaff.find((s) => s.id === addBkStaff.value);
-  return markConflictsIn(addBkAvailability, addBkBusyRanges, newStart, newStart + service.duration_minutes, btnSaveAddBooking, staff?.allow_overlap_booking);
+  return markConflictsIn(addBkAvailability, addBkBusyRanges, newStart, newStart + service.duration_minutes, btnSaveAddBooking);
 }
 // currentServices (used elsewhere for the main schedule grid) is sometimes
 // the abbreviated fallback list with no duration_minutes — fall back to the
@@ -1116,13 +1363,12 @@ btnSaveAddBooking.addEventListener('click', async () => {
     addBkStatus.style.color = '#dc2626';
     return;
   }
-  if (checkAddBookingConflict().length) {
-    addBkStatus.textContent = 'That time overlaps something already booked — pick another time.';
-    addBkStatus.style.color = '#dc2626';
-    return;
-  }
   addBkStatus.textContent = 'Saving…'; addBkStatus.style.color = 'var(--sched-text-muted)';
-  const { error } = await bookAppointment({
+  // staffBookAppointment, not bookAppointment: same rules bar the overlap
+  // check, which a booking entered here is allowed to break. The online
+  // wizard still refuses overlaps for everything except consultations.
+  const { error } = await staffBookAppointment({
+    pin: currentPin,
     serviceId: addBkService.value, staffId: addBkStaff.value, date, startTime: time,
     name, email, phone, notes: addBkNotes.value.trim(),
   });
@@ -1164,7 +1410,10 @@ colorsModal.addEventListener('click', (e) => { if (e.target === colorsModal) clo
 
 // ── OWNER PANEL ── (replaces admin.html — same PIN field, owner_pin unlocks this)
 const OWNER_TAB_RENDERERS = {
+  requests: renderOwnerRequestsTab,
+  export: renderOwnerExportTab,
   services: renderOwnerServicesTab,
+  addons: renderOwnerAddonsTab,
   staff: renderOwnerStaffTab,
   bookings: renderOwnerBookingsTab,
   revenue: renderOwnerRevenueTab,
@@ -1173,7 +1422,29 @@ const OWNER_TAB_RENDERERS = {
   settings: renderOwnerSettingsTab,
 };
 let ownerActiveTab = 'services';
+
+// The Requests tab is markup that schedule.html doesn't carry yet, so its
+// button is inserted here — guarded so it appears exactly once.
+// Two tabs that schedule.html does not carry markup for yet. Guarded so they
+// appear exactly once, however often the panel is opened.
+function ensureRequestsTabButton() {
+  if (!ownerTabs) return;
+  const add = (tab, label, atStart) => {
+    if (ownerTabs.querySelector(`[data-tab="${tab}"]`)) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'owner-tab';
+    btn.dataset.tab = tab;
+    btn.textContent = label;
+    if (atStart) ownerTabs.insertBefore(btn, ownerTabs.firstChild);
+    else ownerTabs.appendChild(btn);
+  };
+  add('requests', 'Requests', true);
+  add('export', 'Export', false);
+}
+
 function openOwnerPanel() {
+  ensureRequestsTabButton();
   ownerPanelModal.style.display = 'flex';
   switchOwnerTab(ownerActiveTab);
 }
@@ -1192,7 +1463,8 @@ ownerTabs.addEventListener('click', (e) => {
   if (btn) switchOwnerTab(btn.dataset.tab);
 });
 
-const OWNER_CATEGORIES = ['Color Services', 'Haircuts & Styling', 'Hair Extensions', 'Keratin & Hair Treatments', 'Bridal & Special Occasion', 'Consultation'];
+const OWNER_CATEGORIES = ['Balayage & Highlights', 'Color', 'Haircuts & Styling', 'Styling',
+  'Special Occasions', 'Bridal', 'Hair Extensions', 'Keratin & Hair Treatments', 'Consultation'];
 
 // Real file-upload photo picker, shared by the Services and Staff forms —
 // stores the uploaded file's public URL in a hidden input (still the same
@@ -1342,12 +1614,14 @@ async function renderOwnerServicesTab() {
       <div class="block-field"><label>Name (NO)</label><input type="text" id="svcNameNo" /></div>
       <div class="block-field"><label>Category</label><select id="svcCategory">${OWNER_CATEGORIES.map((c) => `<option>${c}</option>`).join('')}</select></div>
       <div class="block-field"><label>Color</label><input type="color" id="svcColor" value="#9a9aa2" /></div>
-      <div class="block-field"><label>Price from (NOK)</label><input type="number" id="svcPriceFrom" /></div>
+      <div class="block-field"><label>Price (NOK)</label><input type="number" id="svcPriceFrom" /></div>
       <div class="block-field"><label>Price to (optional)</label><input type="number" id="svcPriceTo" /></div>
       <div class="block-field"><label>Duration (minutes)</label><input type="number" id="svcDuration" /></div>
+      <div class="block-field"><label>Duration with any add-on (blank = same)</label><input type="number" id="svcDurationAddons" /></div>
     </div>
     ${ownerPhotoFieldHtml({ fileId: 'svcImageFile', previewId: 'svcImagePreview', previewEmptyId: 'svcImagePreviewEmpty', statusId: 'svcImageStatus', hiddenId: 'svcImageUrl', label: 'Photo' })}
-    <label class="owner-checkbox-row" style="margin-bottom:0.6rem;margin-top:1rem;"><input type="checkbox" id="svcOnConsultation" /> Price on consultation (no fixed price)</label>
+    <label class="owner-checkbox-row" style="margin-bottom:0.6rem;margin-top:1rem;"><input type="checkbox" id="svcPriceIsFrom" /> Price is a "from" price (price list says "from 3,750")</label>
+    <label class="owner-checkbox-row" style="margin-bottom:0.6rem;"><input type="checkbox" id="svcOnConsultation" /> Price on consultation (quoted after a consultation)</label>
     <label class="owner-checkbox-row" style="margin-bottom:0.6rem;"><input type="checkbox" id="svcFeatured" /> Featured</label>
     <label class="owner-checkbox-row" style="margin-bottom:1rem;"><input type="checkbox" id="svcActive" checked /> Active</label>
     <div class="owner-form-actions">
@@ -1361,9 +1635,10 @@ async function renderOwnerServicesTab() {
 
   function resetServiceForm() {
     document.getElementById('svcFormTitle').textContent = 'Add Service';
-    ['svcId', 'svcName', 'svcNameNo', 'svcPriceFrom', 'svcPriceTo', 'svcDuration', 'svcImageUrl'].forEach((id) => { document.getElementById(id).value = ''; });
+    ['svcId', 'svcName', 'svcNameNo', 'svcPriceFrom', 'svcPriceTo', 'svcDuration', 'svcDurationAddons', 'svcImageUrl'].forEach((id) => { document.getElementById(id).value = ''; });
     document.getElementById('svcCategory').value = OWNER_CATEGORIES[0];
     document.getElementById('svcColor').value = '#9a9aa2';
+    document.getElementById('svcPriceIsFrom').checked = false;
     document.getElementById('svcOnConsultation').checked = false;
     document.getElementById('svcFeatured').checked = false;
     document.getElementById('svcActive').checked = true;
@@ -1402,9 +1677,11 @@ async function renderOwnerServicesTab() {
         document.getElementById('svcPriceFrom').value = s.price_from ?? '';
         document.getElementById('svcPriceTo').value = s.price_to ?? '';
         document.getElementById('svcDuration').value = s.duration_minutes ?? '';
+        document.getElementById('svcDurationAddons').value = s.duration_with_addons_minutes ?? '';
         document.getElementById('svcImageUrl').value = s.image_url || '';
         document.getElementById('svcImageStatus').textContent = '';
         setOwnerPhotoPreview({ previewId: 'svcImagePreview', previewEmptyId: 'svcImagePreviewEmpty', url: s.image_url || null });
+        document.getElementById('svcPriceIsFrom').checked = !!s.price_is_from;
         document.getElementById('svcOnConsultation').checked = !!s.price_on_consultation;
         document.getElementById('svcFeatured').checked = !!s.featured;
         document.getElementById('svcActive').checked = !!s.active;
@@ -1444,7 +1721,9 @@ async function renderOwnerServicesTab() {
       name, nameNo: document.getElementById('svcNameNo').value.trim(),
       category: document.getElementById('svcCategory').value,
       priceFrom, priceTo: priceToRaw ? parseFloat(priceToRaw) : null,
-      priceOnConsultation: onConsultation, durationMinutes: duration,
+      priceOnConsultation: onConsultation, priceIsFrom: document.getElementById('svcPriceIsFrom').checked,
+      durationMinutes: duration,
+      durationWithAddonsMinutes: parseInt(document.getElementById('svcDurationAddons').value, 10) || null,
       color: document.getElementById('svcColor').value,
       imageUrl: document.getElementById('svcImageUrl').value.trim(),
       featured: document.getElementById('svcFeatured').checked,
@@ -1453,6 +1732,456 @@ async function renderOwnerServicesTab() {
     if (error) { statusEl.textContent = 'Error: ' + error.message; statusEl.style.color = '#dc2626'; return; }
     statusEl.textContent = '✓ Saved.'; statusEl.style.color = '#059669';
     renderOwnerServicesTab();
+  });
+}
+
+// Mirrors the addons seed in migration 0005, for preview mode while the
+// database is paused.
+const FALLBACK_ADDONS_ADMIN = [
+  { id: 'addon-haircut', name: 'Haircut', name_no: 'Klipp', price: 500, price_is_from: false, kind: 'addon', sort_order: 1, active: true },
+  { id: 'addon-grey', name: 'Grey Coverage', name_no: 'Grådekking', price: 1200, price_is_from: false, kind: 'addon', sort_order: 2, active: true },
+  { id: 'addon-toner', name: 'Toner', name_no: 'Toner', price: 1250, price_is_from: true, kind: 'combo', sort_order: 3, active: true },
+];
+
+// Which service offers which add-on, for preview mode. Mirrors the
+// service_addons seed (and its two Haircut + Blowdry price overrides) so the
+// tab doesn't read "0 services" against every row while Supabase is paused.
+const FALLBACK_SERVICE_ADDONS_ADMIN = [
+  ['svc-balayage', 'addon-haircut'], ['svc-balayage', 'addon-grey'], ['svc-balayage', 'addon-toner'],
+  ['svc-half-foil', 'addon-haircut'], ['svc-half-foil', 'addon-grey'], ['svc-half-foil', 'addon-toner'],
+  ['svc-full-foil', 'addon-haircut'], ['svc-full-foil', 'addon-grey'], ['svc-full-foil', 'addon-toner'],
+  ['svc-reverse', 'addon-haircut'], ['svc-reverse', 'addon-grey'], ['svc-reverse', 'addon-toner'],
+  ['svc-root', 'addon-haircut'], ['svc-root', 'addon-toner'],
+  ['svc-allover', 'addon-haircut'], ['svc-allover', 'addon-toner'],
+  ['svc-toner', 'addon-haircut'],
+].map(([service_id, addon_id]) => ({ service_id, addon_id }));
+
+// Bridal and updo bookings never carry add-ons, so those categories are left
+// out of the offer checklist entirely — matches the rule book_appointment
+// enforces, rather than leaving a tickbox that would be rejected on save.
+const ADDON_EXCLUDED_CATEGORIES = ['Bridal', 'Special Occasions'];
+
+// ── OWNER TAB: REQUESTS ──
+// Extensions bookings arrive as requests rather than bookings, because the
+// salon has to check the client came in for a consultation and paid a deposit
+// first. Each holds its slot for two days; after that the time goes back on
+// sale, though the request stays here so it can still be answered.
+async function renderOwnerRequestsTab() {
+  const { data, error } = await fetchPendingBookingsAdmin(currentPin);
+  const rows = (!error && data) ? data : [];
+
+  ownerTabContent.innerHTML = `
+    <h4 class="owner-section-title">Booking Requests</h4>
+    <p style="font-size:0.78rem;color:var(--sched-text-muted);margin-bottom:1rem;">
+      Extensions bookings wait here until you confirm them. Each one holds its time for two days -
+      after that the slot is released, but the request stays so you can still answer it.
+      Confirming or rejecting emails the client automatically.
+    </p>
+    <div class="owner-list" id="reqList"></div>
+  `;
+
+  const list = document.getElementById('reqList');
+  if (!rows.length) {
+    list.innerHTML = '<p class="owner-empty">No requests waiting.</p>';
+    return;
+  }
+
+  const holdLabel = (r) => {
+    if (r.hold_expires_at == null) return '';
+    const h = Number(r.hold_hours_left);
+    if (!Number.isFinite(h)) return '';
+    if (h <= 0) return '<span class="req-hold lapsed">Hold lapsed - slot released</span>';
+    if (h < 12) return `<span class="req-hold urgent">${Math.round(h)}h left on hold</span>`;
+    return `<span class="req-hold">${Math.round(h / 24 * 10) / 10} days left on hold</span>`;
+  };
+
+  list.innerHTML = rows.map((r) => `
+    <div class="owner-booking-card pending" data-id="${r.id}">
+      <div class="owner-booking-top">
+        <span class="owner-booking-time">${fmtTime(r.start_time)}</span>
+        <div class="owner-booking-main">
+          <div class="owner-booking-name">${r.customer_name} - ${r.service_name}</div>
+          <div class="owner-booking-meta">
+            ${new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long' })}
+            · ${r.staff_name} · ${r.customer_phone || 'No phone'}${r.customer_email ? ' · ' + r.customer_email : ''}
+          </div>
+          ${holdLabel(r)}
+        </div>
+      </div>
+      <div class="owner-booking-actions">
+        <button type="button" class="owner-action-btn confirm" data-decide="confirmed" data-id="${r.id}"><i class="fa-solid fa-check"></i> Confirm &amp; email</button>
+        <button type="button" class="owner-action-btn reject" data-decide="rejected" data-id="${r.id}"><i class="fa-solid fa-xmark"></i> Reject &amp; email</button>
+      </div>
+      <div class="owner-status-msg" id="reqMsg-${r.id}"></div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-decide]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const decision = btn.dataset.decide;
+      const row = rows.find((r) => r.id === btn.dataset.id);
+      const msg = document.getElementById(`reqMsg-${btn.dataset.id}`);
+      let reason = null;
+      if (decision === 'rejected') {
+        reason = prompt('Anything to tell them? (optional - it goes in the email)') || null;
+      }
+      btn.closest('.owner-booking-card').querySelectorAll('button').forEach((x) => (x.disabled = true));
+      msg.textContent = 'Saving…';
+      msg.style.color = 'var(--sched-text-muted)';
+
+      const { data, error } = await decideBookingAdmin({
+        pin: currentPin, bookingId: btn.dataset.id, decision, reason,
+      });
+      if (error) {
+        msg.textContent = 'Error: ' + error.message;
+        msg.style.color = '#dc2626';
+        btn.closest('.owner-booking-card').querySelectorAll('button').forEach((x) => (x.disabled = false));
+        return;
+      }
+
+      // The decision is saved at this point. Mail is best-effort on top of it,
+      // so a mail failure reports itself without undoing anything.
+      const d = (Array.isArray(data) ? data[0] : data) || {};
+      msg.textContent = decision === 'confirmed' ? '✓ Confirmed. Emailing…' : 'Rejected. Emailing…';
+      msg.style.color = '#059669';
+
+      const mail = await sendBookingEmail({
+        pin: currentPin,
+        booking_id: btn.dataset.id,
+        decision,
+        reason: reason || '',
+        customer_name: d.customer_name || (row && row.customer_name) || '',
+        customer_email: d.customer_email || (row && row.customer_email) || '',
+        service_name: d.service_name || (row && row.service_name) || '',
+        staff_name: d.staff_name || (row && row.staff_name) || '',
+        date: d.date || (row && row.date) || '',
+        start_time: d.start_time || (row && row.start_time) || '',
+        booking_ref: d.booking_ref || (row && row.booking_ref) || '',
+      });
+
+      if (mail && mail.sent) {
+        msg.textContent = decision === 'confirmed'
+          ? '✓ Confirmed - email sent.'
+          : '✓ Rejected - email sent.';
+        msg.style.color = '#059669';
+      } else {
+        msg.innerHTML = `✓ ${decision === 'confirmed' ? 'Confirmed' : 'Rejected'}, but the email didn't send`
+          + `<div class="req-mail-warn">${(mail && mail.reason) || 'Mail service unavailable'}</div>`
+          + `<div class="req-mail-warn">Let them know yourself: `
+          + `<a href="tel:${(row && row.customer_phone) || ''}">call</a>`
+          + `${row && row.customer_email ? ` or <a href="mailto:${row.customer_email}">email</a>` : ''}.</div>`;
+        msg.style.color = '#b45309';
+      }
+      setTimeout(() => renderOwnerRequestsTab(), 2200);
+    });
+  });
+}
+
+// ── OWNER TAB: EXPORT ──
+// Two exports and a reconciliation total. See migration 0006 for why the
+// accounting file deliberately carries no names.
+
+// Norwegian Excel reads a comma as a DECIMAL separator, not a column
+// separator, so a normal comma-separated file opens as one mangled column on
+// a Norwegian machine. Semicolons are what it expects. Numbers get a comma
+// decimal for the same reason — 1250.50 would otherwise be read as text.
+const CSV_SEP = ';';
+
+function csvCell(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'number') return String(value).replace('.', ',');
+  const s = String(value);
+  // Quote anything that would otherwise break the row apart. Inner quotes are
+  // doubled, which is what every spreadsheet expects.
+  return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function toCsv(headers, rows, keys) {
+  const lines = [headers.map(csvCell).join(CSV_SEP)];
+  rows.forEach((r) => lines.push(keys.map((k) => csvCell(r[k])).join(CSV_SEP)));
+  return lines.join('\r\n');
+}
+
+function downloadCsv(filename, csv) {
+  // The byte-order mark is what stops æ, ø and å arriving as mojibake: without
+  // it Excel guesses the ANSI codepage and "Håkon" becomes something else.
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // Freed on a delay — revoking immediately can cancel the download in some
+  // browsers before they have finished reading the blob.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+const STATUS_NO = {
+  pending: 'Venter', confirmed: 'Bekreftet', arrived: 'Ankommet',
+  no_show: 'Møtte ikke', cancelled: 'Avlyst', completed: 'Fullført',
+};
+
+async function renderOwnerExportTab() {
+  const today = new Date();
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  ownerTabContent.innerHTML = `
+    <h4 class="owner-section-title">Export</h4>
+    <div class="export-range">
+      <label>From <input type="date" id="expFrom" value="${iso(firstOfMonth)}"></label>
+      <label>To <input type="date" id="expTo" value="${iso(today)}"></label>
+    </div>
+
+    <div class="export-card">
+      <div class="export-card-title">Accounting</div>
+      <p class="export-card-note">
+        What was sold, when, by whom and for how much. <strong>No names, phone numbers or
+        emails</strong> - this is the file for your accountant, and it is safe to keep or send on.
+      </p>
+      <button type="button" class="owner-action-btn" id="expAccounting">
+        <i class="fa-solid fa-file-arrow-down"></i> Download accounting file
+      </button>
+      <span class="export-status" id="expAccountingMsg"></span>
+    </div>
+
+    <div class="export-card personal">
+      <div class="export-card-title">Client list</div>
+      <p class="export-card-note">
+        Everything above <strong>plus names, phone numbers, emails and notes</strong>. Only export
+        this when you actually need it, and delete the file when you are done - each download is
+        recorded in the activity log.
+      </p>
+      <button type="button" class="owner-action-btn reject" id="expClients">
+        <i class="fa-solid fa-user-lock"></i> Download client list
+      </button>
+      <span class="export-status" id="expClientsMsg"></span>
+    </div>
+
+    <h4 class="owner-section-title" style="margin-top:2rem;">End of day</h4>
+    <p class="export-card-note" style="margin-bottom:0.9rem;">
+      Compare each day against the card terminal's own end-of-day report. One number against one
+      number - if they match, every booking that day is right.
+    </p>
+    <div id="expTotals" class="owner-list"></div>
+  `;
+
+  const from = () => document.getElementById('expFrom').value;
+  const to = () => document.getElementById('expTo').value;
+
+  const run = async (fetcher, headers, keys, prefix, msgEl, confirmText) => {
+    if (confirmText && !confirm(confirmText)) return;
+    msgEl.textContent = 'Preparing…';
+    msgEl.style.color = 'var(--sched-text-muted)';
+    const { data, error } = await fetcher({ pin: currentPin, from: from(), to: to() });
+    if (error) { msgEl.textContent = 'Error: ' + error.message; msgEl.style.color = '#dc2626'; return; }
+    if (!data || !data.length) { msgEl.textContent = 'Nothing in that range.'; return; }
+    const rows = data.map((r) => ({ ...r, status: STATUS_NO[r.status] || r.status }));
+    downloadCsv(`studio-serena-${prefix}-${from()}-${to()}.csv`, toCsv(headers, rows, keys));
+    msgEl.textContent = `${data.length} bookings exported.`;
+    msgEl.style.color = '#059669';
+  };
+
+  document.getElementById('expAccounting').addEventListener('click', () => run(
+    exportAccounting,
+    ['Referanse', 'Dato', 'Fra', 'Til', 'Minutter', 'Stylist', 'Tjeneste', 'Tillegg',
+      'Status', 'Forventet', 'Estimat', 'Belastet', 'Differanse', 'Booket'],
+    ['booking_ref', 'date', 'start_time', 'end_time', 'duration_minutes', 'staff_name',
+      'service_name', 'addons', 'status', 'expected_total', 'expected_is_estimate',
+      'amount_charged', 'difference', 'booked_at'],
+    'regnskap', document.getElementById('expAccountingMsg'),
+  ));
+
+  document.getElementById('expClients').addEventListener('click', () => run(
+    exportClients,
+    ['Referanse', 'Dato', 'Tid', 'Stylist', 'Tjeneste', 'Navn', 'Telefon', 'E-post',
+      'Notater', 'Status', 'Belastet', 'Booket'],
+    ['booking_ref', 'date', 'start_time', 'staff_name', 'service_name', 'customer_name',
+      'customer_phone', 'customer_email', 'notes', 'status', 'amount_charged', 'booked_at'],
+    'kundeliste', document.getElementById('expClientsMsg'),
+    'This file contains client names, phone numbers and emails.\n\nOnly download it if you need it, and delete it when you are done. The download is recorded in the activity log.\n\nContinue?',
+  ));
+
+  const totalsEl = document.getElementById('expTotals');
+  const { data: totals, error: totalsErr } = await fetchDailyTotals({ pin: currentPin, from: from(), to: to() });
+  if (totalsErr) { totalsEl.innerHTML = '<p class="owner-empty">Could not load totals.</p>'; return; }
+  if (!totals || !totals.length) { totalsEl.innerHTML = '<p class="owner-empty">No completed bookings in that range.</p>'; return; }
+
+  const kr = (n) => Number(n || 0).toLocaleString('nb-NO') + ' NOK';
+  totalsEl.innerHTML = totals.map((t) => {
+    const off = Number(t.difference || 0);
+    // A zero difference is the normal case and should read as calm, not as a
+    // success worth colouring.
+    const cls = off === 0 ? '' : (off > 0 ? 'over' : 'under');
+    return `
+      <div class="export-day">
+        <div class="export-day-date">${new Date(t.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
+        <div class="export-day-count">${t.bookings_completed} booking${Number(t.bookings_completed) === 1 ? '' : 's'}</div>
+        <div class="export-day-total">${kr(t.charged_total)}</div>
+        <div class="export-day-diff ${cls}">${off === 0 ? 'matches expected' : (off > 0 ? '+' : '') + kr(off)}</div>
+        <div class="export-day-flag">${Number(t.overridden_count) > 0 ? `${t.overridden_count} amended` : ''}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── OWNER TAB: ADD-ONS ──
+// The catalog behind the wizard's "Can be combined with" chips. Editing a
+// price here only affects FUTURE bookings — booking_addons keeps its own
+// name/price snapshot, so past takings never move under the owner's feet.
+async function renderOwnerAddonsTab() {
+  const { data, error } = await fetchAddonsAdmin(currentPin);
+  const addons = !error && data ? data : FALLBACK_ADDONS_ADMIN;
+  const servicesForAssignment = currentServices[0]?.duration_minutes != null ? currentServices : FALLBACK_SERVICES_ADMIN;
+  const { data: mapRes, error: mapError } = await fetchServiceAddonsAdmin(currentPin);
+  const mapData = (!mapError && mapRes && mapRes.length) ? mapRes : FALLBACK_SERVICE_ADDONS_ADMIN;
+  const addonServiceMap = {}; // addon_id -> Set(service_id)
+  (mapData || []).forEach((row) => {
+    if (!addonServiceMap[row.addon_id]) addonServiceMap[row.addon_id] = new Set();
+    addonServiceMap[row.addon_id].add(row.service_id);
+  });
+
+  ownerTabContent.innerHTML = `
+    <h4 class="owner-section-title" id="adnFormTitle">Add Add-on</h4>
+    <input type="hidden" id="adnId" />
+    <div class="owner-form-grid">
+      <div class="block-field"><label>Name (EN)</label><input type="text" id="adnName" /></div>
+      <div class="block-field"><label>Name (NO)</label><input type="text" id="adnNameNo" /></div>
+      <div class="block-field"><label>Price (NOK)</label><input type="number" id="adnPrice" /></div>
+      <div class="block-field"><label>How the price reads</label><select id="adnKind">
+        <option value="addon">Added to the service - shows as "+500 NOK"</option>
+        <option value="combo">A service in its own right - shows as "From 1,250 NOK"</option>
+      </select></div>
+      <div class="block-field"><label>Sort order</label><input type="number" id="adnSortOrder" value="0" /></div>
+    </div>
+    <p style="font-size:0.72rem;color:var(--sched-text-muted);margin:0.2rem 0 0.9rem;">
+      "How the price reads" only changes the wording on the client's chip - a haircut bolted onto a colour reads
+      as <em>+500 NOK</em>, a toner reads as its own <em>From 1,250 NOK</em>. Either way the same amount is added to the total.
+    </p>
+    <label class="owner-checkbox-row" style="margin-bottom:0.6rem;"><input type="checkbox" id="adnPriceIsFrom" /> Price is a "from" price (not exact)</label>
+    <label class="owner-checkbox-row" style="margin-bottom:1rem;"><input type="checkbox" id="adnActive" checked /> Active</label>
+    <p style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--sched-text-muted);margin-bottom:0.6rem;">Services that offer this add-on</p>
+    <div id="adnServiceChecklist" class="stf-service-checklist">
+      ${OWNER_CATEGORIES.filter((c) => !ADDON_EXCLUDED_CATEGORIES.includes(c)).map((cat) => `
+        <div class="stf-service-cat-label">${cat}</div>
+        ${servicesForAssignment.filter((s) => s.category === cat).map((s) => `
+          <label class="owner-checkbox-row"><input type="checkbox" class="adn-service-cb" value="${s.id}" /> ${s.name}</label>
+        `).join('')}
+      `).join('')}
+    </div>
+    <div class="owner-form-actions" style="margin-top:1rem;">
+      <button type="button" id="btnSaveAddon" class="block-save-btn" style="width:auto;flex:1;">Save Add-on</button>
+      <button type="button" id="btnCancelAddonEdit" class="owner-cancel-edit-btn" style="display:none;">Cancel</button>
+    </div>
+    <div id="adnStatusMsg" class="owner-status-msg"></div>
+    <div class="owner-list" id="adnList"></div>
+  `;
+
+  function setCheckedServices(serviceIdSet) {
+    document.querySelectorAll('.adn-service-cb').forEach((cb) => {
+      cb.checked = !!(serviceIdSet && serviceIdSet.has(cb.value));
+    });
+  }
+
+  function resetAddonForm() {
+    document.getElementById('adnFormTitle').textContent = 'Add Add-on';
+    ['adnId', 'adnName', 'adnNameNo', 'adnPrice'].forEach((id) => { document.getElementById(id).value = ''; });
+    document.getElementById('adnKind').value = 'addon';
+    document.getElementById('adnSortOrder').value = 0;
+    document.getElementById('adnPriceIsFrom').checked = false;
+    document.getElementById('adnActive').checked = true;
+    document.getElementById('btnCancelAddonEdit').style.display = 'none';
+    setCheckedServices(null);
+  }
+
+  function priceText(a) {
+    const num = Number(a.price).toLocaleString('en-US') + ' NOK';
+    return a.price_is_from ? 'From ' + num : num;
+  }
+
+  function renderAddonList() {
+    const list = document.getElementById('adnList');
+    if (!addons.length) { list.innerHTML = '<p class="owner-empty">No add-ons yet.</p>'; return; }
+    list.innerHTML = addons.map((a) => {
+      const count = (addonServiceMap[a.id] || new Set()).size;
+      return `
+      <div class="owner-list-row">
+        <div class="owner-list-row-main">
+          <div class="owner-list-row-title">${a.name}</div>
+          <div class="owner-list-row-meta">${priceText(a)} · ${a.kind === 'combo' ? 'own price' : 'added on'} · ${count} service${count === 1 ? '' : 's'}</div>
+        </div>
+        ${!a.active ? '<span class="owner-status-pill" style="background:#f0f0f2;color:var(--sched-text-muted);">Inactive</span>' : ''}
+        <div class="owner-list-row-actions">
+          <button type="button" class="owner-icon-btn edit" data-id="${a.id}"><i class="fa-solid fa-pen"></i></button>
+          <button type="button" class="owner-icon-btn delete" data-id="${a.id}"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+
+    list.querySelectorAll('.owner-icon-btn.edit').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const a = addons.find((x) => x.id === btn.dataset.id);
+        if (!a) return;
+        document.getElementById('adnFormTitle').textContent = `Editing ${a.name}`;
+        document.getElementById('adnId').value = a.id;
+        document.getElementById('adnName').value = a.name || '';
+        document.getElementById('adnNameNo').value = a.name_no || '';
+        document.getElementById('adnPrice').value = a.price ?? '';
+        document.getElementById('adnKind').value = a.kind || 'addon';
+        document.getElementById('adnSortOrder').value = a.sort_order ?? 0;
+        document.getElementById('adnPriceIsFrom').checked = !!a.price_is_from;
+        document.getElementById('adnActive').checked = !!a.active;
+        setCheckedServices(addonServiceMap[a.id]);
+        document.getElementById('btnCancelAddonEdit').style.display = '';
+        ownerTabContent.scrollTop = 0;
+      });
+    });
+
+    list.querySelectorAll('.owner-icon-btn.delete').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const a = addons.find((x) => x.id === btn.dataset.id);
+        if (!a) return;
+        // Worth spelling out: deleting is not retroactive, by design.
+        if (!confirm(`Delete "${a.name}"?\n\nIt stops being offered on new bookings. Bookings that already include it keep the name and price they were quoted.`)) return;
+        const { error: delErr } = await deleteAddonAdmin({ pin: currentPin, id: a.id });
+        if (delErr) { alert('Could not delete: ' + delErr.message); return; }
+        renderOwnerAddonsTab();
+      });
+    });
+  }
+  renderAddonList();
+
+  document.getElementById('btnCancelAddonEdit').addEventListener('click', resetAddonForm);
+  document.getElementById('btnSaveAddon').addEventListener('click', async () => {
+    const statusEl = document.getElementById('adnStatusMsg');
+    const name = document.getElementById('adnName').value.trim();
+    const price = parseFloat(document.getElementById('adnPrice').value);
+    if (!name || isNaN(price) || price < 0) {
+      statusEl.textContent = 'Name and a valid price are required.';
+      statusEl.style.color = '#dc2626';
+      return;
+    }
+    statusEl.textContent = 'Saving…'; statusEl.style.color = 'var(--sched-text-muted)';
+    const { data: saved, error: saveErr } = await upsertAddonAdmin({
+      pin: currentPin, id: document.getElementById('adnId').value || null,
+      name, nameNo: document.getElementById('adnNameNo').value.trim(),
+      price, priceIsFrom: document.getElementById('adnPriceIsFrom').checked,
+      kind: document.getElementById('adnKind').value,
+      sortOrder: parseInt(document.getElementById('adnSortOrder').value, 10) || 0,
+      active: document.getElementById('adnActive').checked,
+    });
+    if (saveErr) { statusEl.textContent = 'Error: ' + saveErr.message; statusEl.style.color = '#dc2626'; return; }
+
+    // The offer list is a second call, same shape as the stylist-services save.
+    const serviceIds = Array.from(document.querySelectorAll('.adn-service-cb:checked')).map((cb) => cb.value);
+    const addonId = (saved && saved.id) || document.getElementById('adnId').value;
+    if (addonId) {
+      const { error: mapErr } = await setAddonServicesAdmin({ pin: currentPin, addonId, serviceIds });
+      if (mapErr) { statusEl.textContent = 'Saved, but services failed: ' + mapErr.message; statusEl.style.color = '#dc2626'; return; }
+    }
+    statusEl.textContent = '✓ Saved.'; statusEl.style.color = '#059669';
+    renderOwnerAddonsTab();
   });
 }
 
@@ -1479,6 +2208,7 @@ async function renderOwnerStaffTab() {
       <div class="block-field full"><label>Bio (NO)</label><input type="text" id="stfBioNo" /></div>
       <div class="block-field"><label>Sort order</label><input type="number" id="stfSortOrder" value="0" /></div>
       <div class="block-field full"><label>External booking URL (if not bookable here)</label><input type="text" id="stfExternalUrl" /></div>
+      <div class="block-field full"><label>External booking button text</label><input type="text" id="stfExternalLabel" placeholder="e.g. Book on Timma" /></div>
     </div>
     ${ownerPhotoFieldHtml({ fileId: 'stfPhotoFile', previewId: 'stfPhotoPreview', previewEmptyId: 'stfPhotoPreviewEmpty', statusId: 'stfPhotoStatus', hiddenId: 'stfPhotoUrl', label: 'Photo' })}
     <label class="owner-checkbox-row" style="margin-bottom:0.6rem;margin-top:1rem;"><input type="checkbox" id="stfBookable" checked /> Bookable in this system</label>
@@ -1508,7 +2238,7 @@ async function renderOwnerStaffTab() {
 
   function resetStaffForm() {
     document.getElementById('stfFormTitle').textContent = 'Add Stylist';
-    ['stfId', 'stfName', 'stfRole', 'stfRoleNo', 'stfInstagram', 'stfBio', 'stfBioNo', 'stfPhotoUrl', 'stfExternalUrl'].forEach((id) => { document.getElementById(id).value = ''; });
+    ['stfId', 'stfName', 'stfRole', 'stfRoleNo', 'stfInstagram', 'stfBio', 'stfBioNo', 'stfPhotoUrl', 'stfExternalUrl', 'stfExternalLabel'].forEach((id) => { document.getElementById(id).value = ''; });
     document.getElementById('stfSortOrder').value = '0';
     document.getElementById('stfBookable').checked = true;
     document.getElementById('stfOverlap').checked = false;
@@ -1550,6 +2280,7 @@ async function renderOwnerStaffTab() {
         document.getElementById('stfPhotoStatus').textContent = '';
         setOwnerPhotoPreview({ previewId: 'stfPhotoPreview', previewEmptyId: 'stfPhotoPreviewEmpty', url: s.photo_url || null });
         document.getElementById('stfExternalUrl').value = s.external_booking_url || '';
+        document.getElementById('stfExternalLabel').value = s.external_booking_label || '';
         document.getElementById('stfSortOrder').value = s.sort_order ?? 0;
         document.getElementById('stfBookable').checked = !!s.bookable;
         document.getElementById('stfOverlap').checked = !!s.allow_overlap_booking;
@@ -1576,6 +2307,7 @@ async function renderOwnerStaffTab() {
       photoUrl: document.getElementById('stfPhotoUrl').value.trim(), instagram: document.getElementById('stfInstagram').value.trim(),
       bookable: document.getElementById('stfBookable').checked,
       externalBookingUrl: document.getElementById('stfExternalUrl').value.trim(),
+      externalBookingLabel: document.getElementById('stfExternalLabel').value.trim(),
       allowOverlapBooking: document.getElementById('stfOverlap').checked,
       sortOrder: parseInt(document.getElementById('stfSortOrder').value, 10) || 0,
       active: document.getElementById('stfActive').checked,
@@ -1612,7 +2344,7 @@ async function renderOwnerRevenueTab() {
   ownerTabContent.innerHTML = `
     ${ownerPillRowHtml({ id: 'revPeriodPills', active: 'month', options: REVENUE_PERIODS })}
     <div class="revenue-range-row">
-      <span class="revenue-range-sep">or a custom range —</span>
+      <span class="revenue-range-sep">or a custom range -</span>
       ${ownerDatePickerHtml({ btnId: 'revFromBtn', labelId: 'revFromLabel', popoverId: 'revFromPop', prevId: 'revFromPrev', nextId: 'revFromNext', monthLabelId: 'revFromMonth', gridId: 'revFromGrid', placeholder: 'From' })}
       <span class="revenue-range-sep">to</span>
       ${ownerDatePickerHtml({ btnId: 'revToBtn', labelId: 'revToLabel', popoverId: 'revToPop', prevId: 'revToPrev', nextId: 'revToNext', monthLabelId: 'revToMonth', gridId: 'revToGrid', placeholder: 'To' })}
@@ -1661,7 +2393,7 @@ async function renderOwnerRevenueTab() {
           <div class="revenue-stat"><strong>${Math.round(avg).toLocaleString('en-US')} NOK</strong>Average per booking</div>
         </div>
       </div>
-      <h4 class="owner-section-title">By Stylist <span style="font-weight:400;color:var(--sched-text-muted);font-size:0.72rem;text-transform:none;letter-spacing:0;">— tap a stylist for the breakdown</span></h4>
+      <h4 class="owner-section-title">By Stylist <span style="font-weight:400;color:var(--sched-text-muted);font-size:0.72rem;text-transform:none;letter-spacing:0;">- tap a stylist for the breakdown</span></h4>
       <div class="revenue-stylist-list">
         ${rows.length ? rows.map((r) => {
           const isOpen = expandedStaffId === r.staff_id;
@@ -1684,7 +2416,7 @@ async function renderOwnerRevenueTab() {
                   <div class="revenue-detail-service">${b.service_name}</div>
                   <div class="revenue-detail-meta">${b.customer_name} · ${new Date(b.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                 </div>
-                <div class="revenue-detail-amount">${b.amount_charged != null ? Math.round(Number(b.amount_charged)).toLocaleString('en-US') + ' NOK' : '—'}</div>
+                <div class="revenue-detail-amount">${b.amount_charged != null ? Math.round(Number(b.amount_charged)).toLocaleString('en-US') + ' NOK' : '-'}</div>
               </div>
             `).join('') : '<p class="owner-empty">No completed bookings in this period.</p>'}
           </div>` : ''}
@@ -1779,13 +2511,16 @@ async function renderOwnerBookingsTab() {
           <div class="owner-booking-top">
             <span class="owner-booking-time">${fmtTime(b.start_time)}</span>
             <div class="owner-booking-main">
-              <div class="owner-booking-name">${b.customer_name} — ${b.service_name}</div>
+              <div class="owner-booking-name">${b.customer_name} - ${b.service_name}</div>
               <div class="owner-booking-meta">${b.staff_name} · ${b.customer_phone || 'No phone'}${b.customer_email ? ' · ' + b.customer_email : ''}</div>
+              ${b.addons ? `<div class="owner-booking-notes"><i class="fa-solid fa-plus"></i> ${b.addons}</div>` : ''}
               ${b.notes ? `<div class="owner-booking-notes"><i class="fa-solid fa-note-sticky"></i> ${b.notes}</div>` : ''}
             </div>
             <span class="sched-status ${b.status}">${STATUS_LABELS[b.status] || b.status}</span>
           </div>
-          ${b.status === 'completed' && b.amount_charged != null ? `<div class="owner-booking-amount">${Number(b.amount_charged).toLocaleString('en-US')} NOK charged</div>` : ''}
+          ${b.status === 'completed' && b.amount_charged != null
+            ? `<div class="owner-booking-amount">${Number(b.amount_charged).toLocaleString('en-US')} NOK charged${expectedLabel(b) ? ` · expected ${expectedLabel(b)}` : ''}</div>`
+            : (expectedLabel(b) ? `<div class="owner-booking-amount owner-booking-expected">Expected ${expectedLabel(b)}</div>` : '')}
           ${actions.length ? `
           <div class="owner-booking-actions">
             ${actions.map((a) => `<button type="button" class="owner-action-btn ${a.cls}" data-type="${a.type}"${a.status ? ` data-status="${a.status}"` : ''}><i class="fa-solid ${a.icon}"></i> ${a.label}</button>`).join('')}
@@ -1840,7 +2575,7 @@ async function renderOwnerHoursTab() {
     <div id="admHoursStatus" class="owner-status-msg" style="margin-bottom:1.75rem;"></div>
 
     <h4 class="owner-section-title">Per-Stylist Hour Overrides</h4>
-    <p style="font-size:0.78rem;color:var(--sched-text-muted);margin:-0.5rem 0 1rem;">For a stylist who closes later or earlier than the salon's general hours on a specific day — e.g. Kani stays until 18:00 on Mon/Wed/Fri.</p>
+    <p style="font-size:0.78rem;color:var(--sched-text-muted);margin:-0.5rem 0 1rem;">For a stylist who closes later or earlier than the salon's general hours on a specific day - e.g. Kani stays until 18:00 on Mon/Wed/Fri.</p>
     <div class="owner-form-grid">
       <div class="block-field"><label>Stylist</label><select id="hoStaff"></select></div>
       <div class="block-field"><label>Day</label><select id="hoWeekday">${OWNER_WEEKDAY_NAMES.map((n, i) => `<option value="${i}">${n}</option>`).join('')}</select></div>
@@ -1863,12 +2598,12 @@ async function renderOwnerHoursTab() {
     list.innerHTML = '<p class="owner-empty">Loading…</p>';
     const { data, error } = await fetchStaffHoursOverridesAdmin(currentPin);
     if (error) { list.innerHTML = `<p class="owner-empty">Could not load: ${error.message}</p>`; return; }
-    if (!data || !data.length) { list.innerHTML = '<p class="owner-empty">No overrides — everyone follows the salon\'s general hours.</p>'; return; }
+    if (!data || !data.length) { list.innerHTML = '<p class="owner-empty">No overrides - everyone follows the salon\'s general hours.</p>'; return; }
     list.innerHTML = data.map((o) => `
       <div class="owner-list-row">
         <div class="owner-list-row-main">
           <div class="owner-list-row-title">${o.staff_name}</div>
-          <div class="owner-list-row-meta">${OWNER_WEEKDAY_NAMES[o.weekday]} — closes at ${fmtTime(o.close_time)}</div>
+          <div class="owner-list-row-meta">${OWNER_WEEKDAY_NAMES[o.weekday]} - closes at ${fmtTime(o.close_time)}</div>
         </div>
         <div class="owner-list-row-actions"><button type="button" class="owner-icon-btn delete" data-id="${o.id}"><i class="fa-solid fa-trash"></i></button></div>
       </div>
@@ -1942,11 +2677,11 @@ async function renderOwnerHoursTab() {
 }
 
 const OWNER_ACTIVITY_META = {
-  arrived: { icon: 'fa-check', bg: '#059669', title: (s) => `Checked in a client${s ? ' — ' + s : ''}` },
-  no_show: { icon: 'fa-xmark', bg: '#dc2626', title: (s) => `Marked a no-show${s ? ' — ' + s : ''}` },
-  confirmed: { icon: 'fa-rotate-left', bg: '#6b7280', title: (s) => `Undid an Arrived/No-show${s ? ' — ' + s : ''}` },
-  block_created: { icon: 'fa-ban', bg: '#6b7280', title: (s) => `Blocked time — ${s || 'Whole salon'}` },
-  block_removed: { icon: 'fa-rotate-left', bg: '#6b7280', title: (s) => `Removed a block — ${s || 'Whole salon'}` },
+  arrived: { icon: 'fa-check', bg: '#059669', title: (s) => `Checked in a client${s ? ' - ' + s : ''}` },
+  no_show: { icon: 'fa-xmark', bg: '#dc2626', title: (s) => `Marked a no-show${s ? ' - ' + s : ''}` },
+  confirmed: { icon: 'fa-rotate-left', bg: '#6b7280', title: (s) => `Undid an Arrived/No-show${s ? ' - ' + s : ''}` },
+  block_created: { icon: 'fa-ban', bg: '#6b7280', title: (s) => `Blocked time - ${s || 'Whole salon'}` },
+  block_removed: { icon: 'fa-rotate-left', bg: '#6b7280', title: (s) => `Removed a block - ${s || 'Whole salon'}` },
 };
 async function renderOwnerActivityTab() {
   ownerTabContent.innerHTML = `
@@ -2015,8 +2750,26 @@ async function renderOwnerActivityTab() {
   load();
 }
 
-function renderOwnerSettingsTab() {
+async function renderOwnerSettingsTab() {
+  // Read the live value first so the field shows what's actually in force,
+  // not a placeholder the owner might save back unchanged.
+  let horizon = 60;
+  try {
+    const { data, error } = await fetchBookingHorizonDays();
+    if (!error && Number(data) > 0) horizon = Number(data);
+  } catch (e) { /* keep the default */ }
+
   ownerTabContent.innerHTML = `
+    <h4 class="owner-section-title">Booking Window</h4>
+    <p style="font-size:0.78rem;color:var(--sched-text-muted);margin-bottom:0.8rem;">
+      How far ahead clients can book. It rolls forward on its own every day, so there's nothing to renew.
+      Keep it at or below the notice you get for holidays - if the calendar opens further ahead than you
+      can see, someone can book into a week you haven't blocked yet.
+    </p>
+    <div class="block-field" style="max-width:220px;"><label>Days ahead</label><input type="number" id="setHorizon" min="1" max="365" value="${horizon}" /></div>
+    <button type="button" id="btnSaveHorizon" class="block-save-btn" style="width:auto;margin-bottom:0.5rem;">Save</button>
+    <div id="setHorizonStatus" class="owner-status-msg" style="margin-bottom:1.75rem;"></div>
+
     <h4 class="owner-section-title">Team Schedule PIN</h4>
     <p style="font-size:0.78rem;color:var(--sched-text-muted);margin-bottom:0.8rem;">Everyday PIN every stylist uses to open the schedule.</p>
     <div class="block-field" style="max-width:220px;"><label>Staff PIN</label><input type="text" id="setStaffPin" /></div>
@@ -2024,11 +2777,28 @@ function renderOwnerSettingsTab() {
     <div id="setStaffPinStatus" class="owner-status-msg" style="margin-bottom:1.75rem;"></div>
 
     <h4 class="owner-section-title">Owner PIN</h4>
-    <p style="font-size:0.78rem;color:var(--sched-text-muted);margin-bottom:0.8rem;">This PIN unlocks the Owner Panel — keep it different from the staff PIN and don't share it with the team.</p>
+    <p style="font-size:0.78rem;color:var(--sched-text-muted);margin-bottom:0.8rem;">This PIN unlocks the Owner Panel - keep it different from the staff PIN and don't share it with the team.</p>
     <div class="block-field" style="max-width:220px;"><label>Owner PIN</label><input type="text" id="setOwnerPin" /></div>
     <button type="button" id="btnSaveOwnerPinNew" class="block-save-btn" style="width:auto;">Save</button>
     <div id="setOwnerPinStatus" class="owner-status-msg"></div>
   `;
+  document.getElementById('btnSaveHorizon').addEventListener('click', async () => {
+    const statusEl = document.getElementById('setHorizonStatus');
+    const days = parseInt(document.getElementById('setHorizon').value, 10);
+    if (!Number.isFinite(days) || days < 1 || days > 365) {
+      statusEl.textContent = 'Enter a number of days between 1 and 365.';
+      statusEl.style.color = '#dc2626';
+      return;
+    }
+    statusEl.textContent = 'Saving…'; statusEl.style.color = 'var(--sched-text-muted)';
+    const { error } = await setBookingHorizonAdmin({ pin: currentPin, days });
+    if (error) { statusEl.textContent = 'Error: ' + error.message; statusEl.style.color = '#dc2626'; return; }
+    const until = new Date();
+    until.setDate(until.getDate() + days);
+    statusEl.textContent = `✓ Saved - clients can now book up to ${until.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })}, moving forward a day at a time.`;
+    statusEl.style.color = '#059669';
+  });
+
   document.getElementById('btnSaveStaffPinNew').addEventListener('click', async () => {
     const statusEl = document.getElementById('setStaffPinStatus');
     const val = document.getElementById('setStaffPin').value.trim();
@@ -2045,18 +2815,50 @@ function renderOwnerSettingsTab() {
     statusEl.textContent = 'Saving…'; statusEl.style.color = 'var(--sched-text-muted)';
     const { error } = await setPinAdmin({ pin: currentPin, key: 'owner_pin', newValue: val });
     if (error) { statusEl.textContent = 'Error: ' + error.message; statusEl.style.color = '#dc2626'; return; }
-    statusEl.textContent = '✓ Saved — use this new PIN next time you open the Owner Panel.'; statusEl.style.color = '#059669';
+    statusEl.textContent = '✓ Saved - use this new PIN next time you open the Owner Panel.'; statusEl.style.color = '#059669';
   });
 }
 
+let dayStripResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(dayStripResizeTimer);
+  dayStripResizeTimer = setTimeout(async () => {
+    if (!currentPin) return;
+    const next = computeDaysAhead();
+    if (next === DAYS_AHEAD) return;
+    const grew = next > DAYS_AHEAD;
+    DAYS_AHEAD = next;
+    if (grew) await loadWindow(currentPin, windowFrom, addDays(windowFrom, DAYS_AHEAD));
+    renderDayStrip();
+  }, 200);
+});
+
 // ── LOAD ──
 async function loadStaff() {
+  // fetchBookableStaff returns every ACTIVE staff member, bookable or not
+  // (the team page needs the non-bookable ones too). The schedule grid only
+  // wants people who actually take appointments here — otherwise Heba,
+  // Pati and now Taniya each get a column that can never hold anything.
   const { data, error } = await fetchBookableStaff();
-  currentStaff = !error && data && data.length ? data : FALLBACK_STAFF;
+  const rows = !error && data && data.length ? data.filter((s) => s.bookable !== false) : null;
+  currentStaff = rows && rows.length ? rows : FALLBACK_STAFF;
 }
 async function loadServices() {
   const { data, error } = await fetchActiveServices();
   currentServices = !error && data && data.length ? data : FALLBACK_SERVICES;
+}
+
+// Opening hours and the per-stylist closing overrides, for the day strip's
+// capacity bar. Falls back to the seeded hours so the bar still means
+// something in preview mode; an empty override list just means everyone
+// works to the general closing time, which is the common case anyway.
+async function loadHours() {
+  const [hRes, oRes] = await Promise.all([
+    fetchBusinessHours().catch(() => ({ error: true })),
+    fetchStaffHoursOverrides().catch(() => ({ error: true })),
+  ]);
+  currentBusinessHours = (!hRes.error && hRes.data && hRes.data.length) ? hRes.data : FALLBACK_BUSINESS_HOURS_SCHED;
+  currentHoursOverrides = (!oRes.error && oRes.data) ? oRes.data : FALLBACK_HOURS_OVERRIDES_SCHED;
 }
 
 async function loadWindow(pin, dateFrom, dateTo) {
@@ -2078,6 +2880,7 @@ async function openSchedule(pin) {
   isOwnerMode = error ? pin === FALLBACK_OWNER_PIN : data === true;
   btnOwnerPanel.style.display = isOwnerMode ? '' : 'none';
   loadServices();
+  loadHours().then(renderDayStrip);
   loadStaff().then(() => {
     if (currentActorStaffId && currentStaff.some((s) => s.id === currentActorStaffId)) enterApp(pin);
     else showIdentityPicker();
@@ -2104,6 +2907,7 @@ function enterApp(pin) {
   scheduleApp.style.display = '';
   topbarActions.style.display = 'flex';
   relocateStaffPills();
+  DAYS_AHEAD = computeDaysAhead();
   loadWindow(pin, todayStr(), addDays(todayStr(), DAYS_AHEAD)).then(() => {
     renderDayStrip();
     updateDayLabel();
@@ -2174,3 +2978,385 @@ setInterval(() => { if (currentPin && viewMode === 'upcoming') renderGrid(); }, 
 
 const cachedPin = localStorage.getItem(PIN_KEY);
 if (cachedPin) openSchedule(cachedPin);
+
+// ── EXTENSIONS ORDER BOOK ──
+// Staff PIN, not owner: whoever takes the consultation writes the order, while
+// the details are still in front of them. See migration 0007.
+
+const extModal = document.getElementById('extModal');
+const extClose = document.getElementById('extClose');
+const extForm = document.getElementById('extForm');
+const extList = document.getElementById('extList');
+const extRisk = document.getElementById('extRisk');
+const extSearch = document.getElementById('extSearch');
+const extBadge = document.getElementById('extBadge');
+
+// The four states a stylist actually acts on, in the order they need acting on.
+// "Arrived with her already booked" is deliberately its own group: the hair is
+// here and she is coming, so there is nothing to do and it should not sit among
+// the jobs that do need doing.
+const EXT_GROUPS = [
+  { key: 'tell', title: 'Tell her', hint: 'Hair is here, no appointment booked' },
+  { key: 'ordered', title: 'On order', hint: 'Waiting on the supplier' },
+  { key: 'ready', title: 'Ready', hint: 'Hair is here and she is already booked' },
+  { key: 'notified', title: 'Told her', hint: 'Waiting for her to come in' },
+  { key: 'done', title: 'Finished', hint: '' },
+];
+
+function extGroupOf(o) {
+  if (o.status === 'arrived') return o.needs_telling ? 'tell' : 'ready';
+  if (o.status === 'ordered') return 'ordered';
+  if (o.status === 'notified') return 'notified';
+  return 'done';
+}
+
+const extEsc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+
+const extNok = (n) => (n == null ? '' : Number(n).toLocaleString('nb-NO') + ' NOK');
+
+/** "6/613 ombre · 50 cm · 100 g" from whatever was filled in. */
+function extDetailLine(o) {
+  return [o.colour, o.length_cm, o.quantity].filter(Boolean).map(extEsc).join(' · ');
+}
+
+function extDayLabel(n) {
+  const d = Number(n);
+  if (!Number.isFinite(d)) return '';
+  if (d === 0) return 'today';
+  if (d === 1) return '1 day';
+  return `${d} days`;
+}
+
+function openExtModal() {
+  extModal.style.display = 'flex';
+  extForm.hidden = true;
+  extSearch.value = '';
+  loadExtensionStaffOptions();
+  refreshExtensions();
+}
+function closeExtModal() { extModal.style.display = 'none'; }
+
+async function loadExtensionStaffOptions() {
+  const sel = document.getElementById('extStaff');
+  if (!sel || sel.options.length) return;
+  // The stylist list is already loaded for the schedule itself.
+  sel.innerHTML = '<option value="">-</option>'
+    + (currentStaff || []).map((s) => `<option value="${extEsc(s.id)}">${extEsc(s.name)}</option>`).join('');
+  if (currentActorStaffId) sel.value = currentActorStaffId;
+}
+
+async function refreshExtensions(query) {
+  const [ordersRes, riskRes] = await Promise.all([
+    query
+      ? fetchExtensionHistory({ pin: currentPin, query })
+      : fetchExtensionOrders({ pin: currentPin }),
+    fetchExtensionOrdersAtRisk({ pin: currentPin, withinDays: 7 }),
+  ]);
+
+  renderExtRisk(query ? [] : ((!riskRes.error && riskRes.data) || []));
+  renderExtList((!ordersRes.error && ordersRes.data) || [], !!query, ordersRes.error);
+}
+
+// ── FITTINGS WITH NO HAIR ──
+// Nothing here contacts the client. It is a warning for the salon so the
+// supplier can be chased while there is still time — see the note in 0007.
+function renderExtRisk(rows) {
+  if (extBadge) {
+    extBadge.hidden = rows.length === 0;
+    extBadge.textContent = rows.length || '';
+  }
+  if (!rows.length) { extRisk.innerHTML = ''; return; }
+
+  extRisk.innerHTML = `
+    <div class="ext-risk-head">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      ${rows.length} fitting${rows.length === 1 ? '' : 's'} coming up, hair not arrived
+    </div>
+    ${rows.map((r) => `
+      <div class="ext-risk-row">
+        <div class="ext-risk-main">
+          <strong>${extEsc(r.customer_name)}</strong>
+          <span class="ext-risk-when">in ${extDayLabel(r.days_until_fitting)}</span>
+          <div class="ext-risk-meta">
+            ${new Date(r.booking_date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+            ${fmtTime(r.booking_time)}${r.booking_staff ? ' · ' + extEsc(r.booking_staff) : ''}
+          </div>
+          <div class="ext-risk-meta">
+            ${extDetailLine(r)}${r.supplier ? ' · ' + extEsc(r.supplier) : ''}
+            · ordered ${extDayLabel(r.days_since_ordered)} ago
+          </div>
+        </div>
+        <div class="ext-risk-actions">
+          <a class="owner-action-btn" href="tel:${extEsc(r.customer_phone)}"><i class="fa-solid fa-phone"></i> Call</a>
+          <button type="button" class="owner-action-btn confirm" data-ext-arrived="${extEsc(r.id)}"><i class="fa-solid fa-box-open"></i> It arrived</button>
+        </div>
+      </div>`).join('')}
+  `;
+  wireExtActions(extRisk);
+}
+
+function renderExtList(rows, isSearch, error) {
+  if (error) { extList.innerHTML = '<p class="owner-empty">Could not load orders.</p>'; return; }
+  if (!rows.length) {
+    extList.innerHTML = `<p class="owner-empty">${isSearch ? 'Nothing found.' : 'No orders yet.'}</p>`;
+    return;
+  }
+
+  // A search is a history lookup — one client, newest first — so grouping it
+  // by what needs doing would only get in the way.
+  if (isSearch) {
+    extList.innerHTML = `<div class="ext-group-title">Previous orders</div>`
+      + rows.map((o) => extCard(o, true)).join('');
+    wireExtActions(extList);
+    return;
+  }
+
+  const grouped = {};
+  rows.forEach((o) => {
+    const g = extGroupOf(o);
+    (grouped[g] = grouped[g] || []).push(o);
+  });
+
+  extList.innerHTML = EXT_GROUPS.filter((g) => grouped[g.key]).map((g) => `
+    <div class="ext-group-title ext-group-${g.key}">
+      ${g.title} <span>${grouped[g.key].length}</span>
+      ${g.hint ? `<em>${g.hint}</em>` : ''}
+    </div>
+    ${grouped[g.key].map((o) => extCard(o)).join('')}
+  `).join('');
+  wireExtActions(extList);
+}
+
+function extCard(o, historyView) {
+  const group = extGroupOf(o);
+  const balance = o.balance_due != null && Number(o.balance_due) > 0
+    ? `<span class="ext-balance">${extNok(o.balance_due)} to pay</span>` : '';
+  const deposit = o.deposit_amount != null
+    ? `<span class="ext-deposit ${o.deposit_paid ? 'paid' : 'unpaid'}">Deposit ${extNok(o.deposit_amount)}${o.deposit_paid ? ' paid' : ' UNPAID'}</span>`
+    : '';
+
+  let actions = '';
+  if (!historyView) {
+    if (group === 'ordered') {
+      actions = `<button type="button" class="owner-action-btn confirm" data-ext-arrived="${extEsc(o.id)}"><i class="fa-solid fa-box-open"></i> It arrived</button>`;
+    } else if (group === 'tell') {
+      // The only group with a Tell her button. An order sitting in "ready" has
+      // her already booked, so there is nothing to tell her.
+      actions = `
+        <button type="button" class="owner-action-btn confirm" data-ext-tell="${extEsc(o.id)}"><i class="fa-solid fa-paper-plane"></i> Tell her</button>
+        <a class="owner-action-btn" href="tel:${extEsc(o.customer_phone)}"><i class="fa-solid fa-phone"></i> Call</a>`;
+    } else if (group === 'ready' || group === 'notified') {
+      actions = `<button type="button" class="owner-action-btn" data-ext-status="fitted" data-ext-id="${extEsc(o.id)}"><i class="fa-solid fa-check"></i> Fitted</button>`;
+    }
+  }
+
+  const booked = o.booking_date
+    ? `<span class="ext-booked"><i class="fa-regular fa-calendar-check"></i> ${new Date(o.booking_date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} ${fmtTime(o.booking_time)}${o.booking_staff ? ' · ' + extEsc(o.booking_staff) : ''}</span>`
+    : '';
+
+  return `
+    <div class="ext-card ext-card-${group}" data-id="${extEsc(o.id)}">
+      <div class="ext-card-main">
+        <div class="ext-card-name">
+          ${extEsc(o.customer_name)}
+          ${group === 'ordered' ? `<span class="ext-waiting">waiting ${extDayLabel(o.days_waiting)}</span>` : ''}
+        </div>
+        <div class="ext-card-detail">${extDetailLine(o) || '<em>no details recorded</em>'}${o.supplier ? ' · ' + extEsc(o.supplier) : ''}</div>
+        <div class="ext-card-meta">
+          ${extEsc(o.customer_phone)}${o.staff_name ? ' · consultation by ' + extEsc(o.staff_name) : ''}
+          ${booked}
+        </div>
+        <div class="ext-card-money">${deposit} ${balance}</div>
+        ${o.notes ? `<div class="ext-card-notes"><i class="fa-solid fa-note-sticky"></i> ${extEsc(o.notes)}</div>` : ''}
+      </div>
+      <div class="ext-card-actions">${actions}</div>
+      <div class="ext-card-status" id="extMsg-${extEsc(o.id)}"></div>
+    </div>`;
+}
+
+function wireExtActions(root) {
+  root.querySelectorAll('[data-ext-arrived]').forEach((btn) => {
+    btn.addEventListener('click', () => markArrived(btn.dataset.extArrived, btn));
+  });
+  root.querySelectorAll('[data-ext-tell]').forEach((btn) => {
+    btn.addEventListener('click', () => tellHer(btn.dataset.extTell, btn));
+  });
+  root.querySelectorAll('[data-ext-status]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const { error } = await setExtensionOrderStatus({
+        pin: currentPin, id: btn.dataset.extId, status: btn.dataset.extStatus,
+      });
+      if (error) { btn.disabled = false; alert('Could not update: ' + error.message); return; }
+      refreshExtensions();
+    });
+  });
+}
+
+// Logging a delivery and telling the client are separate on purpose: a box with
+// four clients' hair in it can be ticked off in seconds, and the messages sent
+// afterwards. Until they are, the order keeps asking to be dealt with.
+async function markArrived(id, btn) {
+  btn.disabled = true;
+  const { data, error } = await markExtensionsArrived({ pin: currentPin, id });
+  if (error) { btn.disabled = false; alert('Could not mark it arrived: ' + error.message); return; }
+  const row = Array.isArray(data) ? data[0] : data;
+  await refreshExtensions();
+  // If she has no fitting booked, she is now sitting in "Tell her" — say so,
+  // rather than leaving the stylist to notice.
+  if (row && !row.booking_date) {
+    const msg = document.getElementById(`extMsg-${id}`);
+    if (msg) {
+      msg.textContent = 'Marked arrived - she still needs telling.';
+      msg.style.color = '#b45309';
+    }
+  }
+}
+
+async function tellHer(id, btn) {
+  const card = btn.closest('.ext-card');
+  const msg = document.getElementById(`extMsg-${id}`);
+  card.querySelectorAll('button').forEach((b) => (b.disabled = true));
+  msg.textContent = 'Sending…';
+  msg.style.color = 'var(--sched-text-muted)';
+
+  // markExtensionsArrived is what returns the details the message is built
+  // from, and it has already run — so re-read the order from the list instead
+  // of asking the database again.
+  const { data, error } = await fetchExtensionOrders({ pin: currentPin, status: 'arrived' });
+  const order = (!error && data) ? data.find((o) => o.id === id) : null;
+  if (!order) {
+    msg.textContent = 'Could not find that order. Try reopening this screen.';
+    msg.style.color = '#dc2626';
+    card.querySelectorAll('button').forEach((b) => (b.disabled = false));
+    return;
+  }
+
+  const sent = await sendExtensionsArrived({
+    pin: currentPin,
+    order_id: id,
+    customer_name: order.customer_name,
+    customer_email: order.customer_email || '',
+    customer_phone: order.customer_phone,
+    order_detail: [order.colour, order.length_cm, order.quantity].filter(Boolean).join(', '),
+    balance_due: order.balance_due,
+  });
+
+  // The message is best-effort; being told is what matters. Record it either
+  // way, but say plainly when nothing went out so someone picks up the phone.
+  const { error: markErr } = await markExtensionsNotified({ pin: currentPin, id });
+  if (markErr) {
+    msg.textContent = 'Error: ' + markErr.message;
+    msg.style.color = '#dc2626';
+    card.querySelectorAll('button').forEach((b) => (b.disabled = false));
+    return;
+  }
+
+  if (sent && sent.sent) {
+    msg.textContent = '✓ Told her.';
+    msg.style.color = '#059669';
+  } else {
+    msg.innerHTML = `Marked as told, but nothing was sent`
+      + `<div class="req-mail-warn">${extEsc((sent && sent.reason) || 'Messaging is not set up yet')}</div>`
+      + `<div class="req-mail-warn">Ring her: <a href="tel:${extEsc(order.customer_phone)}">${extEsc(order.customer_phone)}</a></div>`;
+    msg.style.color = '#b45309';
+  }
+  setTimeout(() => refreshExtensions(), 1800);
+}
+
+// ── NEW ORDER ──
+document.getElementById('btnExtNew').addEventListener('click', () => {
+  extForm.hidden = !extForm.hidden;
+  if (!extForm.hidden) document.getElementById('extName').focus();
+});
+
+document.getElementById('btnExtSave').addEventListener('click', async () => {
+  const status = document.getElementById('extFormStatus');
+  const val = (id) => document.getElementById(id).value.trim();
+  const num = (id) => {
+    const v = document.getElementById(id).value;
+    return v === '' ? null : Number(v);
+  };
+  if (!val('extName') || !val('extPhone')) {
+    status.textContent = 'A name and a phone number are needed - that is how she gets told when it arrives.';
+    status.style.color = '#dc2626';
+    return;
+  }
+  status.textContent = 'Saving…';
+  status.style.color = 'var(--sched-text-muted)';
+
+  const { error } = await addExtensionOrder({
+    pin: currentPin,
+    customerName: val('extName'), customerPhone: val('extPhone'), customerEmail: val('extEmail'),
+    staffId: document.getElementById('extStaff').value || null,
+    colour: val('extColour'), lengthCm: val('extLength'),
+    quantity: val('extQty'), supplier: val('extSupplier'),
+    totalAgreed: num('extTotal'), depositAmount: num('extDeposit'),
+    depositPaid: document.getElementById('extDepositPaid').checked,
+    notes: val('extNotes'),
+  });
+  if (error) { status.textContent = 'Error: ' + error.message; status.style.color = '#dc2626'; return; }
+
+  status.textContent = '✓ Order added.';
+  status.style.color = '#059669';
+  ['extName', 'extPhone', 'extEmail', 'extColour', 'extLength', 'extQty', 'extTotal', 'extDeposit', 'extNotes']
+    .forEach((id) => { document.getElementById(id).value = ''; });
+  setTimeout(() => { extForm.hidden = true; status.textContent = ''; refreshExtensions(); }, 700);
+});
+
+// ── SEARCH ──
+let extSearchTimer = null;
+extSearch.addEventListener('input', () => {
+  clearTimeout(extSearchTimer);
+  extSearchTimer = setTimeout(() => {
+    const q = extSearch.value.trim();
+    refreshExtensions(q.length >= 2 ? q : undefined);
+  }, 250);
+});
+
+document.getElementById('btnExtensions').addEventListener('click', () => {
+  closeMoreMenu();
+  openExtModal();
+});
+extClose.addEventListener('click', closeExtModal);
+extModal.addEventListener('click', (e) => { if (e.target === extModal) closeExtModal(); });
+
+// ── NO-SHOW NOTICE WIRING ──
+document.getElementById('noShowClose').addEventListener('click', closeNoShowNotice);
+document.getElementById('noShowSkip').addEventListener('click', closeNoShowNotice);
+document.getElementById('noShowModal').addEventListener('click', (e) => {
+  if (e.target.id === 'noShowModal') closeNoShowNotice();
+});
+document.getElementById('noShowSend').addEventListener('click', async () => {
+  if (!noShowTarget) return;
+  const status = document.getElementById('noShowStatus');
+  const btn = document.getElementById('noShowSend');
+  btn.disabled = true;
+  status.textContent = 'Sending…';
+  status.style.color = 'var(--sched-text-muted)';
+
+  const res = await sendBookingEmail({
+    pin: currentPin,
+    booking_id: noShowTarget.id,
+    decision: 'no_show_notice',
+    reason: document.getElementById('noShowNote').value.trim(),
+    customer_name: noShowTarget.customer_name,
+    customer_email: noShowTarget.customer_email,
+    service_name: noShowTarget.service_name,
+    staff_name: noShowTarget.staff_name || '',
+    date: noShowTarget.date,
+    start_time: noShowTarget.start_time,
+  });
+
+  if (res && res.sent) {
+    status.textContent = '✓ Sent.';
+    status.style.color = '#059669';
+    setTimeout(closeNoShowNotice, 900);
+  } else {
+    status.textContent = 'Could not send: ' + ((res && res.reason) || 'unknown');
+    status.style.color = '#b45309';
+    btn.disabled = false;
+  }
+});
