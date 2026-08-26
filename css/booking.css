@@ -455,11 +455,25 @@
 }
 .custom-select-option:hover { background: var(--blush); }
 .custom-select-option.active { background: var(--taupe); color: #fff; }
+/* ── SEARCH AND CATEGORY, SIDE BY SIDE AT EVERY WIDTH ──
+   flex-basis:100% on the search used to push the dropdown onto its own line
+   below 480px, which cost a whole row of a phone screen to a control that
+   fits perfectly well beside it. They share the row now: the search takes
+   what is left, the dropdown keeps enough width to stay readable, and its
+   label truncates rather than wrapping the button to two lines. */
 @media (max-width: 480px) {
-  .service-filter-bar { flex-wrap: wrap; }
-  .service-search-wrap { flex-basis: 100%; }
-  .custom-select { flex: 1; max-width: none; }
-  .custom-select-menu { left: 0; right: 0; min-width: 0; }
+  .service-filter-bar { flex-wrap: nowrap; gap: 0.45rem; }
+  .service-search-wrap { flex: 1 1 auto; min-width: 0; padding: 0.62rem 0.8rem; }
+  .service-search-wrap input { font-size: 0.78rem; }
+  .custom-select { flex: 0 0 auto; width: 42%; max-width: 10.5rem; }
+  .custom-select-trigger { padding: 0.62rem 0.75rem; gap: 0.35rem; }
+  .custom-select-current {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .custom-select-menu { left: auto; right: 0; min-width: 13rem; }
 }
 
 /* Date + time */
