@@ -1,20 +1,33 @@
 {
-  "_comment_maintenance": "THE SITE IS INTENTIONALLY DOWN. The rewrite below serves maintenance.html for every route while the real pages stay intact in the repo. TO BRING THE SITE BACK: delete the entire 'rewrites' block. Nothing else needs restoring. The exclusions keep the maintenance page's own assets, the search-engine verification files, and Vercel's internals reachable.",
-  "rewrites": [
-    {
-      "source": "/((?!maintenance\\.html|favicon\\.ico|icon-192\\.png|icon-512\\.png|manifest\\.json|robots\\.txt|sitemap\\.xml|BingSiteAuth\\.xml|google19500c3f386eb56a\\.html|5e060fce867946c4b3f54be6e43c1a47\\.txt|_vercel).*)",
-      "destination": "/maintenance.html"
-    }
-  ],
+  "_comment_noindex": "The site has no custom domain attached right now, so it is reachable only at its .vercel.app URL. X-Robots-Tag below keeps that URL out of search results. REMOVE that header the day studioserena.no is pointed here, or the real site will be invisible to Google.",
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
       ]
     }
   ]
