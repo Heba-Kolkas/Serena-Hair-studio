@@ -24,6 +24,8 @@ const FALLBACK_STAFF = [
     bookable: false, external_booking_url: 'https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu',
     external_booking_label: 'Book on Instagram' },
   { name: 'Pati', role: 'Nail Artist', role_no: 'Neglekunstner',
+    bio_short: 'Ten years of gel, extensions and nail art, with an eye for precision.',
+    bio_short_no: 'Ti års erfaring med gele, neglforlengelse og neglekunst.',
     bio: [
       'With over 10 years of experience in the nail industry, I am passionate about creating beautiful, precise, and long-lasting nails tailored to each client.',
       'Throughout my career, I have completed several professional training courses and earned multiple certifications, continuously developing my skills and staying up to date with the latest techniques and trends.',
@@ -46,6 +48,15 @@ const FALLBACK_STAFF = [
 ];
 
 function lang() { return (window._getLang && window._getLang()) || 'en'; }
+
+/** The line shown on a card. A written short version wins over an automatic
+ *  cut, which only ever says whatever happened to fall inside the budget. */
+function cardBio(member) {
+  const no = lang() === 'no';
+  const short = no && member.bio_short_no ? member.bio_short_no : member.bio_short;
+  if (short) return short;
+  return shortBio(no && member.bio_no ? member.bio_no : member.bio);
+}
 
 function cardHtml(member) {
   const role = lang() === 'no' && member.role_no ? member.role_no : member.role;
@@ -72,7 +83,7 @@ function cardHtml(member) {
       <div class="team-card-name">${member.name}</div>
       <div class="team-card-role">${role}</div>
       <div class="team-card-stars">★★★★★</div>
-      <div class="team-card-bio">${shortBio(bio)}${moreLink(member, bio)}</div>
+      <div class="team-card-bio">${cardBio(member)}${moreLink(member, bio)}</div>
       ${member.instagram ? `<a href="${member.instagram}" class="team-card-social" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>` : ''}
       ${cta}
     </div>
@@ -189,7 +200,7 @@ function featuredCardHtml(member) {
         <div class="team-card-name">${member.name}</div>
         <div class="team-card-role">${role}</div>
         <div class="team-card-stars">★★★★★</div>
-        <div class="team-card-bio">${shortBio(bio)}${moreLink(member, bio)}</div>
+        <div class="team-card-bio">${cardBio(member)}${moreLink(member, bio)}</div>
         <div class="team-card-featured-actions">
           ${member.instagram ? `<a href="${member.instagram}" class="team-card-social" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>` : ''}
           ${cta}
