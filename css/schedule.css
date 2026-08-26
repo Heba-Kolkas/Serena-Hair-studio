@@ -1481,3 +1481,86 @@ body { background: var(--sched-bg); }
 .noshow-fee { font-size: 0.8rem; color: var(--sched-text-muted); margin: 0.2rem 0 0.9rem; }
 .noshow-warn { font-size: 0.8rem; color: #C25E4B; margin: 0.4rem 0; }
 .noshow-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.9rem; }
+
+/* ── MODALS THAT FIT THE SCREEN ──
+   .appt-popup had no height limit at all. The overlay centres it, so a panel
+   taller than the viewport overflowed off BOTH ends at once: the title and
+   close button above the top edge, the save button below the bottom, and no
+   way to scroll to either. It was survivable while every modal held four
+   fields; the extensions order form has fourteen.
+
+   The panel is now capped and scrolls inside itself, with the heading pinned
+   so you can always see which form you are in and always reach the X. */
+.appt-popup {
+  max-height: calc(100vh - 2.5rem);
+  max-height: calc(100dvh - 2.5rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+.appt-popup > .block-modal-title,
+.appt-popup > .popup-name {
+  flex: none;
+  padding: 1.4rem 1.75rem 0.9rem;
+  margin: 0;
+  background: var(--sched-surface);
+  border-bottom: 1px solid var(--sched-border);
+}
+/* Everything after the heading scrolls as one block. */
+.appt-popup > *:not(.block-modal-title):not(.popup-name):not(.appt-popup-close) {
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
+}
+.appt-popup > *:not(.block-modal-title):not(.popup-name):not(.appt-popup-close):first-of-type {
+  padding-top: 1.25rem;
+}
+.appt-popup > *:last-child { padding-bottom: 1.5rem; }
+.appt-popup-close {
+  top: 1.15rem;
+  right: 1.1rem;
+  z-index: 3;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--sched-surface);
+}
+.appt-popup-close:hover { background: var(--sched-border); }
+
+/* The tabs and the tab body are the scrolling part of the owner panel. */
+.owner-panel .owner-tabs { flex: none; }
+.owner-panel #ownerTabContent,
+#extList, #extRisk {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ── THE EXTENSIONS ORDER FORM ──
+   Fourteen fields in one column is a scroll with no shape to it. Grouped two
+   across so related pairs sit together - name beside phone, colour beside
+   length - and the whole form reads as four short rows rather than a list. */
+.ext-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem 0.75rem; }
+.ext-form-grid .block-field { margin-bottom: 0; }
+.ext-form-grid .block-field label,
+.ext-form .block-field label {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.2rem;
+}
+.ext-form-grid input,
+.ext-form input,
+.ext-form select { padding: 0.5rem 0.65rem; font-size: 0.85rem; }
+.ext-form { padding: 0.9rem 1rem; margin-bottom: 1rem; }
+.ext-form .block-allday-check { margin: 0.6rem 0 0.5rem; }
+.ext-form .block-save-btn { margin-top: 0.4rem; }
+/* Notes runs the full width - it is a sentence, not a field. */
+.ext-form > .block-field { grid-column: 1 / -1; }
+
+@media (max-width: 560px) {
+  .ext-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .appt-popup > .block-modal-title { padding: 1.2rem 1.2rem 0.8rem; }
+  .appt-popup > *:not(.block-modal-title):not(.popup-name):not(.appt-popup-close) {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+}

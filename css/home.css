@@ -860,3 +860,20 @@
 @media (min-width: 900px) {
   .info-strip { grid-template-columns: repeat(4, 1fr); padding: 2.25rem 0.5rem 0; }
 }
+
+/* ── LESS VEIL OVER THE PHONE HERO ──
+   The fade exists to dissolve the photo's left edge into the card so the two
+   read as one surface. On a phone the photo column is only about 40% of the
+   width, so the same curve was washing nearly all of it out - the salon was
+   barely visible behind it. It now starts softer and clears sooner, leaving
+   the photo readable while its edge still melts into the copy beside it. */
+@media (max-width: 599px) {
+  .hero-card-photo::after {
+    background: linear-gradient(90deg,
+      rgba(var(--linen-rgb),0.98) 0%,
+      rgba(var(--linen-rgb),0.72) 14%,
+      rgba(var(--linen-rgb),0.38) 30%,
+      rgba(var(--linen-rgb),0.14) 48%,
+      rgba(var(--linen-rgb),0) 66%);
+  }
+}
