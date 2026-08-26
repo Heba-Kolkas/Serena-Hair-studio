@@ -464,3 +464,45 @@ body.bio-modal-open { overflow: hidden; }
 .team-card-featured-photo:hover .team-card-photo-more {
   background: #000;
 }
+
+/* ── LET A BIO BE AS LONG AS IT IS WRITTEN ──
+   The card clamped every bio to two lines and hid the rest with no way to
+   reach it, so a paragraph written to fit the card was cut at the second line
+   regardless. The text is already shortened in JS when it genuinely needs to
+   be - and that version comes with a "Read more" - so a second, silent cut in
+   CSS could only ever remove words nobody could get back.
+
+   Capped rather than unlimited: a very long bio still stops before it can
+   push the Book button off the bottom of the card. */
+.team-card-bio {
+  -webkit-line-clamp: unset;
+  display: block;
+  overflow: visible;
+}
+@media (max-width: 560px) {
+  .team-card-featured .team-card-bio { -webkit-line-clamp: unset; display: block; overflow: visible; }
+}
+
+/* ── ONE COLUMN ON A PHONE ──
+   Two columns at 390px gives each card 164px of width. A 137-character bio
+   takes thirteen lines in that, the role chip wraps onto three, and the name
+   sits above a column of single words. One column gives each card the full
+   width and the same bio settles at five or six lines.
+
+   The last-card span rule below only makes sense with two columns beside each
+   other, so it is scoped away from here - at one column it was setting an odd
+   card to half width. */
+@media (max-width: 560px) {
+  .team-page-grid { grid-template-columns: minmax(0, 1fr); gap: 0.9rem; }
+  .team-page-grid > .team-card-app:last-child:nth-child(2n+1) {
+    grid-column: auto;
+    max-width: none;
+  }
+  .team-card-bio { font-size: 0.76rem; }
+}
+
+/* Three columns at tablet width gave each card 224px, which pushed the bios
+   to nine lines. Two columns until there is genuinely room for three. */
+@media (min-width: 561px) and (max-width: 899px) {
+  .team-page-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

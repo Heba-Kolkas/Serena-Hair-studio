@@ -194,9 +194,13 @@ where
   or (a.name = 'Toner' and sv.name in (
      'Balayage / Highlights', 'Half Head Foil', 'Full Head Foil',
      'Root Touch-Up', 'All-Over Color', 'Reverse Balayage'))
-  -- Extensions go alongside the four-hour lightening work.
+  -- Extensions go alongside any colour work, lightening or not. Fitting them
+  -- takes the afternoon whatever is underneath, so a root touch-up with
+  -- extensions on it is a four-hour appointment and is scheduled as one - see
+  -- the duration and daily-limit handling in book_appointment_core.
   or (a.name like 'Extensions%' and sv.name in (
-     'Balayage / Highlights', 'Half Head Foil', 'Full Head Foil', 'Reverse Balayage'));
+     'Balayage / Highlights', 'Half Head Foil', 'Full Head Foil', 'Reverse Balayage',
+     'Root Touch-Up', 'All-Over Color'));
 -- Haircuts, styling, updos, bridal, extensions and consultation deliberately
 -- offer none — the price list covers each of those as a complete service.
 
@@ -222,11 +226,15 @@ where
   -- Where the day's four-hour appointment sits, if one is booked. Drives both
   -- the caps below and the working hours further down. Bridal counts: it is
   -- four hours of her day exactly as a colour is.
+  -- Measured from the booking's own length rather than looked up from its
+  -- service. A root touch-up with extensions is four hours long and occupies
+  -- the day exactly as a balayage does, but its service row still says ninety
+  -- minutes, so the service is the wrong thing to ask.
   select min(b.start_time) into v_colour_start
-    from bookings b join services sv2 on sv2.id = b.service_id
+    from bookings b
     where b.staff_id = p_staff_id and b.date = p_date
       and b.status <> 'cancelled'
-      and (sv2.daily_limited or sv2.category = 'Bridal');
+      and (b.end_time - b.start_time) >= interval '240 minutes';
 
   -- Every protection on a policy stylist's day — short work not starting
   -- until other_open_time, the other_split_at rule, max_other_per_day —
@@ -266,10 +274,10 @@ where
     if v_daily_limited or v_is_bridal then
       if v_pol.max_limited_per_day is not null then
         select count(*) into v_scheduled_today
-          from bookings b join services sv3 on sv3.id = b.service_id
+          from bookings b
           where b.staff_id = p_staff_id and b.date = p_date
             and b.status <> 'cancelled'
-            and (sv3.daily_limited or sv3.category = 'Bridal');
+            and (b.end_time - b.start_time) >= interval '240 minutes';
         if v_scheduled_today >= v_pol.max_limited_per_day then
           raise exception 'This stylist is already booked for a four-hour appointment that day';
         end if;
@@ -384,8 +392,9 @@ where
           into v_side_early, v_side_late
         from bookings b join services sv5 on sv5.id = b.service_id
         where b.staff_id = p_staff_id and b.date = p_date
-          and b.status <> 'cancelled' and not sv5.daily_limited
-          and sv5.category <> 'Consultation' and sv5.category <> 'Bridal';
+          and b.status <> 'cancelled'
+          and (b.end_time - b.start_time) < interval '240 minutes'
+          and sv5.category <> 'Consultation';
 
         if v_side_early > 0 and p_start_time >= v_pol.other_split_at then
           raise exception 'This stylist already has a shorter appointment before % that day - please pick a time that finishes by %',
@@ -1206,6 +1215,24 @@ begin
   if v_has_addons and v_duration_with_addons is not null then
     v_duration := v_duration_with_addons;
   end if;
+
+  -- ...except extensions, which take the afternoon whatever is underneath.
+  -- A root touch-up with extensions on it is a four-hour appointment, not a
+  -- two-hour one, and from here on it is treated as a colour: fixed to the
+  -- stylist's four-hour start times, counted against the day's one-four-hour
+  -- allowance, and never offered as the second client of an overlap pairing.
+  --
+  -- v_daily_limited is deliberately overwritten rather than checked alongside,
+  -- so every rule further down that already asks "is this a four-hour job?"
+  -- gets the right answer without being touched.
+  if v_has_addons and exists (
+    select 1 from addons a
+    where a.id = any(p_addon_ids) and a.exclusive_group = 'extensions'
+  ) then
+    v_duration := greatest(v_duration, 240);
+    v_daily_limited := true;
+  end if;
+
   v_end_time := p_start_time + (v_duration || ' minutes')::interval;
 
   v_weekday := extract(dow from p_date);

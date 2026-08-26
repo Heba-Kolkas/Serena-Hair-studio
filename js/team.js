@@ -24,20 +24,11 @@ const FALLBACK_STAFF = [
     bookable: false, external_booking_url: 'https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu',
     external_booking_label: 'Book on Instagram' },
   { name: 'Pati', role: 'Nail Artist', role_no: 'Neglekunstner',
-    bio_short: 'Ten years of gel, extensions and nail art.',
-    bio_short_no: 'Ti års erfaring med gele, forlengelse og neglekunst.',
-    bio: [
-      'With over 10 years of experience in the nail industry, I am passionate about creating beautiful, precise, and long-lasting nails tailored to each client.',
-      'Throughout my career, I have completed several professional training courses and earned multiple certifications, continuously developing my skills and staying up to date with the latest techniques and trends.',
-      'My certifications include training in gel manicure, nail extensions, nail art and design, e-file techniques, as well as hygiene and safety standards.',
-      'For me, nail styling is not only about beautiful results, it is about precision, quality, attention to detail, and making every client feel confident and well cared for.',
-    ].join(PARA),
-    bio_no: [
-      'Med over 10 års erfaring i neglebransjen brenner jeg for å skape vakre, presise og holdbare negler tilpasset hver enkelt kunde.',
-      'Gjennom karrieren har jeg fullført flere profesjonelle kurs og tatt en rekke sertifiseringer, og utvikler meg kontinuerlig for å holde meg oppdatert på de nyeste teknikkene og trendene.',
-      'Sertifiseringene mine omfatter gelemanikyr, neglforlengelse, neglekunst og design, e-fil-teknikker samt hygiene- og sikkerhetsstandarder.',
-      'For meg handler negledesign ikke bare om et vakkert resultat, det handler om presisjon, kvalitet, sans for detaljer, og at hver kunde skal føle seg trygg og godt ivaretatt.',
-    ].join(PARA),
+    // One paragraph, and it is the whole thing - no dialog, nothing hidden
+    // behind a "Read more". Written to the length the card shows rather than
+    // cut down to it.
+    bio: 'With over 10 years in the nail industry, I create beautiful, precise and long-lasting nails tailored to each client. My certifications cover gel manicure, nail extensions, nail art and design, e-file technique, and hygiene and safety standards. For me it is not only about the result: it is precision, quality, and every client leaving feeling well looked after.',
+    bio_no: 'Med over 10 års erfaring i neglebransjen skaper jeg vakre, presise og holdbare negler tilpasset hver kunde. Sertifiseringene mine omfatter gelemanikyr, neglforlengelse, neglekunst og design, e-fil-teknikk samt hygiene- og sikkerhetsstandarder. For meg handler det ikke bare om resultatet: det er presisjon, kvalitet, og at hver kunde går herfra godt ivaretatt.',
     photo_url: './html/Pics/Team/Pati.jpeg', instagram: 'https://www.instagram.com/studio.serena.nailsbypati?igsh=amFoY2Y2bTAzbTZq',
     bookable: false, external_booking_url: 'https://timma.no/salong/patrycja-neglebar' },
   { name: 'Heba K.', role: 'Creative Lead & Communications', role_no: 'Creative Lead & Kommunikasjon',
@@ -95,7 +86,7 @@ function cardHtml(member) {
 // the grid or gets clipped mid-sentence by a line-clamp, and a bio cut off at
 // "I am passionate..." reads worse than no bio at all. So the card carries a
 // sentence that stands on its own, and the rest is a tap away.
-const SHORT_BIO_CHARS = 165;
+const SHORT_BIO_CHARS = 380;
 // Only worth cutting when there is a real amount left over. Truncating a bio
 // for the sake of seven characters costs a "Read more" and an ellipsis and
 // saves nothing, so a bio has to overrun by a clear margin before it is
@@ -108,7 +99,10 @@ function isLongBio(bio) { return (bio || '').length > SHORT_BIO_CHARS * SHORT_BI
  *  the text with a gap around it. A trailing space keeps it from butting up
  *  against the full stop. */
 function moreLink(member, bio) {
-  if (!isLongBio(bio)) return '';
+  // Offered only when the card is genuinely showing less than the whole bio.
+  // Asking isLongBio() meant a bio written to fit the card still got a
+  // "Read more" that opened the same words again.
+  if (cardBio(member).trim() === (bio || '').trim()) return '';
   return ` <button type="button" class="team-card-more" data-bio="${member.name}">`
     + (lang() === 'no' ? 'Les mer' : 'Read more') + '</button>';
 }

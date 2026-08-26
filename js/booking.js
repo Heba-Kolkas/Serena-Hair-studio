@@ -143,6 +143,9 @@ const CONSULTATION_DURATION = 10;
 // runs longer end-to-end.
 const OVERLAP_ANCHORS = { 660: 780, 900: 990 }; // 11:00->13:00, 15:00->16:30
 const BALAYAGE_DURATION = 240;
+// The length that makes a booking a four-hour appointment, whatever service
+// it was booked under.
+const FOUR_HOUR_MINUTES = 240;
 // Bridal and updo work is treated apart from everything else in two ways:
 // it never gets paired with a second client while colour processes, and it
 // never carries add-ons — a client can't tack an updo or bridal styling onto
@@ -175,7 +178,11 @@ const ADDON_EXT_50 = { id: 'addon-ext-50', name: 'Extensions (50g)', name_no: 'E
 const ADDON_EXT_100 = { id: 'addon-ext-100', name: 'Extensions (100-150g)', name_no: 'Extensions (100-150g)', price: 0, price_on_consultation: true, kind: 'combo', exclusive_group: 'extensions', requires_confirmation: true, requiresStaff: STAFF_HASSAN };
 
 const LIGHTENING_ADDONS = [ADDON_HAIRCUT, ADDON_GREY, ADDON_TONER, ADDON_EXT_50, ADDON_EXT_100];
-const COLOR_ADDONS = [ADDON_HAIRCUT, ADDON_TONER];
+// Extensions can be fitted over a root touch-up or an all-over colour just as
+// they can over a balayage. Adding them turns the visit into a four-hour
+// appointment - see isFourHourBooking - so it is scheduled and capped exactly
+// like a colour, rather than as the ninety-minute job the service row says.
+const COLOR_ADDONS = [ADDON_HAIRCUT, ADDON_TONER, ADDON_EXT_50, ADDON_EXT_100];
 
 function fmtPrice(n) { return Number(n).toLocaleString('en-US') + ' NOK'; }
 
@@ -192,11 +199,28 @@ function addonPriceLabel(a) {
 // and/or a toner. Services that leave duration_with_addons_minutes unset
 // never stretch, which is how balayage stays 4 hours whatever goes with it.
 // Mirrors the same rule in book_appointment, which is the one that counts.
+// Extensions turn whatever they are added to into a four-hour appointment.
+// Fitting them takes the afternoon whether the colour underneath was a
+// balayage or a root touch-up, so the visit is priced and scheduled as one.
+function hasExtensionsAddon() {
+  return (state.addons || []).some((a) => a.exclusive_group === 'extensions');
+}
+
 function effectiveDuration() {
   const svc = state.service;
   if (!svc) return 0;
+  if (hasExtensionsAddon()) return FOUR_HOUR_MINUTES;
   if (state.addons.length && svc.duration_with_addons_minutes) return svc.duration_with_addons_minutes;
   return svc.duration_minutes;
+}
+
+// Whether THIS booking is a four-hour appointment, which is not the same
+// question as whether the service usually is. A root touch-up is ninety
+// minutes until someone adds extensions to it, and then it competes for the
+// day's four-hour slot exactly as a balayage does.
+function isFourHourBooking(svc) {
+  if (!svc) return false;
+  return !!svc.balayageSchedule || svc.category === 'Bridal' || hasExtensionsAddon();
 }
 
 // What the visit is expected to cost: the service's own price plus every
@@ -1128,13 +1152,14 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   // Bridal counts here too: it is four hours of her day exactly as a colour
   // is, so Mon/Wed/Fri hold one four-hour appointment, not one colour plus a
   // bride.
-  const limitedIds = new Set(
-    (state.services || [])
-      .filter((x) => x.balayageSchedule || x.category === 'Bridal')
-      .map((x) => String(x.id)),
-  );
-  const limitedToday = (busy || []).filter((b) => limitedIds.has(String(b.service_id)));
-  const otherToday = (busy || []).filter((b) => b.service_id && !limitedIds.has(String(b.service_id)));
+  // Measured from the booking itself rather than looked up from its service.
+  // A root touch-up with extensions on it is four hours long and occupies the
+  // day exactly as a balayage does, but its service row still says ninety
+  // minutes - so the service is the wrong thing to ask.
+  const bookedIsFourHour = (b) =>
+    (parseTime(b.end_time) - parseTime(b.start_time)) >= FOUR_HOUR_MINUTES;
+  const limitedToday = (busy || []).filter(bookedIsFourHour);
+  const otherToday = (busy || []).filter((b) => b.service_id && !bookedIsFourHour(b));
   const colourStart = limitedToday.length
     ? Math.min(...limitedToday.map((b) => parseTime(b.start_time)))
     : null;
@@ -1183,7 +1208,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
     if (policy.open) open = parseTime(policy.open);
     if (policy.close) close = parseTime(policy.close);
 
-    if (svc.balayageSchedule || isBridalService) {
+    if (isFourHourBooking(svc)) {
       if (policy.maxLimited != null && limitedToday.length >= policy.maxLimited) {
         return { slots: [], reason: 'colour-taken' };
       }
@@ -1206,7 +1231,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
     if (colourStart != null) {
       if (colourStart <= open && policy.closeAfterEarly) close = parseTime(policy.closeAfterEarly);
       else if (colourStart > open && policy.openBeforeLate) open = parseTime(policy.openBeforeLate);
-    } else if (!svc.balayageSchedule && !isBridalService && policy.otherOpen
+    } else if (!isFourHourBooking(svc) && policy.otherOpen
                && !colourHoldOver) {
       // A colour can still happen today, so the day has to leave room for one.
       open = parseTime(policy.otherOpen);
@@ -1236,7 +1261,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   // A shorter service on an as-yet-uncoloured day must finish by the split or
   // start after it, so one colour start survives whichever side it lands.
   const splitAt = (policy && policy.otherSplitAt && colourStart == null && !colourHoldOver
-                   && !svc.balayageSchedule && !isBridalService)
+                   && !isFourHourBooking(svc))
     ? parseTime(policy.otherSplitAt)
     : null;
 
@@ -1280,7 +1305,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   if (staffFixed === HASSAN_SLOT_TIMES) {
     const boundary = parseTime(GAP_FILL_BOUNDARY);
     const morningEnd = (busy || [])
-      .filter((bk) => !limitedIds.has(String(bk.service_id)))
+      .filter((bk) => !bookedIsFourHour(bk))
       .map((bk) => parseTime(bk.end_time))
       .filter((e) => e > open && e <= boundary)
       .reduce((a, e) => Math.max(a, e), 0);
@@ -1301,7 +1326,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   // On a policy day the shorter services are shaped by her windows, so build
   // them the same crumb-free way rather than stepping a grid through them.
   let policyWindows = null;
-  if (policy && !svc.balayageSchedule && !svc.consultationRule && !isBridalService) {
+  if (policy && !isFourHourBooking(svc) && !svc.consultationRule) {
     const dayOpen = parseTime(dayHours.open_time);
     policyWindows = splitAt != null
       ? (sideLock === 'late' ? [] : windowSlots(open, splitAt, duration, dayOpen, allRanges))
@@ -1309,7 +1334,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
       : windowSlots(open, close, duration, dayOpen, allRanges);
   }
 
-  const candidates = svc.balayageSchedule
+  const candidates = (svc.balayageSchedule || (hasExtensionsAddon() && !isBridalService))
     ? getBalayageTimes(staff.id, weekday).map(parseTime).filter((t) => t >= open)
     : policyWindows
       ? policyWindows
@@ -1329,7 +1354,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   // the slot UI itself, since two bookings can't be picked at the same
   // minute).
   const overlapEligible = !!staff.allow_overlap_booking
-    && !svc.balayageSchedule
+    && !isFourHourBooking(svc)
     && !BRIDAL_CATEGORIES.includes(svc.category);
 
   const slots = candidates.filter((t) => {
@@ -1367,7 +1392,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   // curated times anyway, and a consultation nests inside other bookings, so
   // it can't strand anything.
   if (policy && slots.length > POLICY_VISIBLE_SLOTS
-      && !svc.balayageSchedule && !isBridalService && !svc.consultationRule) {
+      && !isFourHourBooking(svc) && !svc.consultationRule) {
     // Gap between this slot and the nearest thing already in the day. Touching
     // it is 0; an empty day leaves every slot equal and the sort stable, so
     // the earliest survive.
