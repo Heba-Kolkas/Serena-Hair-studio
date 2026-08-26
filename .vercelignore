@@ -1,0 +1,15 @@
+# Nothing here is served by the site, and shipping it to the build only gives
+# Vercel more chances to decide this is a project that needs compiling.
+#
+# supabase/ holds Deno TypeScript edge functions and SQL migrations. They are
+# deployed to Supabase with its own CLI, never by Vercel.
+supabase/
+
+node_modules/
+out/
+
+# Local tooling and scratch files.
+*.cjs
+*.out
+report_probe*
+.claude/

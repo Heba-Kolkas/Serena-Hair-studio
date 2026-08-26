@@ -422,3 +422,31 @@ body.bio-modal-open { overflow: hidden; }
   line-height: 1.35;
 }
 .team-card-cta span { overflow-wrap: anywhere; }
+
+/* ── THE "MORE" MARKER ──
+   The photo is a circle made with overflow:hidden, which was cutting the
+   marker in half wherever it sat. The clipping moves onto the image itself, so
+   the circle still looks like a circle and the marker can sit proud of its
+   edge where it is actually visible. */
+.team-card-photo,
+.team-card-featured-photo { overflow: visible; }
+.team-card-photo img,
+.team-card-photo .team-card-initial { border-radius: 50%; }
+.team-card-featured-photo img { border-radius: 0; }
+
+.team-card-photo-more {
+  /* Sat at the corner of the bounding box, which on a circle is outside the
+     visible disc. Pulled onto the edge itself, and always visible rather than
+     only on hover - a control nobody can see is a control nobody presses. */
+  right: 2%;
+  bottom: 6%;
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 2px 8px rgba(44, 36, 32, 0.28);
+  border: 2px solid var(--linen, #fdfaf5);
+  width: 26px;
+  height: 26px;
+}
+.team-card-featured-photo .team-card-photo-more { right: 12px; bottom: 12px; }
+.team-card-photo:hover .team-card-photo-more,
+.team-card-featured-photo:hover .team-card-photo-more { transform: scale(1.12); }
