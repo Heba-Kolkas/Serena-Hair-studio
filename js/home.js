@@ -4,10 +4,10 @@ import { fetchFeaturedServices, fetchProductImages } from '/js/supabase-client.j
 // still looks complete (and accurate) while the database is paused/unreachable,
 // or before it's been seeded.
 const FALLBACK_SERVICES = [
-  { name: 'Balayage / Highlights', price_from: 3750, price_is_from: true, image_url: '/html/Pics/Balayage/Blayage12.jpeg' },
-  { name: 'Haircut + Blowdry', price_from: 950, image_url: '/html/Pics/Haircut/Haircut5.jpeg' },
-  { name: 'Keratin Treatment', price_label: 'Price on Consultation', image_url: '/html/Pics/Treatment/cover.jpeg' },
-  { name: 'Hair Extensions', price_from: 3000, image_url: '/html/Pics/Extensions/cover.jpeg' },
+  { name: 'Balayage / Highlights', price_from: 3750, price_is_from: true, image_url: '/html/Pics/Covers/balayage-and-highlights.jpeg' },
+  { name: 'Haircut + Blowdry', price_from: 950, image_url: '/html/Pics/Covers/haircuts-and-styling.jpeg' },
+  { name: 'Keratin Treatment', price_label: 'Price on Consultation', image_url: '/html/Pics/Covers/keratin-and-treatments.jpeg' },
+  { name: 'Hair Extensions', price_from: 3000, image_url: '/html/Pics/Covers/hair-extensions.jpeg' },
 ];
 
 function priceLabel(s) {
