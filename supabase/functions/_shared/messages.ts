@@ -98,6 +98,11 @@ export interface ExtensionsArrivedContext {
 // strings.
 export const SALON = {
   name: 'Studio Serena',
+  // Required on anything that acts as a receipt. A VAT-registered Norwegian
+  // business must show its org number followed by MVA, and must state the VAT
+  // included in the price - bokforingsforskriften kap. 5.
+  orgNumber: '929 908 678 MVA',
+  vatRate: 25,
   address: 'Torshovgata 5H, 0476 Oslo',
   phone: '+47 45 39 76 31',
   /** Plain digits for tel: links. */
@@ -199,8 +204,8 @@ export function smsLength(text: string): SmsCost {
 
 function shell(inner: string, lang: Lang): string {
   const footer = lang === 'no'
-    ? `${SALON.address}<br />${SALON.phone}<br />Svar på denne e-posten, så kommer den rett til oss.`
-    : `${SALON.address}<br />${SALON.phone}<br />Reply to this email and it comes straight to us.`;
+    ? `${SALON.name} &middot; ${SALON.orgNumber}<br />${SALON.address}<br />${SALON.phone}<br />Svar på denne e-posten, så kommer den rett til oss.`
+    : `${SALON.name} &middot; ${SALON.orgNumber}<br />${SALON.address}<br />${SALON.phone}<br />Reply to this email and it comes straight to us.`;
   return `<div style="margin:0;padding:24px;background:#faf6ef;font-family:Helvetica,Arial,sans-serif;color:#3f3632;">
   <div style="max-width:520px;margin:0 auto;background:#fdfaf5;border:1px solid #e9e3db;border-radius:14px;padding:28px;">
     <div style="font-size:20px;letter-spacing:0.12em;text-align:center;color:#3f3632;">STUDIO SERENA</div>
@@ -247,13 +252,23 @@ function receiptBox(ctx: MessageContext, lang: Lang): string {
   const total = typeof ctx.amountCharged === 'number'
     ? `${ctx.amountCharged.toLocaleString('nb-NO')} NOK`
     : '';
+  // Norwegian prices are quoted including VAT, so this is the VAT contained in
+  // the amount rather than something added to it: total x 25/125.
+  const vat = typeof ctx.amountCharged === 'number'
+    ? Math.round(ctx.amountCharged * SALON.vatRate / (100 + SALON.vatRate) * 100) / 100
+    : null;
   return `<div style="background:#f4efe7;border-radius:10px;padding:16px 18px;font-size:15px;line-height:1.7;">
     <table style="width:100%;border-collapse:collapse;font-size:15px;">${rows}</table>
     <div style="height:1px;background:#e2d9cc;margin:12px 0;"></div>
     <div style="display:flex;justify-content:space-between;font-size:16px;">
       <strong>${paid}</strong> <strong>${esc(total)}</strong>
     </div>
+    ${vat != null ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:#6b615c;margin-top:4px;">
+      <span>${lang === 'no' ? `Herav MVA ${SALON.vatRate}%` : `Including VAT ${SALON.vatRate}%`}</span>
+      <span>${vat.toLocaleString('nb-NO', { minimumFractionDigits: 2 })} NOK</span>
+    </div>` : ''}
     ${ctx.bookingRef ? `<div style="color:#9f948e;font-size:13px;margin-top:8px;">${lang === 'no' ? 'Referanse' : 'Reference'} ${esc(String(ctx.bookingRef).toUpperCase())}</div>` : ''}
+    <div style="color:#9f948e;font-size:12px;margin-top:6px;">${esc(SALON.name)} &middot; ${esc(SALON.orgNumber)}</div>
   </div>`;
 }
 
