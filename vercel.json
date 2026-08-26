@@ -1,5 +1,4 @@
 {
-  "_comment_noindex": "The site has no custom domain attached right now, so it is reachable only at its .vercel.app URL. X-Robots-Tag below keeps that URL out of search results. REMOVE that header the day studioserena.no is pointed here, or the real site will be invisible to Google.",
   "headers": [
     {
       "source": "/(.*)",
