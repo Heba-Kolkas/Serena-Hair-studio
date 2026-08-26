@@ -1635,3 +1635,121 @@ body.modal-open { overflow: hidden; }
   }
   .sched-topbar .staff-pills { margin-right: 0.5rem; }
 }
+
+/* ══ OWNER PANEL ═══════════════════════════════════════════════════════
+   Ten sections as pills wrapping across a narrow modal spent half the height
+   on navigation before any content showed, and the wrapped second row read as
+   a different kind of thing from the first. It is a workspace now: sections
+   down the side, the chosen one filling the rest.
+
+   Written to stand on its own rather than adjust the shared .appt-popup rules,
+   because those are set twice in this file and the later block wins - layering
+   another opinion on top is how the last attempt broke. Everything the panel
+   needs is stated here explicitly. */
+.appt-popup.owner-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(1080px, calc(100vw - 2.5rem));
+  max-width: none;
+  height: calc(100vh - 2.5rem);
+  height: calc(100dvh - 2.5rem);
+  max-height: none;
+  overflow: hidden;
+  padding: 0;
+}
+.owner-panel > .owner-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 1.15rem 3rem 1.15rem 1.5rem;
+  border-bottom: 1px solid var(--sched-border);
+  background: var(--sched-surface);
+}
+.owner-panel > .owner-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+  padding: 0 !important;
+}
+.owner-panel .owner-tabs {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0.75rem 0.7rem 1.5rem;
+  border: none;
+  border-right: 1px solid var(--sched-border);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  background: var(--sched-bg, transparent);
+}
+.owner-panel .owner-tab {
+  text-align: left;
+  border: none;
+  border-radius: 9px;
+  padding: 0.58rem 0.8rem;
+  font-size: 0.85rem;
+  background: none;
+  color: var(--sched-text);
+  white-space: nowrap;
+}
+.owner-panel .owner-tab:hover { background: var(--sched-border); }
+.owner-panel .owner-tab.active { background: var(--sched-text); color: var(--sched-surface); }
+.owner-panel > .owner-body > .owner-tab-content {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  padding: 1.4rem 1.6rem 2.5rem !important;
+}
+.owner-back {
+  display: none;
+  border: none;
+  background: none;
+  color: var(--sched-text-muted);
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  flex: none;
+}
+.owner-back:hover { color: var(--sched-text); }
+
+/* ── PHONE: A MENU YOU TAP INTO ──
+   One thing at a time. The section list is the whole screen; choosing one
+   replaces it and the heading becomes that section's name with a back arrow. */
+@media (max-width: 760px) {
+  .appt-popup.owner-panel {
+    width: calc(100vw - 1rem);
+    height: calc(100dvh - 1rem);
+  }
+  .owner-panel > .owner-body { grid-template-columns: minmax(0, 1fr); }
+  .owner-panel .owner-tabs { border-right: none; padding: 0.4rem 0.6rem 1.5rem; }
+  .owner-panel .owner-tab {
+    padding: 0.9rem 0.85rem;
+    font-size: 0.94rem;
+    border-radius: 0;
+    border-bottom: 1px solid var(--sched-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .owner-panel .owner-tab.active { background: none; color: var(--sched-text); font-weight: 600; }
+  /* A chevron, so each row reads as somewhere to go rather than a filter. */
+  .owner-panel .owner-tab::after {
+    content: '\203A';
+    color: var(--sched-text-muted);
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+  .owner-panel > .owner-body > .owner-tab-content {
+    display: none;
+    padding: 1.1rem 1rem 2.5rem !important;
+  }
+  .owner-panel.owner-viewing .owner-tabs { display: none; }
+  .owner-panel.owner-viewing > .owner-body > .owner-tab-content { display: block; }
+  .owner-panel.owner-viewing .owner-back { display: inline-flex; }
+}

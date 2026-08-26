@@ -227,7 +227,11 @@
     <div id="ownerPanelModal" class="appt-popup-overlay" style="display:none;">
         <div class="appt-popup owner-panel">
             <button type="button" class="appt-popup-close" id="ownerPanelClose" aria-label="Close">&times;</button>
-            <h3 class="block-modal-title">Owner Panel</h3>
+            <h3 class="block-modal-title owner-head">
+                <button type="button" class="owner-back" id="ownerBack" aria-label="Back to menu"><i class="fa-solid fa-chevron-left"></i></button>
+                <span id="ownerPanelHeading">Owner Panel</span>
+            </h3>
+            <div class="owner-body">
             <div class="owner-tabs" id="ownerTabs">
                 <button type="button" class="owner-tab active" data-tab="services">Services</button>
                 <button type="button" class="owner-tab" data-tab="addons">Add-ons</button>
@@ -239,6 +243,7 @@
                 <button type="button" class="owner-tab" data-tab="settings">Settings</button>
             </div>
             <div class="owner-tab-content" id="ownerTabContent"></div>
+            </div>
         </div>
     </div>
 

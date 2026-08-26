@@ -1521,15 +1521,39 @@ function ensureRequestsTabButton() {
 function openOwnerPanel() {
   ensureRequestsTabButton();
   ownerPanelModal.style.display = 'flex';
+  // The section renders either way - a wide screen shows it beside the menu.
+  // showOwnerMenu comes AFTER, because switchOwnerTab marks the panel as
+  // viewing a section, and on a phone that would hide the menu the instant
+  // the panel opened: you would land inside whichever section you used last,
+  // with no list in sight.
   switchOwnerTab(ownerActiveTab);
+  showOwnerMenu();
 }
 function closeOwnerPanel() { ownerPanelModal.style.display = 'none'; }
+// On a wide screen the menu and the section sit side by side, both always
+// visible. A phone has room for one at a time, so it behaves like a menu you
+// tap into: choosing a section replaces the list and the heading becomes that
+// section's name with a back arrow.
+const ownerPanelEl = document.querySelector('#ownerPanelModal .owner-panel');
+const ownerBack = document.getElementById('ownerBack');
+const ownerPanelHeading = document.getElementById('ownerPanelHeading');
+
 function switchOwnerTab(tab) {
   ownerActiveTab = tab;
   ownerTabs.querySelectorAll('.owner-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
   ownerTabContent.innerHTML = '<p class="owner-empty">Loading…</p>';
   (OWNER_TAB_RENDERERS[tab] || (() => {}))();
+  const btn = ownerTabs.querySelector(`.owner-tab[data-tab="${tab}"]`);
+  ownerPanelHeading.textContent = btn ? btn.textContent.trim() : 'Owner Panel';
+  ownerPanelEl.classList.add('owner-viewing');
+  ownerTabContent.scrollTop = 0;
 }
+
+function showOwnerMenu() {
+  ownerPanelEl.classList.remove('owner-viewing');
+  ownerPanelHeading.textContent = 'Owner Panel';
+}
+ownerBack.addEventListener('click', showOwnerMenu);
 btnOwnerPanel.addEventListener('click', () => { closeMoreMenu(); openOwnerPanel(); });
 ownerPanelClose.addEventListener('click', closeOwnerPanel);
 ownerPanelModal.addEventListener('click', (e) => { if (e.target === ownerPanelModal) closeOwnerPanel(); });
