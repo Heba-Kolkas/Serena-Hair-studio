@@ -290,20 +290,20 @@
 .popular-services-section {
   padding: 2rem 1rem;
 }
+/* A wrapping grid, not a sideways scroller.
+   The strip used to run off the edge of the screen: the services past the
+   third were invisible unless you thought to swipe, and nothing on the page
+   said they were there. A grid shows every service at once - which is the
+   whole point of a list of what the salon does. */
 .popular-services-row {
-  display: flex;
-  gap: 1.4rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding: 0.25rem 0.5rem 1rem;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 1.1rem 0.75rem;
+  padding: 0.25rem 0.25rem 1rem;
 }
-.popular-services-row::-webkit-scrollbar { display: none; }
 .service-thumb {
-  scroll-snap-align: start;
-  flex: 0 0 auto;
-  width: 104px;
+  width: auto;
+  min-width: 0;
   text-align: center;
   text-decoration: none;
   color: inherit;
@@ -366,7 +366,6 @@
     margin: 0 auto;
   }
   .service-thumb {
-    width: auto;
     background: var(--cream);
     border-radius: 18px;
     padding: 1.5rem 1rem 1.75rem;
