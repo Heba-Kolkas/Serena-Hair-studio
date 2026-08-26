@@ -81,40 +81,40 @@ insert into staff (name, role, role_no, bio, bio_no, photo_url, instagram, booka
 -- not to Kani, whose day is shaped by her own hours instead.
 insert into services (name, name_no, category, price_from, price_to, price_on_consultation, price_is_from, daily_limited, duration_minutes, duration_with_addons_minutes, fixed_times, image_url, color, featured, sort_order) values
 -- Balayage & Highlights — 4 hours each, times set per stylist below.
-('Balayage / Highlights', 'Balayage / Striper', 'Balayage & Highlights', 3750, null, false, true, true, 240, null, null, './html/Pics/Balayage/Blayage12.jpeg', '#C9A96E', true, 1),
-('Half Head Foil', 'Halv Folie', 'Balayage & Highlights', 3000, null, false, true, true, 240, null, null, './html/Pics/Balayage/Blayage12.jpeg', '#D4B87E', false, 2),
-('Full Head Foil', 'Hel Folie', 'Balayage & Highlights', 3750, null, false, true, true, 240, null, null, './html/Pics/Balayage/Blayage12.jpeg', '#BF9A5E', false, 3),
+('Balayage / Highlights', 'Balayage / Striper', 'Balayage & Highlights', 3750, null, false, true, true, 240, null, null, './html/Pics/Covers/balayage-and-highlights.jpeg', '#C9A96E', true, 1),
+('Half Head Foil', 'Halv Folie', 'Balayage & Highlights', 3000, null, false, true, true, 240, null, null, './html/Pics/Covers/balayage-and-highlights.jpeg', '#D4B87E', false, 2),
+('Full Head Foil', 'Hel Folie', 'Balayage & Highlights', 3750, null, false, true, true, 240, null, null, './html/Pics/Covers/balayage-and-highlights.jpeg', '#BF9A5E', false, 3),
 -- Colour — root touch-up and all-over stretch to 120 min with any add-on.
-('Root Touch-Up', 'Ansatsfarge', 'Color', 1600, null, false, true, false, 90, 120, null, './html/Pics/Farge/Farge1.jpeg', '#E0A458', false, 4),
-('All-Over Color', 'Helfarge', 'Color', 2100, null, false, true, false, 90, 120, null, './html/Pics/Farge/Farge1.jpeg', '#D68C3E', false, 5),
+('Root Touch-Up', 'Ansatsfarge', 'Color', 1600, null, false, true, false, 90, 120, null, './html/Pics/Covers/color.jpeg', '#E0A458', false, 4),
+('All-Over Color', 'Helfarge', 'Color', 2100, null, false, true, false, 90, 120, null, './html/Pics/Covers/color.jpeg', '#D68C3E', false, 5),
 -- Reverse balayage is going darker, but it's still 4 hours of colour work.
-('Reverse Balayage', 'Omvendt Balayage', 'Color', 3000, null, false, false, true, 240, null, null, './html/Pics/Farge/Farge1.jpeg', '#A8763E', false, 6),
-('Toner', 'Toner', 'Color', 1250, null, false, true, false, 60, null, null, './html/Pics/Farge/Farge1.jpeg', '#EAC17E', false, 7),
+('Reverse Balayage', 'Omvendt Balayage', 'Color', 3000, null, false, false, true, 240, null, null, './html/Pics/Covers/color.jpeg', '#A8763E', false, 6),
+('Toner', 'Toner', 'Color', 1250, null, false, true, false, 60, null, null, './html/Pics/Covers/color.jpeg', '#EAC17E', false, 7),
 -- Haircuts — every combination on the list is its own priced line, so there
 -- are no wash/styling add-ons to bolt on. All 60 minutes.
-('Haircut + Blowdry (without wash)', 'Klipp + Føn (uten vask)', 'Haircuts & Styling', 950, null, false, false, false, 60, null, null, './html/Pics/Haircut/Haircut5.jpeg', '#3D7A94', true, 8),
-('Haircut + Wash + Blowdry', 'Klipp + Vask + Føn', 'Haircuts & Styling', 1150, null, false, false, false, 60, null, null, './html/Pics/Haircut/Haircut5.jpeg', '#4A88A2', false, 9),
-('Haircut + Wash + Blowdry + Styling', 'Klipp + Vask + Føn + Styling', 'Haircuts & Styling', 1250, null, false, false, false, 60, null, null, './html/Pics/Haircut/Haircut5.jpeg', '#5796B0', false, 10),
-('Haircut + Wash + Mask + Blowdry', 'Klipp + Vask + Maske + Føn', 'Haircuts & Styling', 1350, null, false, false, false, 60, null, null, './html/Pics/Haircut/Haircut5.jpeg', '#2F6B84', false, 11),
+('Haircut + Blowdry (without wash)', 'Klipp + Føn (uten vask)', 'Haircuts & Styling', 950, null, false, false, false, 60, null, null, './html/Pics/Covers/haircuts-and-styling.jpeg', '#3D7A94', true, 8),
+('Haircut + Wash + Blowdry', 'Klipp + Vask + Føn', 'Haircuts & Styling', 1150, null, false, false, false, 60, null, null, './html/Pics/Covers/haircuts-and-styling.jpeg', '#4A88A2', false, 9),
+('Haircut + Wash + Blowdry + Styling', 'Klipp + Vask + Føn + Styling', 'Haircuts & Styling', 1250, null, false, false, false, 60, null, null, './html/Pics/Covers/haircuts-and-styling.jpeg', '#5796B0', false, 10),
+('Haircut + Wash + Mask + Blowdry', 'Klipp + Vask + Maske + Føn', 'Haircuts & Styling', 1350, null, false, false, false, 60, null, null, './html/Pics/Covers/haircuts-and-styling.jpeg', '#2F6B84', false, 11),
 -- Styling — normal 15-minute grid, 60 minutes each.
-('Blowdry / Light Styling', 'Føn / Lett Styling', 'Styling', 680, null, false, false, false, 60, null, null, './html/Pics/Styling/styling4.jpeg', '#7FB3C9', false, 12),
-('Wash + Blowdry', 'Vask + Føn', 'Styling', 750, null, false, false, false, 60, null, null, './html/Pics/Styling/styling4.jpeg', '#8FC0D4', false, 13),
-('Wash + Blowdry + Wavy Styling', 'Vask + Føn + Bølgestyling', 'Styling', 890, null, false, false, false, 60, null, null, './html/Pics/Styling/styling4.jpeg', '#6FA5BC', false, 14),
+('Blowdry / Light Styling', 'Føn / Lett Styling', 'Styling', 680, null, false, false, false, 60, null, null, './html/Pics/Covers/styling.jpeg', '#7FB3C9', false, 12),
+('Wash + Blowdry', 'Vask + Føn', 'Styling', 750, null, false, false, false, 60, null, null, './html/Pics/Covers/styling.jpeg', '#8FC0D4', false, 13),
+('Wash + Blowdry + Wavy Styling', 'Vask + Føn + Bølgestyling', 'Styling', 890, null, false, false, false, 60, null, null, './html/Pics/Covers/styling.jpeg', '#6FA5BC', false, 14),
 -- Special occasions — 90 minutes.
-('Half Updo', 'Halv Oppsett', 'Special Occasions', 1500, null, false, true, false, 90, null, null, './html/Pics/Brides/Bride5.jpeg', '#D98CA8', false, 15),
-('Full Updo', 'Helt Oppsett', 'Special Occasions', 2500, null, false, true, false, 90, null, null, './html/Pics/Brides/Bride5.jpeg', '#C46E8C', false, 16),
+('Half Updo', 'Halv Oppsett', 'Special Occasions', 1500, null, false, true, false, 90, null, null, './html/Pics/Covers/bridal-and-updos.jpeg', '#D98CA8', false, 15),
+('Full Updo', 'Helt Oppsett', 'Special Occasions', 2500, null, false, true, false, 90, null, null, './html/Pics/Covers/bridal-and-updos.jpeg', '#C46E8C', false, 16),
 -- Bridal — 4 hours, quoted at consultation with ~4,000 shown as a guideline.
-('Bridal Hair', 'Brudehår', 'Bridal', 4000, null, true, false, false, 240, null, array['11:00']::time[], './html/Pics/Brides/Bride5.jpeg', '#A8506E', false, 17),
+('Bridal Hair', 'Brudehår', 'Bridal', 4000, null, true, false, false, 240, null, array['11:00']::time[], './html/Pics/Covers/bridal-and-updos.jpeg', '#A8506E', false, 17),
 -- Hair Extensions are not on the printed price list but the studio still
 -- books them here, unchanged, at the owner's instruction.
-('Hair Extensions (50g)', 'Extensions (50g)', 'Hair Extensions', 3000, null, false, false, false, 180, null, null, './html/Pics/Extensions/cover.jpeg', '#A97FC9', true, 18),
-('Hair Extensions (100-150g)', 'Extensions (100-150g)', 'Hair Extensions', null, null, true, false, false, 240, null, null, './html/Pics/Extensions/cover.jpeg', '#8C5EAD', false, 19),
+('Hair Extensions (50g)', 'Extensions (50g)', 'Hair Extensions', 3000, null, false, false, false, 180, null, null, './html/Pics/Covers/hair-extensions.jpeg', '#A97FC9', true, 18),
+('Hair Extensions (100-150g)', 'Extensions (100-150g)', 'Hair Extensions', null, null, true, false, false, 240, null, null, './html/Pics/Covers/hair-extensions.jpeg', '#8C5EAD', false, 19),
 -- Keratin & Hair Botox stay listed but book through Taniya's Instagram —
 -- migration 0005 sets external_booking_url on this whole category.
-('Keratin Treatment', 'Keratinbehandling', 'Keratin & Hair Treatments', null, null, true, false, false, 150, null, null, './html/Pics/Treatment/cover.jpeg', '#6FAF7A', false, 20),
-('Hair Botox', 'Hår Botox', 'Keratin & Hair Treatments', null, null, true, false, false, 120, null, null, './html/Pics/Treatment/cover.jpeg', '#549260', false, 21),
+('Keratin Treatment', 'Keratinbehandling', 'Keratin & Hair Treatments', null, null, true, false, false, 150, null, null, './html/Pics/Covers/keratin-and-treatments.jpeg', '#6FAF7A', false, 20),
+('Hair Botox', 'Hår Botox', 'Keratin & Hair Treatments', null, null, true, false, false, 120, null, null, './html/Pics/Covers/keratin-and-treatments.jpeg', '#549260', false, 21),
 -- Consultation — free, 10 minutes, special-cased throughout book_appointment.
-('Consultation', 'Konsultasjon', 'Consultation', 0, null, false, false, false, 10, null, null, './html/Pics/Haircut/Haircut5.jpeg', '#9a9aa2', false, 22);
+('Consultation', 'Konsultasjon', 'Consultation', 0, null, false, false, false, 10, null, null, './html/Pics/Covers/haircuts-and-styling.jpeg', '#9a9aa2', false, 22);
 
 -- ── STAFF x SERVICES ──
 -- Taniya's two specialties are handled in 0005, which takes her out of the

@@ -411,3 +411,14 @@ body.bio-modal-open { overflow: hidden; }
 .team-card-featured-info { justify-content: center; }
 .team-card-featured .team-card-bio { margin-bottom: 1.1rem; }
 .team-card-featured-actions { margin-top: 0; }
+
+/* A CTA label is whatever the salon typed, and "Book with Taniya on Instagram"
+   is twice the width of "Book with Kani". The button now shrinks its text and
+   wraps rather than pushing out past the card it sits in. */
+.team-card-cta {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
+}
+.team-card-cta span { overflow-wrap: anywhere; }

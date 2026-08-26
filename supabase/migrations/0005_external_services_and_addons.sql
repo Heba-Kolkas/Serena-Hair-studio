@@ -42,7 +42,7 @@ update staff set external_booking_label = 'Book on Timma' where name = 'Pati';
 update staff
   set bookable = false,
       external_booking_url = 'https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu',
-      external_booking_label = 'Book with Taniya on Instagram'
+      external_booking_label = 'Book on Instagram'
   where name = 'Taniya S.';
 
 -- She was the only stylist assigned to the Keratin category, so this empties
@@ -53,7 +53,7 @@ delete from staff_services
 
 update services
   set external_booking_url = 'https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu',
-      external_booking_label = 'Book with Taniya on Instagram'
+      external_booking_label = 'Book on Instagram'
   where category = 'Keratin & Hair Treatments';
 
 -- ═══════════════════════════════════════════════════════════════════

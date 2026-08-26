@@ -22,7 +22,7 @@ const FALLBACK_STAFF = [
     // Keratin and Hair Botox are booked with Taniya directly over Instagram,
     // not through the wizard — same hand-off Pati has for nails via Timma.
     bookable: false, external_booking_url: 'https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu',
-    external_booking_label: 'Book with Taniya on Instagram' },
+    external_booking_label: 'Book on Instagram' },
   { name: 'Pati', role: 'Nail Artist', role_no: 'Neglekunstner',
     bio: [
       'With over 10 years of experience in the nail industry, I am passionate about creating beautiful, precise, and long-lasting nails tailored to each client.',

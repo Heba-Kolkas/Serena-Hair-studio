@@ -32,7 +32,7 @@ const STAFF_HASSAN = ['staff-1']; // extensions are his alone
 // clients to Pati's Timma page from the team card.
 const EXTERNAL_TANIYA = {
   external_booking_url: 'https://www.instagram.com/lavellaprofessional?igsh=Y2MxZTh6eGZvNTFu',
-  external_booking_label: 'Book with Taniya on Instagram',
+  external_booking_label: 'Book on Instagram',
 };
 
 // The 4-hour lightening services (balayage, both foils, reverse balayage) run
@@ -234,34 +234,34 @@ function totalLabel({ total, isEstimate }) {
 // line-for-line transcription of the owner's printed price list.
 const FALLBACK_SERVICES = [
   // Balayage & Highlights — 4 hours each, add-ons never extend them.
-  { id: 'svc-balayage', name: 'Balayage / Highlights', name_no: 'Balayage / Striper', category: 'Balayage & Highlights', price_from: 3750, price_is_from: true, duration_minutes: 240, image_url: './html/Pics/Balayage/Blayage12.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
-  { id: 'svc-half-foil', name: 'Half Head Foil', name_no: 'Halv Folie', category: 'Balayage & Highlights', price_from: 3000, price_is_from: true, duration_minutes: 240, image_url: './html/Pics/Balayage/Blayage12.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
-  { id: 'svc-full-foil', name: 'Full Head Foil', name_no: 'Hel Folie', category: 'Balayage & Highlights', price_from: 3750, price_is_from: true, duration_minutes: 240, image_url: './html/Pics/Balayage/Blayage12.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
+  { id: 'svc-balayage', name: 'Balayage / Highlights', name_no: 'Balayage / Striper', category: 'Balayage & Highlights', price_from: 3750, price_is_from: true, duration_minutes: 240, image_url: './html/Pics/Covers/balayage-and-highlights.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
+  { id: 'svc-half-foil', name: 'Half Head Foil', name_no: 'Halv Folie', category: 'Balayage & Highlights', price_from: 3000, price_is_from: true, duration_minutes: 240, image_url: './html/Pics/Covers/balayage-and-highlights.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
+  { id: 'svc-full-foil', name: 'Full Head Foil', name_no: 'Hel Folie', category: 'Balayage & Highlights', price_from: 3750, price_is_from: true, duration_minutes: 240, image_url: './html/Pics/Covers/balayage-and-highlights.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
   // Colour — root touch-up and all-over stretch to 120 min with any add-on.
-  { id: 'svc-root', name: 'Root Touch-Up', name_no: 'Ansatsfarge', category: 'Color', price_from: 1600, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Farge/Farge1.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
-  { id: 'svc-allover', name: 'All-Over Color', name_no: 'Helfarge', category: 'Color', price_from: 2100, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Farge/Farge1.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
-  { id: 'svc-reverse', name: 'Reverse Balayage', name_no: 'Omvendt Balayage', category: 'Color', price_from: 3000, duration_minutes: 240, image_url: './html/Pics/Farge/Farge1.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
-  { id: 'svc-toner', name: 'Toner', name_no: 'Toner', category: 'Color', price_from: 1250, price_is_from: true, duration_minutes: 60, image_url: './html/Pics/Farge/Farge1.jpeg', staff: STAFF_GENERAL, addons: [ADDON_HAIRCUT] },
+  { id: 'svc-root', name: 'Root Touch-Up', name_no: 'Ansatsfarge', category: 'Color', price_from: 1600, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
+  { id: 'svc-allover', name: 'All-Over Color', name_no: 'Helfarge', category: 'Color', price_from: 2100, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: 120, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: COLOR_ADDONS },
+  { id: 'svc-reverse', name: 'Reverse Balayage', name_no: 'Omvendt Balayage', category: 'Color', price_from: 3000, duration_minutes: 240, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, balayageSchedule: true, addons: LIGHTENING_ADDONS },
+  { id: 'svc-toner', name: 'Toner', name_no: 'Toner', category: 'Color', price_from: 1250, price_is_from: true, duration_minutes: 60, image_url: './html/Pics/Covers/color.jpeg', staff: STAFF_GENERAL, addons: [ADDON_HAIRCUT] },
   // Haircuts — every combination is its own priced line, so nothing bolts on.
-  { id: 'svc-cut-blowdry', name: 'Haircut + Blowdry (without wash)', name_no: 'Klipp + Føn (uten vask)', category: 'Haircuts & Styling', price_from: 950, duration_minutes: 60, image_url: './html/Pics/Haircut/Haircut5.jpeg', staff: STAFF_GENERAL },
-  { id: 'svc-cut-wash-blowdry', name: 'Haircut + Wash + Blowdry', name_no: 'Klipp + Vask + Føn', category: 'Haircuts & Styling', price_from: 1150, duration_minutes: 60, image_url: './html/Pics/Haircut/Haircut5.jpeg', staff: STAFF_GENERAL },
-  { id: 'svc-cut-wash-blowdry-styling', name: 'Haircut + Wash + Blowdry + Styling', name_no: 'Klipp + Vask + Føn + Styling', category: 'Haircuts & Styling', price_from: 1250, duration_minutes: 60, image_url: './html/Pics/Haircut/Haircut5.jpeg', staff: STAFF_GENERAL },
-  { id: 'svc-cut-wash-mask-blowdry', name: 'Haircut + Wash + Mask + Blowdry', name_no: 'Klipp + Vask + Maske + Føn', category: 'Haircuts & Styling', price_from: 1350, duration_minutes: 60, image_url: './html/Pics/Haircut/Haircut5.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-cut-blowdry', name: 'Haircut + Blowdry (without wash)', name_no: 'Klipp + Føn (uten vask)', category: 'Haircuts & Styling', price_from: 950, duration_minutes: 60, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-cut-wash-blowdry', name: 'Haircut + Wash + Blowdry', name_no: 'Klipp + Vask + Føn', category: 'Haircuts & Styling', price_from: 1150, duration_minutes: 60, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-cut-wash-blowdry-styling', name: 'Haircut + Wash + Blowdry + Styling', name_no: 'Klipp + Vask + Føn + Styling', category: 'Haircuts & Styling', price_from: 1250, duration_minutes: 60, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-cut-wash-mask-blowdry', name: 'Haircut + Wash + Mask + Blowdry', name_no: 'Klipp + Vask + Maske + Føn', category: 'Haircuts & Styling', price_from: 1350, duration_minutes: 60, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL },
   // Styling — normal 15-minute grid.
-  { id: 'svc-blowdry', name: 'Blowdry / Light Styling', name_no: 'Føn / Lett Styling', category: 'Styling', price_from: 680, duration_minutes: 60, image_url: './html/Pics/Styling/styling4.jpeg', staff: STAFF_GENERAL },
-  { id: 'svc-wash-blowdry', name: 'Wash + Blowdry', name_no: 'Vask + Føn', category: 'Styling', price_from: 750, duration_minutes: 60, image_url: './html/Pics/Styling/styling4.jpeg', staff: STAFF_GENERAL },
-  { id: 'svc-wash-blowdry-wavy', name: 'Wash + Blowdry + Wavy Styling', name_no: 'Vask + Føn + Bølgestyling', category: 'Styling', price_from: 890, duration_minutes: 60, image_url: './html/Pics/Styling/styling4.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-blowdry', name: 'Blowdry / Light Styling', name_no: 'Føn / Lett Styling', category: 'Styling', price_from: 680, duration_minutes: 60, image_url: './html/Pics/Covers/styling.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-wash-blowdry', name: 'Wash + Blowdry', name_no: 'Vask + Føn', category: 'Styling', price_from: 750, duration_minutes: 60, image_url: './html/Pics/Covers/styling.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-wash-blowdry-wavy', name: 'Wash + Blowdry + Wavy Styling', name_no: 'Vask + Føn + Bølgestyling', category: 'Styling', price_from: 890, duration_minutes: 60, image_url: './html/Pics/Covers/styling.jpeg', staff: STAFF_GENERAL },
   // Special occasions.
-  { id: 'svc-half-updo', name: 'Half Updo', name_no: 'Halv Oppsett', category: 'Special Occasions', price_from: 1500, price_is_from: true, duration_minutes: 90, image_url: './html/Pics/Brides/Bride5.jpeg', staff: STAFF_GENERAL },
-  { id: 'svc-full-updo', name: 'Full Updo', name_no: 'Helt Oppsett', category: 'Special Occasions', price_from: 2500, price_is_from: true, duration_minutes: 90, image_url: './html/Pics/Brides/Bride5.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-half-updo', name: 'Half Updo', name_no: 'Halv Oppsett', category: 'Special Occasions', price_from: 1500, price_is_from: true, duration_minutes: 90, image_url: './html/Pics/Covers/bridal-and-updos.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-full-updo', name: 'Full Updo', name_no: 'Helt Oppsett', category: 'Special Occasions', price_from: 2500, price_is_from: true, duration_minutes: 90, image_url: './html/Pics/Covers/bridal-and-updos.jpeg', staff: STAFF_GENERAL },
   // Bridal — quoted at consultation, with ~4,000 shown as a guideline.
-  { id: 'svc-bridal', name: 'Bridal Hair', name_no: 'Brudehår', category: 'Bridal', price_from: 4000, price_on_consultation: true, duration_minutes: 240, fixed_times: ['11:00'], image_url: './html/Pics/Brides/Bride5.jpeg', staff: STAFF_GENERAL },
+  { id: 'svc-bridal', name: 'Bridal Hair', name_no: 'Brudehår', category: 'Bridal', price_from: 4000, price_on_consultation: true, duration_minutes: 240, fixed_times: ['11:00'], image_url: './html/Pics/Covers/bridal-and-updos.jpeg', staff: STAFF_GENERAL },
   // Not on the printed list, but still booked here.
-  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, duration_minutes: 180, image_url: './html/Pics/Extensions/cover.jpeg', staff: STAFF_HASSAN, requiresConsultation: true },
-  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_on_consultation: true, duration_minutes: 240, image_url: './html/Pics/Extensions/cover.jpeg', staff: STAFF_HASSAN, requiresConsultation: true },
-  { id: 'svc-keratin', name: 'Keratin Treatment', name_no: 'Keratinbehandling', category: 'Keratin & Hair Treatments', price_on_consultation: true, duration_minutes: 150, image_url: './html/Pics/Treatment/cover.jpeg', ...EXTERNAL_TANIYA },
-  { id: 'svc-botox', name: 'Hair Botox', name_no: 'Hår Botox', category: 'Keratin & Hair Treatments', price_on_consultation: true, duration_minutes: 120, image_url: './html/Pics/Treatment/cover.jpeg', ...EXTERNAL_TANIYA },
-  { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, duration_minutes: 10, image_url: './html/Pics/Haircut/Haircut5.jpeg', staff: STAFF_GENERAL, consultationRule: true },
+  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, duration_minutes: 180, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true },
+  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_on_consultation: true, duration_minutes: 240, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true },
+  { id: 'svc-keratin', name: 'Keratin Treatment', name_no: 'Keratinbehandling', category: 'Keratin & Hair Treatments', price_on_consultation: true, duration_minutes: 150, image_url: './html/Pics/Covers/keratin-and-treatments.jpeg', ...EXTERNAL_TANIYA },
+  { id: 'svc-botox', name: 'Hair Botox', name_no: 'Hår Botox', category: 'Keratin & Hair Treatments', price_on_consultation: true, duration_minutes: 120, image_url: './html/Pics/Covers/keratin-and-treatments.jpeg', ...EXTERNAL_TANIYA },
+  { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, duration_minutes: 10, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL, consultationRule: true },
 ];
 const FALLBACK_STAFF = [
   { id: 'staff-1', name: 'Hassan K.', role: 'Founder & Master Stylist', role_no: 'Grunnlegger & Mesterstylisten', photo_url: './html/Pics/Team/Hassan.jpeg', allow_overlap_booking: true },
@@ -295,6 +295,11 @@ const state = {
 const wizard = document.getElementById('wizard');
 const errorBox = document.getElementById('wizardError');
 
+// One cover per category, all in html/Pics/Covers, named after the category
+// they belong to. Swapping a cover means dropping a file over the one with the
+// matching name - no code change, and no guessing which of forty gallery
+// photos happens to be the one on the booking page.
+//
 // Image paths are relative ('./html/...') rather than rooted ('/html/...')
 // so the pages also work when a file is opened straight from the folder,
 // where a leading slash points at the root of the drive. Matches the paths
