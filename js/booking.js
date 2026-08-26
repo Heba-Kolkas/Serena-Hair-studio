@@ -247,7 +247,11 @@ function expectedTotal() {
   const svc = state.service;
   let total = 0;
   let isEstimate = false;
-  if (!svc) return { total, isEstimate };
+  if (!svc) return { total, isEstimate, unpricedBase: false };
+  // A service quoted only at consultation contributes no figure at all. Adding
+  // its add-ons to zero and printing the result told a client that Hair
+  // Extensions (100-150g) with a haircut costs 500 NOK.
+  const unpricedBase = !!svc.price_on_consultation && svc.price_from == null;
   total += Number(svc.price_from) || 0;
   if (svc.price_on_consultation || svc.price_is_from || svc.price_to != null) isEstimate = true;
   state.addons.forEach((a) => {
@@ -257,13 +261,21 @@ function expectedTotal() {
     total += Number(a.price) || 0;
     if (a.price_is_from) isEstimate = true;
   });
-  return { total, isEstimate };
+  return { total, isEstimate, unpricedBase };
 }
 
-function totalLabel({ total, isEstimate }) {
+function totalLabel({ total, isEstimate, unpricedBase }) {
+  const no = lang() === 'no';
+  // Nothing to add to, so say what is actually known: the add-ons cost this
+  // much, and the service itself is quoted at the consultation.
+  if (unpricedBase) {
+    const words = no ? 'pris etter konsultasjon' : 'price on consultation';
+    if (!total) return no ? 'Pris etter konsultasjon' : 'Price on consultation';
+    return fmtPrice(total) + (no ? ' + ' : ' + ') + words;
+  }
   const num = fmtPrice(total);
   if (!isEstimate) return num;
-  return (lang() === 'no' ? 'Fra ' : 'From ') + num;
+  return (no ? 'Fra ' : 'From ') + num;
 }
 
 // Mirrors supabase/migrations/0002_seed_data.sql, which is itself a
@@ -293,8 +305,8 @@ const FALLBACK_SERVICES = [
   // Bridal — quoted at consultation, with ~4,000 shown as a guideline.
   { id: 'svc-bridal', name: 'Bridal Hair', name_no: 'Brudehår', category: 'Bridal', price_from: 4000, price_on_consultation: true, duration_minutes: 240, fixed_times: ['11:00'], image_url: './html/Pics/Covers/bridal-and-updos.jpeg', staff: STAFF_GENERAL },
   // Not on the printed list, but still booked here.
-  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, duration_minutes: 180, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true },
-  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_on_consultation: true, duration_minutes: 240, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true },
+  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, duration_minutes: 180, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true, addons: [ADDON_HAIRCUT] },
+  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_on_consultation: true, duration_minutes: 240, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true, addons: [ADDON_HAIRCUT] },
   { id: 'svc-keratin', name: 'Keratin Treatment', name_no: 'Keratinbehandling', category: 'Keratin & Hair Treatments', price_on_consultation: true, duration_minutes: 150, image_url: './html/Pics/Covers/keratin-and-treatments.jpeg', ...EXTERNAL_TANIYA },
   { id: 'svc-botox', name: 'Hair Botox', name_no: 'Hår Botox', category: 'Keratin & Hair Treatments', price_on_consultation: true, duration_minutes: 120, image_url: './html/Pics/Covers/keratin-and-treatments.jpeg', ...EXTERNAL_TANIYA },
   { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, duration_minutes: 10, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL, consultationRule: true },

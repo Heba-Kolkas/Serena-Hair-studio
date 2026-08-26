@@ -1407,3 +1407,14 @@ select sv.id, a.id, a.sort_order
 from services sv join addons a on a.name like 'Extensions%'
 where sv.name = 'Toner'
 on conflict do nothing;
+
+-- ── A HAIRCUT DURING AN EXTENSIONS FITTING ──
+-- Offered on both extensions tiers. Deliberately no
+-- duration_with_addons_minutes on those two services, so the appointment does
+-- not get longer: the cut is done while the fitting is already under way, and
+-- shaping the new length is part of the job rather than an extra sitting.
+insert into service_addons (service_id, addon_id, sort_order)
+select sv.id, a.id, a.sort_order
+from services sv join addons a on a.name = 'Haircut'
+where sv.name in ('Hair Extensions (50g)', 'Hair Extensions (100-150g)')
+on conflict do nothing;

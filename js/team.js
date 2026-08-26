@@ -86,7 +86,7 @@ function cardHtml(member) {
 // the grid or gets clipped mid-sentence by a line-clamp, and a bio cut off at
 // "I am passionate..." reads worse than no bio at all. So the card carries a
 // sentence that stands on its own, and the rest is a tap away.
-const SHORT_BIO_CHARS = 380;
+const SHORT_BIO_CHARS = 165;
 // Only worth cutting when there is a real amount left over. Truncating a bio
 // for the sake of seven characters costs a "Read more" and an ellipsis and
 // saves nothing, so a bio has to overrun by a clear margin before it is
