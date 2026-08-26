@@ -481,6 +481,22 @@ body.bio-modal-open { overflow: hidden; }
   -webkit-line-clamp: 3;
 }
 
-}
+/* ── THE FOUNDER CARD IS NOT A GRID CELL ──
+   .team-card-bio carries flex:1 so that in the grid below, every bio pushes
+   its Book button down to a common baseline and the row of buttons lines up.
+   The featured card is a single flex row, not one of those cells, so there
+   is no baseline to meet - flex:1 simply inflated a two-line bio into a tall
+   empty box and stranded the buttons at the bottom of the photo's height,
+   leaving a void through the middle of the card.
 
+   Sized to its text here, and the column centres it against the photo. */
+.team-card-featured .team-card-bio {
+  flex: 0 0 auto;
+}
+/* The role is a pill, and a pill hugs its text. display:inline-block says so,
+   but as a child of the info column it is also a flex item, and a flex item
+   stretches across the cross axis by default - so "FOUNDER & MASTER STYLIST"
+   was drawn as a 950px bar across the whole card. */
+.team-card-featured .team-card-role {
+  align-self: flex-start;
 }

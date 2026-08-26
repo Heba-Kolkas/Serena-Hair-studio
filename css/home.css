@@ -713,6 +713,14 @@
   color: var(--espresso);
   font-weight: 600;
 }
+/* The hours card and the map are a pair standing side by side, so they have
+   to start on the same line. .hours-card carries margin-top:1.5rem from where
+   it is used further up the page; inside this grid that margin both dropped
+   the card 24px below the top of the map and added itself to the row height,
+   so the card finished 35px taller as well as lower. Two cards meant to read
+   as one row looked like neither was aligned to anything. */
+#location .hours-card { margin-top: 0; }
+
 .map-card {
   border-radius: 18px;
   overflow: hidden;
@@ -815,7 +823,30 @@
   gap: 0.75rem;
   margin-top: 0.5rem;
 }
-.services-cta-row .view-all-link { flex: 1 1 220px; margin-top: 0; }
+/* Two ways on to the same shelf - browse the services, or read the prices -
+   so they should look like a pair. flex-grow:1 let the first one take every
+   spare pixel: it stretched to 1240px beside a button sized to its own text,
+   which read as one real button and one very long input field. Both size to
+   their content now and sit centred together. */
+.services-cta-row .view-all-link {
+  flex: 0 0 auto;
+  max-width: none;
+  margin-top: 0;
+  padding: 0.75rem 1.6rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+@media (max-width: 520px) {
+  /* Side by side they would each be about 150px, which cuts the labels. */
+  .services-cta-row { flex-direction: column; align-items: stretch; }
+  .services-cta-row .view-all-link,
+  .services-cta-row .btn-outline-taupe { justify-content: center; }
+  /* .view-all-link is centred elsewhere with `margin: 0.5rem auto 0`. Auto
+     side margins beat align-items:stretch, so it kept its content width -
+     a 174px pill sitting above a full-width button. */
+  .services-cta-row .view-all-link { margin-left: 0; margin-right: 0; }
+}
 
 /* ── INFO STRIP ── */
 .info-strip-section {
