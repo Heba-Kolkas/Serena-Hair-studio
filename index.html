@@ -210,6 +210,20 @@
                 <div class="team-col">
                     <div class="team-featured-wrap" id="teamFeatured"></div>
                     <div class="team-page-grid" id="teamGrid"></div>
+
+                    <!-- The full bio. Cards carry a sentence; the rest is here. -->
+                    <div class="bio-modal" id="bioModal" hidden>
+                      <div class="bio-modal-panel" role="dialog" aria-modal="true" aria-labelledby="bioModalName">
+                        <button type="button" class="bio-modal-close" id="bioModalClose" aria-label="Close">&times;</button>
+                        <div class="bio-modal-photo" id="bioModalPhoto"></div>
+                        <div class="bio-modal-body">
+                          <div class="bio-modal-name" id="bioModalName"></div>
+                          <div class="bio-modal-role" id="bioModalRole"></div>
+                          <div class="bio-modal-text" id="bioModalText"></div>
+                          <div class="bio-modal-links" id="bioModalLinks"></div>
+                        </div>
+                      </div>
+                    </div>
                 </div>
                 <aside class="reviews-sidebar" id="reviews">
                     <p class="mini-section-title" style="margin-bottom:1rem" data-en="Client Reviews" data-no="Kundeanmeldelser">Client Reviews</p>

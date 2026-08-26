@@ -264,3 +264,137 @@
     overflow: hidden;
   }
 }
+
+/* ── THE PHOTO IS A BUTTON NOW ── */
+.team-card-photo,
+.team-card-featured-photo {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+}
+.team-card-photo { border: 3px solid var(--linen); }
+.team-card-photo-more {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  font-size: 0.6rem;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.team-card-featured-photo { position: relative; }
+.team-card-featured-photo .team-card-photo-more { right: 10px; bottom: 10px; width: 30px; height: 30px; font-size: 0.75rem; }
+.team-card-photo:hover .team-card-photo-more,
+.team-card-featured-photo:hover .team-card-photo-more,
+.team-card-photo:focus-visible .team-card-photo-more,
+.team-card-featured-photo:focus-visible .team-card-photo-more { opacity: 1; transform: scale(1); }
+
+.team-card-more {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0.35rem 0 0.6rem;
+  font: inherit;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  color: var(--gold, #C9A96E);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.team-card-more:hover { color: var(--espresso, #3f3632); }
+
+/* ── FULL BIO DIALOG ── */
+.bio-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(44, 36, 32, 0.42);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.bio-modal[hidden] { display: none; }
+body.bio-modal-open { overflow: hidden; }
+.bio-modal-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40% 1fr;
+  width: min(46rem, 100%);
+  max-height: 88vh;
+  overflow: hidden;
+  background: var(--linen, #fdfaf5);
+  border-radius: 20px;
+  box-shadow: 0 30px 70px rgba(44, 36, 32, 0.3);
+}
+.bio-modal-photo { background: var(--warmgrey, #e9e3db); min-height: 100%; }
+.bio-modal-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bio-modal-body {
+  padding: 2rem 2rem 1.75rem;
+  overflow-y: auto;
+}
+.bio-modal-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.9rem;
+  z-index: 2;
+  border: 0;
+  background: rgba(255,255,255,0.85);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--espresso, #3f3632);
+  cursor: pointer;
+}
+.bio-modal-name {
+  font-family: var(--font-display, serif);
+  font-size: 1.6rem;
+  color: var(--espresso, #3f3632);
+}
+.bio-modal-role {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--greige, #9f948e);
+  margin: 0.3rem 0 1.1rem;
+}
+.bio-modal-text p {
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: var(--espresso, #3f3632);
+  margin-bottom: 0.85rem;
+}
+.bio-modal-links {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 1.2rem;
+}
+
+@media (max-width: 700px) {
+  .bio-modal-panel { grid-template-columns: 1fr; max-height: 90vh; overflow-y: auto; }
+  .bio-modal-photo { height: 210px; min-height: 0; }
+  .bio-modal-body { padding: 1.4rem 1.3rem 1.5rem; }
+  .bio-modal-name { font-size: 1.35rem; }
+}
+
+/* The cards centre their text, which suits two lines and not four paragraphs.
+   Left-aligned prose gives the eye a fixed place to return to on each line. */
+.bio-modal-body { text-align: left; }
+.bio-modal-name, .bio-modal-role { text-align: left; }
+.bio-modal-links { justify-content: flex-start; }
