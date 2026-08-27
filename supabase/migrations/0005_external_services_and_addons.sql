@@ -811,6 +811,23 @@ drop function if exists book_appointment(uuid, uuid, date, time, text, text, tex
 -- for the public wizard, and staff_book_appointment for the schedule tool.
 -- Deliberately NOT granted to anon — the switches below would be a way to
 -- book straight past the overlap rule if a client could set them.
+-- ── A DELIBERATE DEAD BRANCH, DO NOT "FIX" ──
+-- Inside this function, the gap-fill lookup that sets v_morning_end reads
+-- v_open, which is not assigned until further down. v_open is therefore null,
+-- the comparison never matches, and the branch never fires.
+--
+-- That reads like a bug and is not being treated as one. Its only effect is on
+-- Hassan, the one stylist with fixed times for short work (13:00 and 16:30,
+-- plus 11:00 for updos): were it live, the hour between a finished appointment
+-- and the 15:00 colour - say 14:00 after a 13:00 haircut - would become
+-- bookable. Kani has no fixed times for short work, so her day is untouched
+-- either way.
+--
+-- Asked and answered by the owner on 27 August 2026: leave it. The gap is
+-- breathing space between clients, not lost revenue. Anyone tempted to move
+-- the v_open assignment above this block should know they are changing how
+-- hard Hassan's day runs, not correcting a typo.
+
 create or replace function book_appointment_core(
   p_service_id uuid, p_staff_id uuid, p_date date, p_start_time time,
   p_customer_name text, p_customer_email text, p_customer_phone text,
