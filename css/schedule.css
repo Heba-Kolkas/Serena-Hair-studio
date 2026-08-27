@@ -2037,3 +2037,147 @@ body.modal-open { overflow: hidden; }
   line-height: 1.5;
   text-align: left;
 }
+
+/* ── MOVE APPOINTMENT ──
+   Date beside stylist, then the day itself as something to tap. */
+.resched-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 0.7rem;
+}
+.resched-grid > .block-field { min-width: 0; }
+/* The date button is a field in this row, so it fills its cell and matches
+   the select beside it. Left to itself it shrank to its own text - 90px
+   beside a full-width control. */
+.resched-grid .owner-date-pick-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.resched-picker { margin-bottom: 1rem; }
+.resched-picker-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sched-text-muted);
+  margin: 0 0 0.5rem;
+}
+/* Every quarter hour the stylist works, wrapped as a block of times. Reading
+   the whole day at once is the point - which times are gone is as useful as
+   which are left. */
+.resched-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.4rem, 1fr));
+  gap: 0.35rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 12px;
+  background: var(--sched-bg);
+}
+.resched-slots-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.5rem 0.2rem;
+  font-size: 0.78rem;
+  color: var(--sched-text-muted);
+}
+.resched-slot {
+  padding: 0.5rem 0.2rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 9px;
+  background: var(--sched-surface);
+  color: var(--sched-text);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.resched-slot:hover { border-color: var(--sched-text); }
+/* Taken is shown, not hidden. A stylist deciding where to move someone needs
+   to see what is in the way, and the salon allows an overlap to be saved
+   deliberately - so these stay pressable. */
+.resched-slot.taken {
+  background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 4px, #e9eaee 4px, #e9eaee 8px);
+  color: var(--sched-text-muted);
+  border-style: dashed;
+}
+.resched-slot.chosen {
+  background: var(--sched-text);
+  border-color: var(--sched-text);
+  color: var(--sched-surface);
+  font-weight: 600;
+}
+
+/* Move, on the appointment popup itself, so any booking on the grid can be
+   moved by opening it - not only from the list inside the owner panel. */
+.popup-move-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.9rem;
+  padding: 0.65rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 10px;
+  background: var(--sched-surface);
+  color: var(--sched-text);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.popup-move-btn:hover { background: var(--sched-bg); border-color: var(--sched-text); }
+
+@media (max-width: 560px) {
+  .resched-grid { grid-template-columns: minmax(0, 1fr); }
+  .resched-slots { grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr)); }
+}
+/* Shown when a long appointment has nowhere clear to go that day. */
+.resched-slots-note {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.45rem;
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 9px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+/* A note on a booking - usually an allergy or something to check before
+   starting. Visible on the block itself, so it is known while the day is
+   being read rather than only after the appointment is opened. */
+.sched-block-note {
+  margin-right: 0.3rem;
+  font-size: 0.7rem;
+  color: #b45309;
+}
+.sched-block-dim .sched-block-note { opacity: 1; }
+
+/* Charging for a no-show is set apart from the message, because it is the
+   decision with money on it and should not be made in passing. */
+.noshow-fee-box {
+  border: 1px solid var(--sched-border);
+  border-radius: 12px;
+  padding: 0.85rem 0.95rem 0.1rem;
+  margin-bottom: 1rem;
+  background: var(--sched-bg);
+  text-align: left;
+}
+.noshow-fee-box .block-allday-check { margin-bottom: 0.75rem; }
+.noshow-fee-box .block-field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--sched-text-muted);
+}

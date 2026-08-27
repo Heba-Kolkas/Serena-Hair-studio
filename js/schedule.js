@@ -6,7 +6,7 @@ import {
   fetchAllStaffAdmin, upsertStaffAdmin,
   fetchBookingsAdmin, updateBookingStatusAdmin, rescheduleBookingAdmin, completeBookingAdmin,
   upsertBusinessHoursAdmin, addBlockedSlotAdmin, removeBlockedSlotAdmin,
-  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail,
+  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
   markExtensionsNotified, setExtensionOrderStatus, fetchExtensionHistory,
@@ -435,7 +435,13 @@ async function selectDate(dateStr, cellEl) {
   renderDayStrip();
   updateDayLabel();
   renderGrid();
-  if (cellEl) cellEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  // Bring the chosen day into view however it was chosen. This used to happen
+  // only when a strip cell was tapped, so picking a date from the calendar or
+  // paging with the arrows left the strip sitting where it was: the heading
+  // read one date while the strip showed a different week, and the day you had
+  // just asked for was off the end of it.
+  const active = dayStripEl.querySelector('.day-cell.active');
+  if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
 
 // ── CUSTOM CALENDAR POPOVER ──
@@ -681,6 +687,15 @@ function statusBadgeHtml(b) {
   }
   return '';
 }
+/** A note on a booking is often an allergy - Mona Iqbal's says to check
+ *  before using anything ammonia-based. That cannot live only behind a tap:
+ *  the stylist has to know it is there while reading the day. Marked on the
+ *  block, and the note itself is in the popup. */
+function noteFlagHtml(b) {
+  if (!b.notes || !String(b.notes).trim()) return '';
+  return `<i class="fa-solid fa-note-sticky sched-block-note" title="${escHtml(b.notes)}" aria-label="This client has a note"></i>`;
+}
+
 function blockHtml(b, gridStart) {
   const top = (timeToMinutes(b.start_time) - gridStart) * PX_PER_MIN;
   const height = Math.max((timeToMinutes(b.end_time) - timeToMinutes(b.start_time)) * PX_PER_MIN, 30);
@@ -690,7 +705,7 @@ function blockHtml(b, gridStart) {
   return `
     <div class="${blockClass(b)}" data-id="${b.id}" style="top:${top}px; height:${height}px; width:calc(${b.widthPct}% - 4px); left:calc(${b.leftPct}% + 2px); background:${bg}; border-left-color:${color};">
       ${statusBadgeHtml(b)}
-      <div class="sched-block-name">${b.customer_name}</div>
+      <div class="sched-block-name">${noteFlagHtml(b)}${b.customer_name}</div>
       ${narrow ? '' : `<div class="sched-block-meta">${b.service_name}</div>`}
       <div class="sched-block-meta">${fmtTime(b.start_time)}</div>
       ${isPaid(b) && !narrow ? `<div class="sched-block-paid">${escHtml(money(b.amount_charged))}</div>` : ''}
@@ -892,6 +907,9 @@ function openPopup(id) {
       ? '<div class="popup-paid-missing"><i class="fa-solid fa-triangle-exclamation"></i> Completed, but no amount was recorded - this visit is not in the revenue.</div>'
       : ''}
     ${awaitingPayment ? paidBox(b) : ''}
+    ${b.status !== 'cancelled' && b.status !== 'completed'
+      ? `<button type="button" class="popup-move-btn" id="popupMove"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move this appointment</button>`
+      : ''}
     ${b.customer_phone || b.customer_name ? `<button type="button" class="popup-history-btn" id="popupCheckHistory"><i class="fa-solid fa-clock-rotate-left"></i> Check history of this person</button>` : ''}
   `;
   popupBody.querySelectorAll('[data-action]').forEach((btn) => {
@@ -918,7 +936,11 @@ function openPopup(id) {
       // emailing an invoice to someone whose morning fell apart is how a salon
       // loses a client it could have kept. So this asks, every time, and it is
       // easy to say no.
-      if (status === 'no_show' && !error) openNoShowNotice(b);
+      // b.status, not !error - for the same reason as the arrived branch above.
+      // The demo path applies the change through the fallback despite an
+      // error, so asking !error skipped the notice on exactly the path a
+      // stylist sees when the backend is unreachable.
+      if (status === 'no_show' && b.status === 'no_show') openNoShowNotice(b);
     });
   });
   const paidBtn = document.getElementById('popupPaidBtn');
@@ -956,6 +978,8 @@ function openPopup(id) {
     // Enter is what a hand already on the number pad reaches for.
     amountEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitPaid(); } });
   }
+  const moveBtn = document.getElementById('popupMove');
+  if (moveBtn) moveBtn.addEventListener('click', () => { closePopup(); openRescheduleModal(b); });
   const historyBtn = document.getElementById('popupCheckHistory');
   if (historyBtn) historyBtn.addEventListener('click', () => { closePopup(); runSearch(b.customer_phone || b.customer_name); });
   apptPopup.style.display = 'flex';
@@ -1347,6 +1371,7 @@ async function loadRescheduleAvailability() {
   rescheduleAvailability.innerHTML = '<p class="reschedule-availability-title">Checking availability…</p>';
   rescheduleBusyRanges = await fetchBusyRangesFor(date, staffId, rescheduleBookingTarget?.id);
   renderBusyRangesInto(rescheduleAvailability, rescheduleBusyRanges);
+  renderReschedSlots();
   checkRescheduleConflict();
 }
 
@@ -1363,11 +1388,98 @@ function checkRescheduleConflict() {
   return markConflictsIn(rescheduleAvailability, rescheduleBusyRanges, newStart, newStart + duration, btnSaveReschedule);
 }
 
+// ── PICKING THE NEW TIME OFF THE DAY ITSELF ──
+// Moving an appointment used to mean typing into <input type="time">, which
+// asks the stylist to already know what is free - and renders AM/PM on any
+// phone set to a 12-hour clock, which is not how this salon reads its day.
+// The day is drawn instead: every quarter hour the stylist works, marked
+// free or taken, and the move is a tap on one of them.
+
+/** "4 hours", "1½ hours", "45 min" - how a stylist says it, not 240. */
+function fmtDuration(mins) {
+  if (mins < 60) return mins + ' min';
+  const h = Math.floor(mins / 60);
+  const rest = mins % 60;
+  const half = rest === 30 ? '½' : '';
+  const label = half ? h + half : String(h);
+  if (!half && rest) return h + ' h ' + rest + ' min';
+  return label + (h === 1 && !half ? ' hour' : ' hours');
+}
+
+/** The stylist's own working window for that date - their override if they
+ *  have one, otherwise the salon's hours. Null when the salon is shut. */
+function dayWindowFor(dateIso, staffId) {
+  const weekday = new Date(dateIso + 'T00:00:00').getDay();
+  const dayHours = (currentBusinessHours || []).find((h) => h.weekday === weekday);
+  if (!dayHours || dayHours.closed || !dayHours.open_time || !dayHours.close_time) return null;
+  const override = (currentHoursOverrides || []).find((o) => o.staff_id === staffId && o.weekday === weekday);
+  return {
+    open: timeToMinutes(dayHours.open_time),
+    close: timeToMinutes(override && override.close_time ? override.close_time : dayHours.close_time),
+  };
+}
+
+let reschedSelectedMin = null;
+
+function renderReschedSlots() {
+  const el = document.getElementById('reschedSlots');
+  if (!el) return;
+  const date = rescheduleDatePicker.value;
+  const staffId = rescheduleStaffSelect.value;
+  if (!date || !staffId || !rescheduleBookingTarget) {
+    el.innerHTML = '<p class="resched-slots-empty">Choose a date first.</p>';
+    return;
+  }
+  const win = dayWindowFor(date, staffId);
+  if (!win) {
+    el.innerHTML = '<p class="resched-slots-empty">The salon is closed that day.</p>';
+    return;
+  }
+  const duration = timeToMinutes(fmtTime(rescheduleBookingTarget.end_time))
+    - timeToMinutes(fmtTime(rescheduleBookingTarget.start_time));
+
+  const slots = [];
+  for (let m = win.open; m + duration <= win.close; m += 15) {
+    // Taken means this appointment, at this length, would land on something
+    // already there - not merely that the quarter hour itself is busy.
+    const clash = (rescheduleBusyRanges || []).some((r) => m < r.endMin && (m + duration) > r.startMin);
+    slots.push({ min: m, clash });
+  }
+  if (!slots.length) {
+    el.innerHTML = '<p class="resched-slots-empty">This appointment is longer than that day.</p>';
+    return;
+  }
+  // A long appointment on a busy day can leave nothing clear at all. Saying so
+  // is kinder than a wall of hatched boxes with no explanation - and the salon
+  // does allow an overlap to be saved on purpose, so it is a note, not a stop.
+  const freeCount = slots.filter((sl) => !sl.clash).length;
+  const note = freeCount === 0
+    ? `<p class="resched-slots-note"><i class="fa-solid fa-circle-info"></i> Nothing is free for ${fmtDuration(duration)} that day. You can still put it on a taken time - it will sit alongside.</p>`
+    : '';
+
+  el.innerHTML = note + slots.map((sl) => `
+    <button type="button" class="resched-slot${sl.clash ? ' taken' : ''}${sl.min === reschedSelectedMin ? ' chosen' : ''}"
+            data-min="${sl.min}" aria-pressed="${sl.min === reschedSelectedMin}">
+      ${minutesToTimeStr(sl.min)}
+    </button>`).join('');
+
+  el.querySelectorAll('.resched-slot').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      reschedSelectedMin = Number(btn.dataset.min);
+      rescheduleTime.value = minutesToTimeStr(reschedSelectedMin);
+      renderReschedSlots();
+      checkRescheduleConflict();
+      rescheduleStatus.textContent = '';
+    });
+  });
+}
+
 function openRescheduleModal(booking) {
   rescheduleBookingTarget = booking;
   rescheduleSub.textContent = `${booking.customer_name} - ${booking.service_name}`;
   rescheduleDatePicker.setValue(booking.date);
   rescheduleTime.value = booking.start_time.slice(0, 5);
+  reschedSelectedMin = timeToMinutes(fmtTime(booking.start_time));
   rescheduleStaffSelect.innerHTML = currentStaff.map((s) => `<option value="${s.id}"${s.id === booking.staff_id ? ' selected' : ''}>${s.name}</option>`).join('');
   rescheduleStatus.textContent = '';
   rescheduleModal.style.display = 'flex';
@@ -1377,7 +1489,6 @@ function closeRescheduleModal() { rescheduleModal.style.display = 'none'; resche
 rescheduleClose.addEventListener('click', closeRescheduleModal);
 rescheduleModal.addEventListener('click', (e) => { if (e.target === rescheduleModal) closeRescheduleModal(); });
 rescheduleStaffSelect.addEventListener('change', loadRescheduleAvailability);
-rescheduleTime.addEventListener('input', checkRescheduleConflict);
 btnSaveReschedule.addEventListener('click', async () => {
   if (!rescheduleBookingTarget) return;
   const date = rescheduleDatePicker.value;
@@ -1394,7 +1505,15 @@ btnSaveReschedule.addEventListener('click', async () => {
   });
   if (error) { rescheduleStatus.textContent = 'Error: ' + error.message; rescheduleStatus.style.color = '#dc2626'; return; }
   rescheduleStatus.textContent = '✓ Moved.'; rescheduleStatus.style.color = '#059669';
-  setTimeout(() => { closeRescheduleModal(); switchOwnerTab(ownerActiveTab); }, 500);
+  setTimeout(async () => {
+    closeRescheduleModal();
+    // The move can be started from the grid or from the owner panel, and the
+    // grid is where it has to be seen to have happened. Reload the window and
+    // redraw it; refresh the panel list only if the panel is actually open.
+    await loadWindow(currentPin, windowFrom, windowTo);
+    renderGrid();
+    if (ownerPanelModal.style.display !== 'none') switchOwnerTab(ownerActiveTab);
+  }, 500);
 });
 
 // Minimal escaping for anything a client typed. See the audit note about
@@ -1417,19 +1536,41 @@ function openNoShowNotice(booking) {
     `${booking.customer_name} · ${booking.service_name} · ${fmtTime(booking.start_time)}`;
   document.getElementById('noShowNote').value = '';
   document.getElementById('noShowStatus').textContent = '';
-  const feeEl = document.getElementById('noShowFee');
-  // The fee was written by the database the moment the status changed. Shown
-  // here so whoever decides can see what the email would actually say.
+  // Half the booking's own price, which is what the cancellation policy says.
+  // Offered as a starting figure, not imposed - it stays editable, because the
+  // owner may well decide on something else for a particular client.
   const fee = booking.expected_total != null
     ? Math.round(Number(booking.expected_total) / 2)
     : null;
-  feeEl.textContent = fee != null
-    ? `The email would mention the ${fee.toLocaleString('nb-NO')} NOK policy charge.`
-    : 'This service has no fixed price, so the email would not name an amount.';
+  const charge = document.getElementById('noShowCharge');
+  const feeField = document.getElementById('noShowFeeField');
+  const feeAmount = document.getElementById('noShowFeeAmount');
+  const feeHint = document.getElementById('noShowFee');
+  // Always starts unticked. Charging has to be a decision someone made, not
+  // one they failed to undo.
+  charge.checked = false;
+  feeField.hidden = true;
+  feeAmount.value = fee != null ? String(fee) : '';
+  feeHint.textContent = fee != null
+    ? `Half of ${Number(booking.expected_total).toLocaleString('nb-NO')} NOK, which is what the policy says. Change it if you want to charge something else.`
+    : 'This service has no fixed price, so there is no half to work from - enter what you want to invoice.';
+  syncNoShowFee();
+
   const mail = document.getElementById('noShowSend');
   mail.disabled = !booking.customer_email;
   document.getElementById('noShowNoEmail').hidden = !!booking.customer_email;
   modal.style.display = 'flex';
+}
+
+/** The amount box and the send button both follow the charge decision, so the
+ *  button says what pressing it will actually do. */
+function syncNoShowFee() {
+  const charge = document.getElementById('noShowCharge');
+  const feeField = document.getElementById('noShowFeeField');
+  const label = document.getElementById('noShowSendLabel');
+  if (!charge || !feeField || !label) return;
+  feeField.hidden = !charge.checked;
+  label.textContent = charge.checked ? 'Send the message and the invoice' : 'Send her a message';
 }
 function closeNoShowNotice() {
   const modal = document.getElementById('noShowModal');
@@ -3575,31 +3716,59 @@ document.getElementById('noShowSkip').addEventListener('click', closeNoShowNotic
 document.getElementById('noShowModal').addEventListener('click', (e) => {
   if (e.target.id === 'noShowModal') closeNoShowNotice();
 });
+document.getElementById('noShowCharge').addEventListener('change', syncNoShowFee);
+
 document.getElementById('noShowSend').addEventListener('click', async () => {
   if (!noShowTarget) return;
   const status = document.getElementById('noShowStatus');
   const btn = document.getElementById('noShowSend');
+  const charge = document.getElementById('noShowCharge').checked;
+  const feeAmount = parseFloat(document.getElementById('noShowFeeAmount').value);
+  // Asked to invoice, but with nothing to invoice for. Better to stop here
+  // than to send a client a bill with no figure on it.
+  if (charge && (!Number.isFinite(feeAmount) || feeAmount <= 0)) {
+    status.textContent = 'Enter the amount to invoice, or untick the fee.';
+    status.style.color = '#dc2626';
+    document.getElementById('noShowFeeAmount').focus();
+    return;
+  }
   btn.disabled = true;
   status.textContent = 'Sending…';
   status.style.color = 'var(--sched-text-muted)';
 
-  const res = await sendBookingEmail({
+  // Routed through send-message, not send-booking-email: that function only
+  // ever accepted 'confirmed' and 'rejected', so a no-show notice sent through
+  // it came back a 400. send-message knows all thirteen messages.
+  //
+  // Two different letters. Without a fee it is the notice - we missed you,
+  // ring us. With one it is the invoice, a document with an amount and the
+  // salon's org number on it. The recipient should never have to work out
+  // which of the two she has been sent.
+  const res = await sendMessage({
     pin: currentPin,
-    booking_id: noShowTarget.id,
-    decision: 'no_show_notice',
-    reason: document.getElementById('noShowNote').value.trim(),
-    customer_name: noShowTarget.customer_name,
-    customer_email: noShowTarget.customer_email,
-    service_name: noShowTarget.service_name,
-    staff_name: noShowTarget.staff_name || '',
-    date: noShowTarget.date,
-    start_time: noShowTarget.start_time,
+    bookingId: noShowTarget.id,
+    key: charge ? 'invoice' : 'no_show_notice',
+    lang: 'no',
+    email: noShowTarget.customer_email,
+    phone: noShowTarget.customer_phone,
+    smsConsent: noShowTarget.sms_consent !== false,
+    context: {
+      customerName: noShowTarget.customer_name,
+      serviceName: noShowTarget.service_name,
+      staffName: noShowTarget.staff_name || '',
+      date: noShowTarget.date,
+      startTime: fmtTime(noShowTarget.start_time),
+      note: document.getElementById('noShowNote').value.trim(),
+      ...(charge ? { invoiceAmount: feeAmount, invoiceReason: 'no_show' } : {}),
+    },
   });
 
   if (res && res.sent) {
-    status.textContent = '✓ Sent.';
+    status.textContent = charge
+      ? '✓ Sent, with the ' + feeAmount.toLocaleString('nb-NO') + ' NOK invoice.'
+      : '✓ Sent.';
     status.style.color = '#059669';
-    setTimeout(closeNoShowNotice, 900);
+    setTimeout(closeNoShowNotice, 1200);
   } else {
     status.textContent = 'Could not send: ' + ((res && res.reason) || 'unknown');
     status.style.color = '#b45309';

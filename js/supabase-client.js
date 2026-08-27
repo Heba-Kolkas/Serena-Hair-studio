@@ -507,6 +507,26 @@ export async function sendBookingEmail(payload) {
   }
 }
 
+// The single send path for every message the salon sends - confirmations,
+// reminders, no-show notices, invoices, extensions arrivals, waitlist offers.
+// See supabase/functions/send-message: it holds the Resend and Sveve keys,
+// refuses to send the same message twice, will not text anyone at 03:00 or
+// anyone who did not agree to texts, and records every attempt either way.
+//
+// Like sendBookingEmail it resolves rather than throws: a decision the owner
+// has already made must not be lost because a provider is down.
+export async function sendMessage({ pin, key, lang, email, phone, context, bookingId, extensionOrderId, smsConsent }) {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-message', {
+      body: { pin, key, lang, email, phone, context, bookingId, extensionOrderId, smsConsent },
+    });
+    if (error) return { sent: false, reason: error.message || 'Edge function error' };
+    return data || { sent: false, reason: 'No response' };
+  } catch (e) {
+    return { sent: false, reason: (e && e.message) || 'Could not reach the message service' };
+  }
+}
+
 export async function fetchBookingsInRangeAdmin({ pin, dateFrom, dateTo, staffId }) {
   return supabase.rpc('admin_get_bookings_in_range', {
     p_pin: pin, p_date_from: dateFrom, p_date_to: dateTo, p_staff_id: staffId || null,

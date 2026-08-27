@@ -199,14 +199,30 @@
             <button type="button" class="appt-popup-close" id="noShowClose" aria-label="Close">&times;</button>
             <h3 class="block-modal-title">Marked as a no-show</h3>
             <p class="block-modal-sub" id="noShowWho"></p>
-            <p class="noshow-fee" id="noShowFee"></p>
+            <!-- Charging is a separate decision from writing to her, and it is
+                 the one with money on it - so it is asked outright rather than
+                 being implied by a sentence in the email. Off by default: a
+                 missed appointment usually has a reason, and a salon that
+                 invoices before it has heard the reason loses the client it
+                 could have kept. -->
+            <div class="noshow-fee-box">
+                <label class="block-allday-check">
+                    <input type="checkbox" id="noShowCharge" />
+                    Charge the no-show fee
+                </label>
+                <div class="block-field" id="noShowFeeField" hidden>
+                    <label>Amount to invoice (NOK)</label>
+                    <input type="number" id="noShowFeeAmount" min="0" step="1" inputmode="numeric" placeholder="e.g. 575" />
+                    <span class="block-field-hint" id="noShowFee"></span>
+                </div>
+            </div>
             <div class="block-field">
                 <label>Add a line of your own (optional)</label>
                 <input type="text" id="noShowNote" placeholder="Hope everything is alright - ring us and we will find a new time." />
             </div>
             <p class="noshow-warn" id="noShowNoEmail" hidden>No email address on this booking, so nothing can be sent.</p>
             <div class="noshow-actions">
-                <button type="button" id="noShowSend" class="owner-action-btn confirm"><i class="fa-solid fa-paper-plane"></i> Send her a message</button>
+                <button type="button" id="noShowSend" class="owner-action-btn confirm"><i class="fa-solid fa-paper-plane"></i> <span id="noShowSendLabel">Send her a message</span></button>
                 <button type="button" id="noShowSkip" class="owner-action-btn">Don't send anything</button>
             </div>
             <div id="noShowStatus" class="block-status"></div>
@@ -249,32 +265,52 @@
 
     <!-- MOVE (RESCHEDULE) BOOKING MODAL -->
     <div id="rescheduleModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup">
+        <div class="appt-popup wide-popup resched-popup">
             <button type="button" class="appt-popup-close" id="rescheduleClose" aria-label="Close">&times;</button>
             <h3 class="block-modal-title">Move Appointment</h3>
-            <p class="block-modal-sub" id="rescheduleSub"></p>
-            <div class="block-field">
-                <label>New date</label>
-                <div class="calendar-pick-wrap">
-                    <button type="button" id="btnRescheduleDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="rescheduleDateLabel">Pick a date</span></button>
-                    <div id="rescheduleCalendarPopover" class="calendar-popover" style="display:none;">
-                        <div class="calendar-header">
-                            <button type="button" id="reschedCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
-                            <span class="calendar-month-label" id="reschedCalMonthLabel"></span>
-                            <button type="button" id="reschedCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+            <!-- One wrapper below the heading. The popup pads its own
+                 children, so a bare button as a direct child had that padding
+                 applied to its own box and ran edge to edge. -->
+            <div class="resched-body">
+                <p class="block-modal-sub" id="rescheduleSub"></p>
+
+                <div class="resched-grid">
+                    <div class="block-field resched-date">
+                        <label>New date</label>
+                        <div class="calendar-pick-wrap">
+                            <button type="button" id="btnRescheduleDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="rescheduleDateLabel">Pick a date</span></button>
+                            <div id="rescheduleCalendarPopover" class="calendar-popover" style="display:none;">
+                                <div class="calendar-header">
+                                    <button type="button" id="reschedCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <span class="calendar-month-label" id="reschedCalMonthLabel"></span>
+                                    <button type="button" id="reschedCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+                                <div class="calendar-grid" id="reschedCalGrid"></div>
+                            </div>
                         </div>
-                        <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-                        <div class="calendar-grid" id="reschedCalGrid"></div>
                     </div>
+                    <div class="block-field resched-stylist"><label>Stylist</label><select id="rescheduleStaffSelect"></select></div>
                 </div>
+
+                <!-- The chosen start time. Kept as a hidden input because the
+                     conflict check reads it, but it is never typed into: the
+                     time is picked off the day below, where a stylist can see
+                     what is already taken. A bare <input type="time"> also
+                     renders AM/PM on any phone set to a 12-hour clock, which
+                     is not how a Norwegian salon reads its own day. -->
+                <input type="hidden" id="rescheduleTime" />
+
+                <div class="resched-picker">
+                    <p class="resched-picker-title">Pick the new time</p>
+                    <div id="reschedSlots" class="resched-slots"><p class="resched-slots-empty">Choose a date first.</p></div>
+                </div>
+
+                <div id="rescheduleAvailability" class="reschedule-availability"></div>
+
+                <button type="button" id="btnSaveReschedule" class="block-save-btn"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move Appointment</button>
+                <div id="rescheduleStatus" class="block-status"></div>
             </div>
-            <div class="block-field-row">
-                <div class="block-field"><label>New time</label><input type="time" id="rescheduleTime" /></div>
-                <div class="block-field"><label>Stylist</label><select id="rescheduleStaffSelect"></select></div>
-            </div>
-            <div id="rescheduleAvailability" class="reschedule-availability"></div>
-            <button type="button" id="btnSaveReschedule" class="block-save-btn"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move Appointment</button>
-            <div id="rescheduleStatus" class="block-status"></div>
         </div>
     </div>
 
