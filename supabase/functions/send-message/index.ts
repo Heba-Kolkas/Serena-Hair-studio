@@ -153,6 +153,39 @@ async function sendSms(to: string, text: string) {
   }
 }
 
+// ── HOW MANY MESSAGES ARE LEFT ──
+// Credits are prepaid, so they run out. When they do, nothing breaks loudly:
+// bookings still work, emails still arrive, and only the SMS quietly stops -
+// which the salon finds out about from a client who never got her reminder.
+//
+// Sveve exposes the remaining count, so the Owner Panel can say so first.
+// Deliberately honest about not knowing: a balance that cannot be read comes
+// back as an error, never as zero and never as a confident number. "Unknown"
+// prompts someone to look; a wrong number does not.
+async function smsBalance(): Promise<{ ok: boolean; balance: number | null; reason: string | null }> {
+  if (!SVEVE_USER || !SVEVE_PASSWORD) {
+    return { ok: false, balance: null, reason: 'SVEVE_USER / SVEVE_PASSWORD are not set' };
+  }
+  try {
+    const url = new URL('https://sveve.no/SMS/AccountAdm');
+    url.searchParams.set('cmd', 'sms_count');
+    url.searchParams.set('user', SVEVE_USER);
+    url.searchParams.set('passwd', SVEVE_PASSWORD);
+    const res = await fetch(url.toString(), { method: 'GET' });
+    const text = (await res.text()).trim();
+    if (!res.ok) return { ok: false, balance: null, reason: `Sveve returned ${res.status}` };
+    // The endpoint answers with a bare number. Anything else is an error
+    // message, and is passed through rather than coerced into a count.
+    const n = Number(text.replace(/[^0-9-]/g, ''));
+    if (!/^-?[0-9]+$/.test(text.replace(/[^0-9-]/g, '')) || Number.isNaN(n)) {
+      return { ok: false, balance: null, reason: text.slice(0, 200) || 'Empty response' };
+    }
+    return { ok: true, balance: n, reason: null };
+  } catch (e) {
+    return { ok: false, balance: null, reason: (e as Error).message };
+  }
+}
+
 // ── THE ENTRY POINT ──
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
@@ -161,20 +194,29 @@ serve(async (req) => {
   let body: Record<string, any>;
   try { body = await req.json(); } catch { return json({ error: 'Expected JSON' }, 400); }
 
-  const { pin, key, lang, email, phone, context, bookingId, extensionOrderId, smsConsent } = body;
+  const { pin, key, action, lang, email, phone, context, bookingId, extensionOrderId, smsConsent } = body;
 
   if (!pin) return json({ error: 'pin is required' }, 400);
-  if (!key) return json({ error: 'key is required' }, 400);
 
   // The PIN is checked by the database, which is the only thing that knows it.
   // Without this the function is an open endpoint that will email or text
-  // anyone, with the salon's name on it.
+  // anyone, with the salon's name on it. Checked before the balance too - the
+  // credit remaining is a fact about the business, not public information.
   try {
     const ok = await rpc('verify_staff_pin', { p_pin: pin });
     if (ok !== true) return json({ error: 'Invalid PIN' }, 403);
   } catch (e) {
     return json({ error: 'Could not verify PIN: ' + (e as Error).message }, 502);
   }
+
+  // Asking how many are left is not sending anything, so it needs no message
+  // key and takes no recipient.
+  if (action === 'balance') {
+    const b = await smsBalance();
+    return json({ ...b, configured: !!(SVEVE_USER && SVEVE_PASSWORD) });
+  }
+
+  if (!key) return json({ error: 'key is required' }, 400);
 
   const language: Lang = lang === 'en' ? 'en' : 'no';
   const ctx = (context ?? {}) as MessageContext;

@@ -528,6 +528,21 @@ export async function sendMessage({ pin, key, lang, email, phone, context, booki
   }
 }
 
+// How many prepaid SMS remain. Resolves rather than throws, and never invents
+// a number: a balance that could not be read comes back with ok:false and the
+// reason, so the panel can say "could not check" instead of a confident zero.
+export async function fetchSmsBalance(pin) {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-message', {
+      body: { pin, action: 'balance' },
+    });
+    if (error) return { ok: false, balance: null, reason: error.message || 'Edge function error', configured: false };
+    return data || { ok: false, balance: null, reason: 'No response', configured: false };
+  } catch (e) {
+    return { ok: false, balance: null, reason: (e && e.message) || 'Could not reach the message service', configured: false };
+  }
+}
+
 export async function fetchBookingsInRangeAdmin({ pin, dateFrom, dateTo, staffId }) {
   return supabase.rpc('admin_get_bookings_in_range', {
     p_pin: pin, p_date_from: dateFrom, p_date_to: dateTo, p_staff_id: staffId || null,

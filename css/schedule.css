@@ -2332,3 +2332,32 @@ body.is-moving #gridWrap { padding-bottom: 5rem; }
 }
 .move-bar-confirm:hover { background: #047857; }
 .move-bar-confirm[hidden] { display: none; }
+
+/* ── HOW MANY TEXTS ARE LEFT ──
+   Credits are prepaid, so they run out, and when they do nothing breaks
+   loudly - bookings still work, emails still arrive, only the texts stop.
+   Colour carries the urgency so the state is read before the sentence is. */
+.sms-balance {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid var(--sched-border);
+  background: var(--sched-bg);
+  color: var(--sched-text);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  text-align: left;
+  margin-bottom: 1.75rem;
+}
+.sms-balance i { flex: none; margin-top: 0.15rem; }
+.sms-balance.checking,
+.sms-balance.unset { color: var(--sched-text-muted); }
+.sms-balance.ok     { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+.sms-balance.warn   { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.sms-balance.low    { background: #fff7ed; border-color: #fdba74; color: #9a3412; }
+/* Out of credit and could-not-check are both red: in each case reminders may
+   not be going out, and that is the same problem to the salon. */
+.sms-balance.out,
+.sms-balance.error  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }

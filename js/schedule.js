@@ -6,7 +6,7 @@ import {
   fetchAllStaffAdmin, upsertStaffAdmin,
   fetchBookingsAdmin, updateBookingStatusAdmin, rescheduleBookingAdmin, completeBookingAdmin,
   upsertBusinessHoursAdmin, addBlockedSlotAdmin, removeBlockedSlotAdmin,
-  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage,
+  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage, fetchSmsBalance,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
   markExtensionsNotified, setExtensionOrderStatus, fetchExtensionHistory,
@@ -3337,6 +3337,63 @@ async function renderOwnerActivityTab() {
   load();
 }
 
+/** How many prepaid texts are left, said plainly.
+ *
+ *  Credits are bought up front, so they run out - and when they do nothing
+ *  breaks loudly. Bookings still work, emails still arrive, and only the SMS
+ *  stops. Without this the first anyone hears of it is a client who never got
+ *  her reminder, which is the most expensive way to find out.
+ *
+ *  Thresholds are in days rather than a bare count, because 200 left means
+ *  nothing on its own: at roughly two texts a booking it is how long they
+ *  last that decides whether to act today.
+ */
+async function renderSmsBalance() {
+  const box = document.getElementById('smsBalanceBox');
+  if (!box) return;
+  const r = await fetchSmsBalance(currentPin);
+
+  if (!r.configured) {
+    box.className = 'sms-balance unset';
+    box.innerHTML = '<i class="fa-solid fa-circle-info"></i> <span>Text messages are not set up yet. '
+      + 'Once the Sveve details are saved, the balance shows here.</span>';
+    return;
+  }
+  if (!r.ok || r.balance == null) {
+    // Never a confident zero. A number nobody can read is a reason to look,
+    // and saying so is more useful than guessing.
+    box.className = 'sms-balance error';
+    box.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span><strong>Could not check the balance.</strong> '
+      + escHtml(r.reason || 'No reason given') + '</span>';
+    return;
+  }
+
+  const n = r.balance;
+  // Two per booking - a confirmation and a reminder - against a rough dozen
+  // bookings a day.
+  const perDay = 24;
+  const days = Math.floor(n / perDay);
+  const left = n.toLocaleString('nb-NO') + (n === 1 ? ' text' : ' texts');
+  const lasts = days >= 1 ? ` &middot; about ${days} ${days === 1 ? 'day' : 'days'} at your usual rate` : '';
+
+  if (n <= 0) {
+    box.className = 'sms-balance out';
+    box.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <span><strong>No texts left.</strong> '
+      + 'Reminders and confirmations are not being sent. Emails still are. Top up in Sveve.</span>';
+  } else if (n < 100) {
+    box.className = 'sms-balance low';
+    box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span><strong>${left} left</strong>${lasts}. `
+      + 'Top up in Sveve before they run out - reminders stop silently when they do.</span>';
+  } else if (n < 400) {
+    box.className = 'sms-balance warn';
+    box.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span><strong>${left} left</strong>${lasts}. `
+      + 'Worth topping up soon.</span>';
+  } else {
+    box.className = 'sms-balance ok';
+    box.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span><strong>${left} left</strong>${lasts}.</span>`;
+  }
+}
+
 async function renderOwnerSettingsTab() {
   // Read the live value first so the field shows what's actually in force,
   // not a placeholder the owner might save back unchanged.
@@ -3347,6 +3404,11 @@ async function renderOwnerSettingsTab() {
   } catch (e) { /* keep the default */ }
 
   ownerTabContent.innerHTML = `
+    <h4 class="owner-section-title">Text Messages</h4>
+    <div id="smsBalanceBox" class="sms-balance checking">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Checking how many texts are left&hellip;
+    </div>
+
     <h4 class="owner-section-title">Booking Window</h4>
     <p style="font-size:0.78rem;color:var(--sched-text-muted);margin-bottom:0.8rem;">
       How far ahead clients can book. It rolls forward on its own every day, so there's nothing to renew.
@@ -3369,6 +3431,10 @@ async function renderOwnerSettingsTab() {
     <button type="button" id="btnSaveOwnerPinNew" class="block-save-btn" style="width:auto;">Save</button>
     <div id="setOwnerPinStatus" class="owner-status-msg"></div>
   `;
+  // Fired without awaiting: the balance is a network call to Sveve and the
+  // rest of the panel must not sit blank behind it.
+  renderSmsBalance();
+
   document.getElementById('btnSaveHorizon').addEventListener('click', async () => {
     const statusEl = document.getElementById('setHorizonStatus');
     const days = parseInt(document.getElementById('setHorizon').value, 10);
