@@ -1,3 +1,16 @@
+-- REPAIRED ORDERING, 27 August 2026.
+-- book_appointment_core was split in two: it opened, ran as far as the
+-- staff_service_schedule count, and then stopped dead, while the whole of its
+-- remaining body - the per-stylist day policy, the colour hold, the split-day
+-- rule, the expected total and the insert - sat 800 lines earlier as bare
+-- statements belonging to no function at all. That is a syntax error, which
+-- is why this migration had never once run. The block has been moved back to
+-- where it belongs; not a line of logic was changed.
+--
+-- check_function_bodies is off because book_appointment (language sql) is
+-- defined before the core it calls.
+set check_function_bodies = off;
+
 -- Two changes, both driven by the owner:
 --
 --   1. Taniya is out of the booking system entirely. Keratin Treatment and
@@ -206,312 +219,13 @@ where
 -- Haircuts, styling, updos, bridal, extensions and consultation deliberately
 -- offer none — the price list covers each of those as a complete service.
 
--- ── PER-STYLIST DAY POLICY ──
-  -- Skipped wholesale on the manual path: a stylist entering a booking by
-  -- hand has already decided it fits, and these rules exist to shape what
-  -- the public wizard offers.
-  select * into v_pol from staff_day_policy
-    where staff_id = p_staff_id and weekday = v_weekday;
-  v_has_pol := found;
 
-  -- ── ONE BOOKING AT A TIME, PER STYLIST PER DAY ──
-  -- Everything below reads the day's bookings and then writes a new one. Two
-  -- clients confirming at the same moment would both read a free slot and
-  -- both write into it — the checks are correct in isolation and useless in
-  -- parallel. This lock makes them run one after the other for that stylist
-  -- and date; the second one re-reads the day and finds the slot gone.
-  --
-  -- It is held until the transaction ends, so it cannot be left behind, and
-  -- it is scoped to one stylist-day, so bookings elsewhere never wait on it.
-  perform pg_advisory_xact_lock(hashtext(p_staff_id::text || ':' || p_date::text));
-
-  -- Where the day's four-hour appointment sits, if one is booked. Drives both
-  -- the caps below and the working hours further down. Bridal counts: it is
-  -- four hours of her day exactly as a colour is.
-  -- Measured from the booking's own length rather than looked up from its
-  -- service. A root touch-up with extensions is four hours long and occupies
-  -- the day exactly as a balayage does, but its service row still says ninety
-  -- minutes, so the service is the wrong thing to ask.
-  select min(b.start_time) into v_colour_start
-    from bookings b
-    where b.staff_id = p_staff_id and b.date = p_date
-      and b.status <> 'cancelled'
-      and (b.end_time - b.start_time) >= interval '240 minutes';
-
-  -- Every protection on a policy stylist's day — short work not starting
-  -- until other_open_time, the other_split_at rule, max_other_per_day —
-  -- exists for one purpose: keep a four-hour colour start alive. Each costs
-  -- bookable hours, and that price is only worth paying while a colour can
-  -- still actually happen.
-  --
-  -- Once every colour start is blocked, they are guarding an empty room. A
-  -- 12:00 booking rules out an 11:00 colour and a 16:00 booking rules out a
-  -- 15:00 one; hold the rules after that and the middle of the day is
-  -- unsellable for nothing. So when no colour can start any more, the
-  -- protections drop and her day opens end to end.
-  if v_has_pol and v_colour_start is null then
-    -- The hold also has a deadline, not just a condition.
-    if v_pol.colour_hold_days is not null
-       and p_date - current_date <= v_pol.colour_hold_days then
-      v_colour_hold_over := true;
-    end if;
-    select not exists (
-      select 1 from staff_service_schedule sss
-      join services sv6 on sv6.id = sss.service_id and sv6.daily_limited
-      where sss.staff_id = p_staff_id and sss.weekday = v_weekday
-        and not exists (
-          select 1 from bookings b2
-          where b2.staff_id = p_staff_id and b2.date = p_date
-            and b2.status <> 'cancelled'
-            and b2.start_time < sss.start_time + (sv6.duration_minutes * interval '1 minute')
-            and b2.end_time > sss.start_time
-        )
-    ) or v_colour_hold_over into v_colour_hold_over;
-  end if;
-
-  if v_has_pol and not p_allow_overlap then
-    -- Bridal is four hours of her day just as a colour is, so it counts
-    -- against the same allowance: Mon/Wed/Fri hold one four-hour
-    -- appointment, not one colour plus a bride.
-    if v_daily_limited or v_is_bridal then
-      if v_pol.max_limited_per_day is not null then
-        select count(*) into v_scheduled_today
-          from bookings b
-          where b.staff_id = p_staff_id and b.date = p_date
-            and b.status <> 'cancelled'
-            and (b.end_time - b.start_time) >= interval '240 minutes';
-        if v_scheduled_today >= v_pol.max_limited_per_day then
-          raise exception 'This stylist is already booked for a four-hour appointment that day';
-        end if;
-      end if;
-    else
-      -- Colours only, until the date is close enough that the colour
-      -- probably isn't coming — from then on the day is an ordinary mixed
-      -- one and the rules below apply unchanged.
-      if not v_pol.allow_other_services
-         and (v_pol.late_fill_days is null
-              or p_date - current_date > v_pol.late_fill_days) then
-        raise exception 'This stylist only takes colour appointments on this day';
-      end if;
-
-      if v_pol.max_other_per_day is not null and not v_colour_hold_over then
-        select count(*) into v_other_today
-          from bookings b join services sv4 on sv4.id = b.service_id
-          where b.staff_id = p_staff_id and b.date = p_date
-            and b.status <> 'cancelled' and not sv4.daily_limited;
-        if v_other_today >= v_pol.max_other_per_day then
-          raise exception 'This stylist is fully booked for shorter appointments that day';
-        end if;
-      end if;
-    end if;
-  end if;
-
-  if v_schedule_count > 0 then
-    -- A stylist's scheduled slots leave gaps once part of the morning is
-    -- already booked. When a NON-colour appointment ends inside the morning,
-    -- anything from its end up to the afternoon colour hour is allowed too,
-    -- so the leftover time gets used rather than sitting idle. Slots at or
-    -- after that hour are untouched. Colours are excluded: their early slot
-    -- is the overlap pairing, not a gap to fill.
-    if not v_daily_limited then
-      select max(b.end_time) into v_morning_end
-        from bookings b join services sv5 on sv5.id = b.service_id
-        where b.staff_id = p_staff_id and b.date = p_date
-          and b.status <> 'cancelled' and not sv5.daily_limited
-          and b.end_time > v_open and b.end_time <= v_gap_boundary;
-    end if;
-
-    -- Back-to-back from the end of the morning, or flush against the colour
-    -- hour. Anything in between would strand a quarter of an hour that can
-    -- never be filled.
-    if not (v_morning_end is not null
-            and p_start_time >= v_morning_end
-            and v_end_time <= v_gap_boundary
-            and (
-              extract(epoch from (p_start_time - v_morning_end))::int % (v_duration * 60) = 0
-              or v_end_time = v_gap_boundary
-            ))
-       and not exists (
-      select 1 from staff_service_schedule
-      where staff_id = p_staff_id and service_id = p_service_id
-        and weekday = v_weekday and start_time = p_start_time
-    ) then
-      raise exception 'This time is not available for this stylist';
-    end if;
-  elsif v_fixed_times is not null and not (p_start_time = any(v_fixed_times)) then
-    raise exception 'This service can only be booked at its fixed times';
-  end if;
-
-  select open_time, close_time, closed into v_open, v_close, v_closed
-    from business_hours where weekday = v_weekday;
-
-  -- Per-staff closing-time override (e.g. Kani takes clients until 18:00 on
-  -- Mon/Wed/Fri, later than the salon's general 17:30 close).
-  select close_time into v_staff_close from staff_hours_override
-    where staff_id = p_staff_id and weekday = v_weekday;
-  if v_staff_close is not null then v_close := v_staff_close; end if;
-
-  -- A policy stylist's hours are her own, and they move with the colour: an
-  -- early colour extends her finish, a late one delays her start.
-  if v_has_pol then
-    if v_pol.open_time is not null then v_open := v_pol.open_time; end if;
-    if v_pol.close_time is not null then v_close := v_pol.close_time; end if;
-    if v_colour_start is not null then
-      if v_colour_start <= v_open and v_pol.close_after_early is not null then
-        v_close := v_pol.close_after_early;
-      elsif v_colour_start > v_open and v_pol.open_before_late is not null then
-        v_open := v_pol.open_before_late;
-      end if;
-    elsif not v_daily_limited and not v_is_bridal and not v_colour_hold_over then
-      -- A colour can still happen today, so the day has to leave room for one.
-      if v_pol.other_open_time is not null then v_open := v_pol.other_open_time; end if;
-
-      -- Nothing may straddle the split: a booking sitting across it rules out
-      -- both colour starts on its own.
-      if v_pol.other_split_at is not null
-         and p_start_time < v_pol.other_split_at
-         and v_end_time > v_pol.other_split_at then
-        raise exception 'That time would leave no room for a colour appointment - please pick a time that finishes by %, or starts at % or later',
-          to_char(v_pol.other_split_at, 'HH24:MI'), to_char(v_pol.other_split_at, 'HH24:MI');
-      end if;
-
-      -- ...and once one shorter booking exists, every later one stays on the
-      -- SAME side of it.
-      --
-      -- One short booking always leaves a colour start alive: before the split
-      -- leaves the afternoon colour, after it leaves the morning one. Two on
-      -- opposite sides leave none, and the day is left with no four-hour start
-      -- and several unsellable hours stranded between the two small bookings.
-      -- So the first booking of the day chooses the side and the rest follow.
-      --
-      -- Consultations do not count - they nest inside other bookings. Bridal
-      -- does not either: it is four hours and is counted with the colours.
-      -- The owner booking by hand (p_allow_overlap) has already decided.
-      if v_pol.other_split_at is not null and not p_allow_overlap then
-        select
-          count(*) filter (where b.end_time <= v_pol.other_split_at),
-          count(*) filter (where b.start_time >= v_pol.other_split_at)
-          into v_side_early, v_side_late
-        from bookings b join services sv5 on sv5.id = b.service_id
-        where b.staff_id = p_staff_id and b.date = p_date
-          and b.status <> 'cancelled'
-          and (b.end_time - b.start_time) < interval '240 minutes'
-          and sv5.category <> 'Consultation';
-
-        if v_side_early > 0 and p_start_time >= v_pol.other_split_at then
-          raise exception 'This stylist already has a shorter appointment before % that day - please pick a time that finishes by %',
-            to_char(v_pol.other_split_at, 'HH24:MI'), to_char(v_pol.other_split_at, 'HH24:MI');
-        end if;
-        if v_side_late > 0 and v_end_time <= v_pol.other_split_at then
-          raise exception 'This stylist already has a shorter appointment after % that day - please pick a time that starts at % or later',
-            to_char(v_pol.other_split_at, 'HH24:MI'), to_char(v_pol.other_split_at, 'HH24:MI');
-        end if;
-      end if;
-    end if;
-  end if;
-
-  -- Fixed-time bookings (Balayage's per-stylist schedule, or a service's own
-  -- fixed_times) are owner-curated and allowed to run past closing — e.g. a
-  -- 15:00 Balayage (240min) legitimately finishes at 19:00 even though the
-  -- salon stops taking new arrivals at 17:30. Only the dynamic open-grid
-  -- case must fit entirely before v_close.
-  if v_closed or v_open is null or p_start_time < v_open
-     or (v_schedule_count = 0 and v_fixed_times is null and v_end_time > v_close) then
-    raise exception 'Outside business hours';
-  end if;
-
-  select count(*) into v_conflict from blocked_slots
-    where (staff_id = p_staff_id or staff_id is null) and date = p_date
-      and start_time < v_end_time and end_time > p_start_time;
-  if v_conflict > 0 then raise exception 'Slot is blocked'; end if;
-
-  select allow_overlap_booking into v_allow_overlap from staff where id = p_staff_id;
-
-  -- Two separate exemptions from the usual "no time overlap" rule:
-  -- 1) Overlap-eligible stylists can take a second, non-Bridal client at
-  --    13:00 while an 11:00 Balayage is processing (16:30 for a 15:00
-  --    Balayage) — that specific pairing only.
-  -- 2) A Consultation can nest inside any other booking's time block —
-  --    it just can't share that booking's exact start time, which the
-  --    bookings_staff_slot_unique index already guarantees on its own.
-  select count(*) into v_conflict from bookings b
-    where b.staff_id = p_staff_id and b.date = p_date and b.status <> 'cancelled'
-      and b.start_time < v_end_time and b.end_time > p_start_time
-      and not (
-        (
-          coalesce(v_allow_overlap, false)
-          and v_category not in ('Bridal', 'Special Occasions')
-          and (b.end_time - b.start_time) = interval '240 minutes'
-          and b.start_time in ('11:00', '15:00')
-          and (
-            (b.start_time = '11:00' and p_start_time = '13:00')
-            or (b.start_time = '15:00' and p_start_time = '16:30')
-          )
-        )
-        or v_service_name = 'Consultation'
-      );
-  -- Skipped for a booking entered by hand in the schedule tool: a stylist
-  -- looking at their own day can see exactly what they're doubling up on and
-  -- may have good reason to. The unique index on (staff, date, start_time)
-  -- still holds, so an overlap has to start at a different minute — two
-  -- bookings can never occupy the identical slot.
-  if v_conflict > 0 and not p_allow_overlap then raise exception 'Slot no longer available'; end if;
-
-  -- ── EXPECTED TOTAL ──
-  -- Start from the service itself. A consultation-priced service contributes
-  -- nothing but forces the estimate flag; a range price contributes its
-  -- floor and does the same.
-  if coalesce(v_on_consultation, false) then
-    v_is_estimate := true;
-  else
-    v_expected := coalesce(v_price_from, 0);
-    if v_price_to is not null then v_is_estimate := true; end if;
-  end if;
-
-  select coalesce(sum(a.price), 0),
-         coalesce(bool_or(a.price_is_from), false)
-    into v_addon_total, v_addon_from
-    from addons a
-    join service_addons sa on sa.addon_id = a.id and sa.service_id = p_service_id
-    where p_addon_ids is not null and a.id = any(p_addon_ids);
-
-  v_expected := v_expected + coalesce(v_addon_total, 0);
-  v_is_estimate := v_is_estimate or coalesce(v_addon_from, false);
-
-  insert into bookings (
-    service_id, staff_id, customer_name, customer_email, customer_phone,
-    date, start_time, end_time, notes, expected_total, expected_total_is_estimate, status
-  )
-  values (
-    p_service_id, p_staff_id, p_customer_name, p_customer_email, p_customer_phone,
-    p_date, p_start_time, v_end_time, p_notes, v_expected, v_is_estimate,
-    case when v_requires_confirmation or exists (
-           select 1 from addons a
-           where p_addon_ids is not null and a.id = any(p_addon_ids)
-             and a.requires_confirmation
-         ) then 'pending'::booking_status
-         else 'confirmed'::booking_status end
-  )
-  returning * into v_booking;
-
-  -- A pending request holds its slot for two days, then the time is released.
-  if v_booking.status = 'pending' then
-    update bookings set hold_expires_at = now() + interval '2 days'
-      where id = v_booking.id returning * into v_booking;
-  end if;
-
-  -- Snapshot each add-on onto the booking.
-  if v_has_addons then
-    insert into booking_addons (booking_id, addon_id, name_at_booking, price_at_booking, price_is_from)
-    select v_booking.id, a.id, a.name, a.price, a.price_is_from
-    from addons a
-    join service_addons sa on sa.addon_id = a.id and sa.service_id = p_service_id
-    where a.id = any(p_addon_ids)
-    order by a.sort_order;
-  end if;
-
-  return v_booking;
-end; $$;
+-- 0001's book_appointment took eight arguments; this one takes nine
+-- (p_addon_ids). That is an overload, not a replacement, so both would exist
+-- and "grant execute on function book_appointment" becomes ambiguous - the
+-- second reason this migration could never have run. The old signature goes
+-- first.
+drop function if exists book_appointment(uuid, uuid, date, time, text, text, text, text);
 
 -- Public wizard: every rule applies.
 create or replace function book_appointment(
@@ -1275,6 +989,312 @@ begin
   -- takes precedence over the service's own generic fixed_times.
   select count(*) into v_schedule_count from staff_service_schedule
     where staff_id = p_staff_id and service_id = p_service_id;
+-- ── PER-STYLIST DAY POLICY ──
+  -- Skipped wholesale on the manual path: a stylist entering a booking by
+  -- hand has already decided it fits, and these rules exist to shape what
+  -- the public wizard offers.
+  select * into v_pol from staff_day_policy
+    where staff_id = p_staff_id and weekday = v_weekday;
+  v_has_pol := found;
+
+  -- ── ONE BOOKING AT A TIME, PER STYLIST PER DAY ──
+  -- Everything below reads the day's bookings and then writes a new one. Two
+  -- clients confirming at the same moment would both read a free slot and
+  -- both write into it — the checks are correct in isolation and useless in
+  -- parallel. This lock makes them run one after the other for that stylist
+  -- and date; the second one re-reads the day and finds the slot gone.
+  --
+  -- It is held until the transaction ends, so it cannot be left behind, and
+  -- it is scoped to one stylist-day, so bookings elsewhere never wait on it.
+  perform pg_advisory_xact_lock(hashtext(p_staff_id::text || ':' || p_date::text));
+
+  -- Where the day's four-hour appointment sits, if one is booked. Drives both
+  -- the caps below and the working hours further down. Bridal counts: it is
+  -- four hours of her day exactly as a colour is.
+  -- Measured from the booking's own length rather than looked up from its
+  -- service. A root touch-up with extensions is four hours long and occupies
+  -- the day exactly as a balayage does, but its service row still says ninety
+  -- minutes, so the service is the wrong thing to ask.
+  select min(b.start_time) into v_colour_start
+    from bookings b
+    where b.staff_id = p_staff_id and b.date = p_date
+      and b.status <> 'cancelled'
+      and (b.end_time - b.start_time) >= interval '240 minutes';
+
+  -- Every protection on a policy stylist's day — short work not starting
+  -- until other_open_time, the other_split_at rule, max_other_per_day —
+  -- exists for one purpose: keep a four-hour colour start alive. Each costs
+  -- bookable hours, and that price is only worth paying while a colour can
+  -- still actually happen.
+  --
+  -- Once every colour start is blocked, they are guarding an empty room. A
+  -- 12:00 booking rules out an 11:00 colour and a 16:00 booking rules out a
+  -- 15:00 one; hold the rules after that and the middle of the day is
+  -- unsellable for nothing. So when no colour can start any more, the
+  -- protections drop and her day opens end to end.
+  if v_has_pol and v_colour_start is null then
+    -- The hold also has a deadline, not just a condition.
+    if v_pol.colour_hold_days is not null
+       and p_date - current_date <= v_pol.colour_hold_days then
+      v_colour_hold_over := true;
+    end if;
+    select not exists (
+      select 1 from staff_service_schedule sss
+      join services sv6 on sv6.id = sss.service_id and sv6.daily_limited
+      where sss.staff_id = p_staff_id and sss.weekday = v_weekday
+        and not exists (
+          select 1 from bookings b2
+          where b2.staff_id = p_staff_id and b2.date = p_date
+            and b2.status <> 'cancelled'
+            and b2.start_time < sss.start_time + (sv6.duration_minutes * interval '1 minute')
+            and b2.end_time > sss.start_time
+        )
+    ) or v_colour_hold_over into v_colour_hold_over;
+  end if;
+
+  if v_has_pol and not p_allow_overlap then
+    -- Bridal is four hours of her day just as a colour is, so it counts
+    -- against the same allowance: Mon/Wed/Fri hold one four-hour
+    -- appointment, not one colour plus a bride.
+    if v_daily_limited or v_is_bridal then
+      if v_pol.max_limited_per_day is not null then
+        select count(*) into v_scheduled_today
+          from bookings b
+          where b.staff_id = p_staff_id and b.date = p_date
+            and b.status <> 'cancelled'
+            and (b.end_time - b.start_time) >= interval '240 minutes';
+        if v_scheduled_today >= v_pol.max_limited_per_day then
+          raise exception 'This stylist is already booked for a four-hour appointment that day';
+        end if;
+      end if;
+    else
+      -- Colours only, until the date is close enough that the colour
+      -- probably isn't coming — from then on the day is an ordinary mixed
+      -- one and the rules below apply unchanged.
+      if not v_pol.allow_other_services
+         and (v_pol.late_fill_days is null
+              or p_date - current_date > v_pol.late_fill_days) then
+        raise exception 'This stylist only takes colour appointments on this day';
+      end if;
+
+      if v_pol.max_other_per_day is not null and not v_colour_hold_over then
+        select count(*) into v_other_today
+          from bookings b join services sv4 on sv4.id = b.service_id
+          where b.staff_id = p_staff_id and b.date = p_date
+            and b.status <> 'cancelled' and not sv4.daily_limited;
+        if v_other_today >= v_pol.max_other_per_day then
+          raise exception 'This stylist is fully booked for shorter appointments that day';
+        end if;
+      end if;
+    end if;
+  end if;
+
+  if v_schedule_count > 0 then
+    -- A stylist's scheduled slots leave gaps once part of the morning is
+    -- already booked. When a NON-colour appointment ends inside the morning,
+    -- anything from its end up to the afternoon colour hour is allowed too,
+    -- so the leftover time gets used rather than sitting idle. Slots at or
+    -- after that hour are untouched. Colours are excluded: their early slot
+    -- is the overlap pairing, not a gap to fill.
+    if not v_daily_limited then
+      select max(b.end_time) into v_morning_end
+        from bookings b join services sv5 on sv5.id = b.service_id
+        where b.staff_id = p_staff_id and b.date = p_date
+          and b.status <> 'cancelled' and not sv5.daily_limited
+          and b.end_time > v_open and b.end_time <= v_gap_boundary;
+    end if;
+
+    -- Back-to-back from the end of the morning, or flush against the colour
+    -- hour. Anything in between would strand a quarter of an hour that can
+    -- never be filled.
+    if not (v_morning_end is not null
+            and p_start_time >= v_morning_end
+            and v_end_time <= v_gap_boundary
+            and (
+              extract(epoch from (p_start_time - v_morning_end))::int % (v_duration * 60) = 0
+              or v_end_time = v_gap_boundary
+            ))
+       and not exists (
+      select 1 from staff_service_schedule
+      where staff_id = p_staff_id and service_id = p_service_id
+        and weekday = v_weekday and start_time = p_start_time
+    ) then
+      raise exception 'This time is not available for this stylist';
+    end if;
+  elsif v_fixed_times is not null and not (p_start_time = any(v_fixed_times)) then
+    raise exception 'This service can only be booked at its fixed times';
+  end if;
+
+  select open_time, close_time, closed into v_open, v_close, v_closed
+    from business_hours where weekday = v_weekday;
+
+  -- Per-staff closing-time override (e.g. Kani takes clients until 18:00 on
+  -- Mon/Wed/Fri, later than the salon's general 17:30 close).
+  select close_time into v_staff_close from staff_hours_override
+    where staff_id = p_staff_id and weekday = v_weekday;
+  if v_staff_close is not null then v_close := v_staff_close; end if;
+
+  -- A policy stylist's hours are her own, and they move with the colour: an
+  -- early colour extends her finish, a late one delays her start.
+  if v_has_pol then
+    if v_pol.open_time is not null then v_open := v_pol.open_time; end if;
+    if v_pol.close_time is not null then v_close := v_pol.close_time; end if;
+    if v_colour_start is not null then
+      if v_colour_start <= v_open and v_pol.close_after_early is not null then
+        v_close := v_pol.close_after_early;
+      elsif v_colour_start > v_open and v_pol.open_before_late is not null then
+        v_open := v_pol.open_before_late;
+      end if;
+    elsif not v_daily_limited and not v_is_bridal and not v_colour_hold_over then
+      -- A colour can still happen today, so the day has to leave room for one.
+      if v_pol.other_open_time is not null then v_open := v_pol.other_open_time; end if;
+
+      -- Nothing may straddle the split: a booking sitting across it rules out
+      -- both colour starts on its own.
+      if v_pol.other_split_at is not null
+         and p_start_time < v_pol.other_split_at
+         and v_end_time > v_pol.other_split_at then
+        raise exception 'That time would leave no room for a colour appointment - please pick a time that finishes by %, or starts at % or later',
+          to_char(v_pol.other_split_at, 'HH24:MI'), to_char(v_pol.other_split_at, 'HH24:MI');
+      end if;
+
+      -- ...and once one shorter booking exists, every later one stays on the
+      -- SAME side of it.
+      --
+      -- One short booking always leaves a colour start alive: before the split
+      -- leaves the afternoon colour, after it leaves the morning one. Two on
+      -- opposite sides leave none, and the day is left with no four-hour start
+      -- and several unsellable hours stranded between the two small bookings.
+      -- So the first booking of the day chooses the side and the rest follow.
+      --
+      -- Consultations do not count - they nest inside other bookings. Bridal
+      -- does not either: it is four hours and is counted with the colours.
+      -- The owner booking by hand (p_allow_overlap) has already decided.
+      if v_pol.other_split_at is not null and not p_allow_overlap then
+        select
+          count(*) filter (where b.end_time <= v_pol.other_split_at),
+          count(*) filter (where b.start_time >= v_pol.other_split_at)
+          into v_side_early, v_side_late
+        from bookings b join services sv5 on sv5.id = b.service_id
+        where b.staff_id = p_staff_id and b.date = p_date
+          and b.status <> 'cancelled'
+          and (b.end_time - b.start_time) < interval '240 minutes'
+          and sv5.category <> 'Consultation';
+
+        if v_side_early > 0 and p_start_time >= v_pol.other_split_at then
+          raise exception 'This stylist already has a shorter appointment before % that day - please pick a time that finishes by %',
+            to_char(v_pol.other_split_at, 'HH24:MI'), to_char(v_pol.other_split_at, 'HH24:MI');
+        end if;
+        if v_side_late > 0 and v_end_time <= v_pol.other_split_at then
+          raise exception 'This stylist already has a shorter appointment after % that day - please pick a time that starts at % or later',
+            to_char(v_pol.other_split_at, 'HH24:MI'), to_char(v_pol.other_split_at, 'HH24:MI');
+        end if;
+      end if;
+    end if;
+  end if;
+
+  -- Fixed-time bookings (Balayage's per-stylist schedule, or a service's own
+  -- fixed_times) are owner-curated and allowed to run past closing — e.g. a
+  -- 15:00 Balayage (240min) legitimately finishes at 19:00 even though the
+  -- salon stops taking new arrivals at 17:30. Only the dynamic open-grid
+  -- case must fit entirely before v_close.
+  if v_closed or v_open is null or p_start_time < v_open
+     or (v_schedule_count = 0 and v_fixed_times is null and v_end_time > v_close) then
+    raise exception 'Outside business hours';
+  end if;
+
+  select count(*) into v_conflict from blocked_slots
+    where (staff_id = p_staff_id or staff_id is null) and date = p_date
+      and start_time < v_end_time and end_time > p_start_time;
+  if v_conflict > 0 then raise exception 'Slot is blocked'; end if;
+
+  select allow_overlap_booking into v_allow_overlap from staff where id = p_staff_id;
+
+  -- Two separate exemptions from the usual "no time overlap" rule:
+  -- 1) Overlap-eligible stylists can take a second, non-Bridal client at
+  --    13:00 while an 11:00 Balayage is processing (16:30 for a 15:00
+  --    Balayage) — that specific pairing only.
+  -- 2) A Consultation can nest inside any other booking's time block —
+  --    it just can't share that booking's exact start time, which the
+  --    bookings_staff_slot_unique index already guarantees on its own.
+  select count(*) into v_conflict from bookings b
+    where b.staff_id = p_staff_id and b.date = p_date and b.status <> 'cancelled'
+      and b.start_time < v_end_time and b.end_time > p_start_time
+      and not (
+        (
+          coalesce(v_allow_overlap, false)
+          and v_category not in ('Bridal', 'Special Occasions')
+          and (b.end_time - b.start_time) = interval '240 minutes'
+          and b.start_time in ('11:00', '15:00')
+          and (
+            (b.start_time = '11:00' and p_start_time = '13:00')
+            or (b.start_time = '15:00' and p_start_time = '16:30')
+          )
+        )
+        or v_service_name = 'Consultation'
+      );
+  -- Skipped for a booking entered by hand in the schedule tool: a stylist
+  -- looking at their own day can see exactly what they're doubling up on and
+  -- may have good reason to. The unique index on (staff, date, start_time)
+  -- still holds, so an overlap has to start at a different minute — two
+  -- bookings can never occupy the identical slot.
+  if v_conflict > 0 and not p_allow_overlap then raise exception 'Slot no longer available'; end if;
+
+  -- ── EXPECTED TOTAL ──
+  -- Start from the service itself. A consultation-priced service contributes
+  -- nothing but forces the estimate flag; a range price contributes its
+  -- floor and does the same.
+  if coalesce(v_on_consultation, false) then
+    v_is_estimate := true;
+  else
+    v_expected := coalesce(v_price_from, 0);
+    if v_price_to is not null then v_is_estimate := true; end if;
+  end if;
+
+  select coalesce(sum(a.price), 0),
+         coalesce(bool_or(a.price_is_from), false)
+    into v_addon_total, v_addon_from
+    from addons a
+    join service_addons sa on sa.addon_id = a.id and sa.service_id = p_service_id
+    where p_addon_ids is not null and a.id = any(p_addon_ids);
+
+  v_expected := v_expected + coalesce(v_addon_total, 0);
+  v_is_estimate := v_is_estimate or coalesce(v_addon_from, false);
+
+  insert into bookings (
+    service_id, staff_id, customer_name, customer_email, customer_phone,
+    date, start_time, end_time, notes, expected_total, expected_total_is_estimate, status
+  )
+  values (
+    p_service_id, p_staff_id, p_customer_name, p_customer_email, p_customer_phone,
+    p_date, p_start_time, v_end_time, p_notes, v_expected, v_is_estimate,
+    case when v_requires_confirmation or exists (
+           select 1 from addons a
+           where p_addon_ids is not null and a.id = any(p_addon_ids)
+             and a.requires_confirmation
+         ) then 'pending'::booking_status
+         else 'confirmed'::booking_status end
+  )
+  returning * into v_booking;
+
+  -- A pending request holds its slot for two days, then the time is released.
+  if v_booking.status = 'pending' then
+    update bookings set hold_expires_at = now() + interval '2 days'
+      where id = v_booking.id returning * into v_booking;
+  end if;
+
+  -- Snapshot each add-on onto the booking.
+  if v_has_addons then
+    insert into booking_addons (booking_id, addon_id, name_at_booking, price_at_booking, price_is_from)
+    select v_booking.id, a.id, a.name, a.price, a.price_is_from
+    from addons a
+    join service_addons sa on sa.addon_id = a.id and sa.service_id = p_service_id
+    where a.id = any(p_addon_ids)
+    order by a.sort_order;
+  end if;
+
+  return v_booking;
+end; $$;
 
   -- ── BUSY SLOTS NOW CARRY THE SERVICE ──
 -- Counting how many four-hour colours a stylist already has that day needs to
