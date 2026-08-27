@@ -385,13 +385,51 @@ function dayLoadPct(dateStr) {
   return pct > 0 ? Math.max(pct, 12) : 0;
 }
 
+/** Whole days from one ISO date to another. */
+function daysBetween(fromIso, toIso) {
+  return Math.round(
+    (new Date(toIso + 'T00:00:00') - new Date(fromIso + 'T00:00:00')) / 86400000
+  );
+}
+
+// ── THE STRIP IS ONE RIBBON, NOT A STACK OF PAGES ──
+// Reaching the end used to load a fresh fortnight starting the next day: the
+// strip snapped back to its left edge, the selected day jumped a fortnight
+// with it, and the days you had just scrolled past were gone. Pressing
+// "later" appeared to throw you backwards.
+//
+// Now the loaded range grows at whichever end you reach and the strip keeps
+// its scroll position, so the days simply continue one after another.
+const STRIP_PAGE_DAYS = 7;
+const STRIP_MAX_DAYS = 84; // twelve weeks; past that, use the calendar
+
+async function extendStripForward() {
+  if (daysBetween(windowFrom, windowTo) >= STRIP_MAX_DAYS) return false;
+  const keep = dayStripEl.scrollLeft;
+  await loadWindow(currentPin, windowFrom, addDays(windowTo, STRIP_PAGE_DAYS));
+  renderDayStrip();
+  dayStripEl.scrollLeft = keep;
+  return true;
+}
+
+async function extendStripBackward() {
+  if (daysBetween(windowFrom, windowTo) >= STRIP_MAX_DAYS) return false;
+  const widthBefore = dayStripEl.scrollWidth;
+  await loadWindow(currentPin, addDays(windowFrom, -STRIP_PAGE_DAYS), windowTo);
+  renderDayStrip();
+  // Days added on the left push everything right, so the scroll position has
+  // to move with them or the view jumps to a different week.
+  dayStripEl.scrollLeft += dayStripEl.scrollWidth - widthBefore;
+  return true;
+}
+
 function renderDayStrip() {
   const today = todayStr();
   let html = '';
   // Anchored to the currently-loaded window (not always "today"), so paging
   // forward/back with the arrow buttons or the calendar picker actually
   // changes what the strip shows instead of always displaying today+13.
-  for (let i = 0; i <= DAYS_AHEAD; i++) {
+  for (let i = 0; i <= daysBetween(windowFrom, windowTo); i++) {
     const dateStr = addDays(windowFrom, i);
     const d = new Date(dateStr + 'T00:00:00');
     const dow = d.getDay();
@@ -505,19 +543,17 @@ document.addEventListener('click', closeMoreMenu);
 
 // Scrolls the visible strip; if already at the end of the loaded window,
 // pages forward to the next window so "next" always reveals more days.
+// Both arrows only ever scroll the ribbon. They used to change which day was
+// selected when they hit an edge, so pressing "later" twice could land you on
+// a day a fortnight away that you had never asked for.
 btnDayStripNext.addEventListener('click', async () => {
-  if (dayStripEl.scrollLeft + dayStripEl.clientWidth >= dayStripEl.scrollWidth - 4) {
-    await selectDate(addDays(windowTo, 1), null);
-  } else {
-    dayStripEl.scrollBy({ left: dayStripEl.clientWidth * 0.6, behavior: 'smooth' });
-  }
+  const atEnd = dayStripEl.scrollLeft + dayStripEl.clientWidth >= dayStripEl.scrollWidth - 4;
+  if (atEnd) await extendStripForward();
+  dayStripEl.scrollBy({ left: dayStripEl.clientWidth * 0.6, behavior: 'smooth' });
 });
 btnDayStripPrev.addEventListener('click', async () => {
-  if (dayStripEl.scrollLeft <= 4) {
-    await selectDate(addDays(windowFrom, -(DAYS_AHEAD + 1)), null);
-  } else {
-    dayStripEl.scrollBy({ left: -dayStripEl.clientWidth * 0.6, behavior: 'smooth' });
-  }
+  if (dayStripEl.scrollLeft <= 4) await extendStripBackward();
+  dayStripEl.scrollBy({ left: -dayStripEl.clientWidth * 0.6, behavior: 'smooth' });
 });
 
 // ── STAFF FILTER PILLS ──
@@ -839,7 +875,7 @@ function columnHtml(staff, bookings, blocked, gridStart, gridEnd) {
   return `
     <div class="sched-col" data-staff="${staff.id}">
       <div class="sched-col-header">${staff.name}</div>
-      <div class="sched-col-body" style="height:${gridHeight}px;">
+      <div class="sched-col-body" data-lanes="${laneCount}" style="height:${gridHeight}px;">
         ${hourLinesHtml(gridStart, gridEnd)}
         ${laneDividersHtml(laneCount)}
         ${blocked.map((s) => unavailBlockHtml(s, gridStart)).join('')}
@@ -1477,9 +1513,7 @@ function setPendingMove({ staffId, date, minutes }) {
   pendingMove = { staffId, date, minutes };
   renderMovePreview(staffId, minutes);
   const staff = (currentStaff || []).find((x) => String(x.id) === String(staffId));
-  const duration = moveTarget
-    ? timeToMinutes(fmtTime(moveTarget.end_time)) - timeToMinutes(fmtTime(moveTarget.start_time))
-    : 0;
+  const duration = movingDuration();
   moveBarHint.textContent = `${minutesToTimeStr(minutes)} - ${minutesToTimeStr(minutes + duration)}`
     + (staff ? ` · ${staff.name}` : '')
     + ' · tap again to move it, or press the tick.';
@@ -1497,17 +1531,67 @@ function clearPendingMove() {
  *  at the size it would actually be - see-through, so what is underneath is
  *  still readable. A row highlight says which row you hit; it does not say
  *  whether a four-hour colour clears the 15:00 booking below it. This does. */
+/** "4 hours", "1½ hours", "45 min" - how a stylist says it, not 240. */
+function fmtDuration(mins) {
+  if (mins < 60) return mins + ' min';
+  const h = Math.floor(mins / 60);
+  const rest = mins % 60;
+  if (rest === 30) return h + '½ hours';
+  if (rest) return h + ' h ' + rest + ' min';
+  return h + (h === 1 ? ' hour' : ' hours');
+}
+
+/** How long the appointment will be once this move is saved: the chosen
+ *  service's length if it is being changed, otherwise what it is now. */
+function movingDuration() {
+  if (!moveTarget) return 0;
+  const chosen = rescheduleService && rescheduleService.value;
+  // An empty value is the "unchanged" option, not a service.
+  if (chosen && String(chosen) !== String(moveTarget.service_id)) {
+    const svc = (addBkServicesSource || []).find((x) => String(x.id) === String(chosen));
+    if (svc && svc.duration_minutes) return Number(svc.duration_minutes);
+  }
+  return timeToMinutes(fmtTime(moveTarget.end_time)) - timeToMinutes(fmtTime(moveTarget.start_time));
+}
+
 function renderMovePreview(staffId, minutes) {
   clearMovePreview();
   if (!moveTarget) return;
   const col = gridWrap.querySelector(`.sched-col[data-staff="${staffId}"] .sched-col-body`);
   if (!col) return;
-  const duration = timeToMinutes(fmtTime(moveTarget.end_time)) - timeToMinutes(fmtTime(moveTarget.start_time));
+  const duration = movingDuration();
   const gridStart = currentGridStart;
+
+  // An appointment occupies one lane, so its preview must too. Drawn across
+  // the whole column it claimed both lanes of a stylist who takes overlapping
+  // work, which said the wrong thing twice: that it needed the entire column,
+  // and that the lane beside it was no longer free.
+  //
+  // Which lane it takes is the one a real block would: the first that has
+  // nothing in it for the span this would occupy.
+  const lanes = Math.max(1, Number(col.dataset.lanes) || 1);
+  const occupied = new Set();
+  col.querySelectorAll('.sched-block').forEach((blk) => {
+    const top = parseFloat(blk.style.top) || 0;
+    const h = parseFloat(blk.style.height) || 0;
+    const bStart = gridStart + top / PX_PER_MIN;
+    const bEnd = bStart + h / PX_PER_MIN;
+    if (minutes < bEnd && (minutes + duration) > bStart) {
+      // leftPct is written as `calc(X% + 2px)`, so read the number back out.
+      const m = /([\d.]+)%/.exec(blk.style.left || '');
+      const leftPct = m ? parseFloat(m[1]) : 0;
+      occupied.add(Math.round(leftPct / (100 / lanes)));
+    }
+  });
+  let lane = 0;
+  while (lane < lanes - 1 && occupied.has(lane)) lane += 1;
+
   const el = document.createElement('div');
   el.className = 'sched-move-preview';
   el.style.top = `${(minutes - gridStart) * PX_PER_MIN}px`;
   el.style.height = `${Math.max(duration * PX_PER_MIN, 24)}px`;
+  el.style.width = `calc(${100 / lanes}% - 4px)`;
+  el.style.left = `calc(${(100 / lanes) * lane}% + 2px)`;
   el.innerHTML = `<span class="smp-time">${minutesToTimeStr(minutes)} - ${minutesToTimeStr(minutes + duration)}</span>`
     + `<span class="smp-name">${escHtml(moveTarget.customer_name)}</span>`;
   col.appendChild(el);
@@ -1543,20 +1627,42 @@ function openMoveConfirm({ staffId, date, time }) {
   rescheduleTime.value = time;
   rescheduleStaffSelect.value = staffId;
 
-  const staff = (currentStaff || []).find((x) => String(x.id) === String(staffId));
-  const d = new Date(date + 'T00:00:00');
-  moveToEl.innerHTML = `
-    <div class="move-to-when">${d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
-    <div class="move-to-detail">${escHtml(time)}${staff ? ' &middot; ' + escHtml(staff.name) : ''}</div>`;
-
-  // Prefilled with what she already has: leaving it alone is the default.
+  // Prefilled with what she already has, so leaving it alone is the default.
+  //
+  // The match has to be checked rather than assumed. A booking whose service
+  // is not in the list - it has been retired, or the row simply carries no
+  // service_id - left nothing selected, and a <select> with nothing selected
+  // shows its first option. So Julie Berg's All-Over Color appeared as
+  // Balayage / Highlights, and pressing Save would have changed her service
+  // to a four-hour one without anyone asking for it.
+  //
+  // When there is no match the current service leads the list with an empty
+  // value, which the save treats as "unchanged".
   const services = (addBkServicesSource || []).slice();
-  rescheduleService.innerHTML = services.length
-    ? services.map((sv) => `<option value="${escHtml(sv.id)}"${String(sv.id) === String(moveTarget.service_id) ? ' selected' : ''}>${escHtml(sv.name)}</option>`).join('')
-    : `<option value="">${escHtml(moveTarget.service_name || 'Same service')}</option>`;
+  const matched = services.some((sv) => String(sv.id) === String(moveTarget.service_id));
+  const keepOption = `<option value=""${matched ? '' : ' selected'}>${escHtml(moveTarget.service_name || 'Same service')} (unchanged)</option>`;
+  rescheduleService.innerHTML = (matched ? '' : keepOption)
+    + services.map((sv) => `<option value="${escHtml(sv.id)}"${String(sv.id) === String(moveTarget.service_id) ? ' selected' : ''}>${escHtml(sv.name)}</option>`).join('');
 
   rescheduleStatus.textContent = '';
+  renderMoveSummary();
   rescheduleModal.style.display = 'flex';
+}
+
+/** The "going to" line, and the preview behind the sheet. Both depend on how
+ *  long the appointment will be, so both follow the service dropdown - a
+ *  90-minute colour swapped for a 4-hour balayage has to be seen to take four
+ *  hours before it is saved, not discovered on the schedule afterwards. */
+function renderMoveSummary() {
+  if (!pendingMove || !moveTarget) return;
+  const staff = (currentStaff || []).find((x) => String(x.id) === String(pendingMove.staffId));
+  const d = new Date(pendingMove.date + 'T00:00:00');
+  const dur = movingDuration();
+  moveToEl.innerHTML = `
+    <div class="move-to-when">${d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+    <div class="move-to-detail">${escHtml(minutesToTimeStr(pendingMove.minutes))} - ${escHtml(minutesToTimeStr(pendingMove.minutes + dur))}`
+    + `${staff ? ' &middot; ' + escHtml(staff.name) : ''} &middot; ${escHtml(fmtDuration(dur))}</div>`;
+  renderMovePreview(pendingMove.staffId, pendingMove.minutes);
 }
 
 function closeRescheduleModal() {
@@ -1572,6 +1678,7 @@ function closeRescheduleModal() {
 function checkRescheduleConflict() { return []; }
 
 document.getElementById('moveBarCancel').addEventListener('click', cancelMoveMode);
+rescheduleService.addEventListener('change', renderMoveSummary);
 moveBarConfirm.addEventListener('click', () => {
   if (!pendingMove) return;
   openMoveConfirm({

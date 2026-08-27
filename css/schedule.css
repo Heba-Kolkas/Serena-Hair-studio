@@ -2281,8 +2281,8 @@ body.is-moving #gridWrap { padding-bottom: 5rem; }
    the booking underneath it. This does, and what is beneath stays readable. */
 .sched-move-preview {
   position: absolute;
-  left: 2px;
-  right: 2px;
+  /* left and width are set per placement - the preview takes one lane, the
+     same as the appointment will. */
   z-index: 5;
   display: flex;
   flex-direction: column;
