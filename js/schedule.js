@@ -768,6 +768,38 @@ function expectedLabel(b) {
   return b.expected_total_is_estimate ? 'From ' + num : num;
 }
 
+// ── TAKING THE MONEY WHERE THE CLIENT IS STANDING ──
+// She is marked arrived at the chair and pays at the same chair minutes
+// later, so the amount is asked for here rather than behind a second screen
+// in the owner panel. A booking left at "arrived" is one nobody completed,
+// and an incomplete booking carries no amount - which is how a day's takings
+// end up lower than the day actually was.
+//
+// The pre-fill follows the same rule as Add Booking: a fixed price is filled
+// in because it is what she owes, but a "from" price is a floor, not a
+// figure, and must never sit in the box waiting to be accepted by mistake.
+function paidBox(b) {
+  const estimate = b.expected_total == null || b.expected_total_is_estimate;
+  const value = estimate ? '' : String(Number(b.expected_total));
+  const hint = b.expected_total == null
+    ? 'Enter what she paid.'
+    : (b.expected_total_is_estimate
+        ? 'Listed from ' + Number(b.expected_total).toLocaleString('nb-NO') + ' NOK - enter what she actually paid.'
+        : 'The listed price. Change it if she paid something else.');
+  return `
+    <div class="popup-paid-box">
+      <div class="popup-paid-title"><i class="fa-solid fa-cash-register"></i> Record the payment</div>
+      <label class="popup-paid-label" for="popupPaidAmount">Amount charged (NOK)</label>
+      <input type="number" id="popupPaidAmount" class="popup-paid-input" min="0" step="1"
+             inputmode="numeric" placeholder="e.g. 1150" value="${value}" />
+      <span class="popup-paid-hint">${hint}</span>
+      <button type="button" class="popup-paid-btn" id="popupPaidBtn">
+        <i class="fa-solid fa-flag-checkered"></i> Paid &amp; done
+      </button>
+      <div class="popup-paid-status" id="popupPaidStatus"></div>
+    </div>`;
+}
+
 // ── DETAIL POPUP ──
 function openPopup(id) {
   const b = currentBookings.find((x) => x.id === id) || (historyBookings || []).find((x) => x.id === id) || (searchResults || []).find((x) => x.id === id);
@@ -775,6 +807,10 @@ function openPopup(id) {
   const isToday = b.date === todayStr();
   const canAct = isToday && (b.status === 'pending' || b.status === 'confirmed');
   const canUndo = isToday && (b.status === 'arrived' || b.status === 'no_show');
+  // She is here and has not been rung up yet. Any day, not only today: a
+  // booking marked arrived yesterday and never completed still has to be
+  // possible to settle, or the money is simply lost.
+  const awaitingPayment = b.status === 'arrived';
   popupBody.innerHTML = `
     <div class="popup-name">${b.customer_name}</div>
     <div class="popup-meta">${b.service_name}${b.staff_name ? ' · ' + b.staff_name : ''}</div>
@@ -790,6 +826,7 @@ function openPopup(id) {
          </div>`
       : `<span class="sched-status ${b.status}">${STATUS_LABELS[b.status] || b.status}</span>
          ${canUndo ? `<button type="button" class="popup-undo-btn" data-action="confirmed" data-id="${b.id}"><i class="fa-solid fa-rotate-left"></i> Pressed by mistake? Undo</button>` : ''}`}
+    ${awaitingPayment ? paidBox(b) : ''}
     ${b.customer_phone || b.customer_name ? `<button type="button" class="popup-history-btn" id="popupCheckHistory"><i class="fa-solid fa-clock-rotate-left"></i> Check history of this person</button>` : ''}
   `;
   popupBody.querySelectorAll('[data-action]').forEach((btn) => {
@@ -797,8 +834,18 @@ function openPopup(id) {
       popupBody.querySelectorAll('button').forEach((x) => (x.disabled = true));
       const status = btn.dataset.action;
       const { error } = await updateBookingStatusStaff({ pin: currentPin, bookingId: id, status, actorStaffId: currentActorStaffId });
-      if (error && id.startsWith('demo-')) { const fb = currentBookings.find((x) => x.id === id); if (fb) fb.status = status; }
+      if (error && id.startsWith('demo-')) { const fb = currentBookings.find((x) => x.id === id); if (fb) fb.status = status; b.status = status; }
       else if (!error) b.status = status;
+      // Arrived is not the end of the visit - she still has to pay. Closing
+      // here sent the stylist looking for the booking a second time in the
+      // owner panel to record the amount, and a booking nobody goes back for
+      // stays at "arrived" with no money against it. Reopening shows the
+      // amount box in place instead.
+      // Reopen only if the change actually took. Asking `!error` was wrong:
+      // the demo data applies the change through the fallback branch above
+      // *despite* an error, so the popup closed on exactly the path the
+      // stylist sees when the backend is unreachable.
+      if (status === 'arrived' && b.status === 'arrived') { renderGrid(); openPopup(id); return; }
       closePopup();
       renderGrid();
       // Marking the no-show and writing to the client are separate decisions.
@@ -809,6 +856,41 @@ function openPopup(id) {
       if (status === 'no_show' && !error) openNoShowNotice(b);
     });
   });
+  const paidBtn = document.getElementById('popupPaidBtn');
+  if (paidBtn) {
+    const amountEl = document.getElementById('popupPaidAmount');
+    const statusEl = document.getElementById('popupPaidStatus');
+    const submitPaid = async () => {
+      const amount = parseFloat(amountEl.value);
+      if (!Number.isFinite(amount) || amount < 0) {
+        statusEl.textContent = 'Enter what she paid first.';
+        statusEl.style.color = '#dc2626';
+        amountEl.focus();
+        return;
+      }
+      paidBtn.disabled = true;
+      statusEl.textContent = 'Saving…';
+      statusEl.style.color = 'var(--sched-text-muted)';
+      const { error } = await completeBookingAdmin({ pin: currentPin, bookingId: b.id, amountCharged: amount });
+      if (error && !String(b.id).startsWith('demo-')) {
+        paidBtn.disabled = false;
+        statusEl.textContent = 'Could not save: ' + error.message;
+        statusEl.style.color = '#dc2626';
+        return;
+      }
+      b.status = 'completed';
+      b.amount_charged = amount;
+      const fb = currentBookings.find((x) => x.id === b.id);
+      if (fb) { fb.status = 'completed'; fb.amount_charged = amount; }
+      statusEl.textContent = '✓ ' + amount.toLocaleString('nb-NO') + ' NOK recorded.';
+      statusEl.style.color = '#059669';
+      renderGrid();
+      setTimeout(closePopup, 900);
+    };
+    paidBtn.addEventListener('click', submitPaid);
+    // Enter is what a hand already on the number pad reaches for.
+    amountEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitPaid(); } });
+  }
   const historyBtn = document.getElementById('popupCheckHistory');
   if (historyBtn) historyBtn.addEventListener('click', () => { closePopup(); runSearch(b.customer_phone || b.customer_name); });
   apptPopup.style.display = 'flex';

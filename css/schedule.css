@@ -1699,10 +1699,30 @@ body.modal-open { overflow: hidden; }
 }
 .owner-panel .owner-tab:hover { background: var(--sched-border); }
 .owner-panel .owner-tab.active { background: var(--sched-text); color: var(--sched-surface); }
-.owner-panel > .owner-body > .owner-tab-content {
+/* ── THE SECTION PANE IS THE SCROLLER, AND IT HAS TO WIN ──
+   Two older rules fight this one and both were beating it.
+
+   `.owner-panel #ownerTabContent { overflow-y: visible }` further up carries
+   an ID, so (1,1,0) beat this rule's three classes (0,3,0) no matter that it
+   is written later. That rule was right for the old panel, which scrolled as
+   one long column - a second scrolling box inside a scrolling panel just
+   traps the gesture in whichever one the finger lands on. This panel does not
+   scroll: it is a flex column with overflow hidden and a pane that scrolls.
+   So with the pane forced to `visible`, nothing scrolled at all - every
+   section past the fold was simply unreachable on a phone.
+
+   `.owner-tab-content { max-height: 62vh }` is the other. 62vh of an 844px
+   phone is 523px, which is where every section was being cut.
+
+   Selected by id here so it outranks both. */
+.owner-panel > .owner-body > #ownerTabContent {
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* The pane is the scroller, so the finger must be allowed to pan it. */
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   min-height: 0;
+  max-height: none;
   padding: 1.4rem 1.6rem 2.5rem !important;
 }
 .owner-back {
@@ -1744,12 +1764,28 @@ body.modal-open { overflow: hidden; }
     font-size: 1.15rem;
     line-height: 1;
   }
-  .owner-panel > .owner-body > .owner-tab-content {
+  .owner-panel > .owner-body > #ownerTabContent {
     display: none;
     padding: 1.1rem 1rem 2.5rem !important;
   }
   .owner-panel.owner-viewing .owner-tabs { display: none; }
-  .owner-panel.owner-viewing > .owner-body > .owner-tab-content { display: block; }
+  /* Also by id: the rule above it that hides the pane is now id-weighted, so
+     a class-only rule here could not turn it back on. */
+  .owner-panel.owner-viewing > .owner-body > #ownerTabContent { display: block; }
+
+  /* ── ONE SCROLLER PER SCREEN ──
+     .stf-service-checklist is a 260px scrolling box. Inside a scrolling pane
+     that gives a phone two nested scrollers, and a finger landing on the list
+     scrolls the list while the section behind it appears frozen - which is
+     exactly what "Add-ons doesn't work" looks like from the outside.
+
+     There is no need for it here: the pane already scrolls, and the panel is
+     the whole screen. Let the list be as tall as it is and the pane carry the
+     whole section. */
+  .stf-service-checklist {
+    max-height: none;
+    overflow-y: visible;
+  }
   .owner-panel.owner-viewing .owner-back { display: inline-flex; }
 }
 
@@ -1809,4 +1845,84 @@ body.modal-open { overflow: hidden; }
   .addbk-grid > .block-field,
   .addbk-grid > .addbk-span2,
   .addbk-grid > .addbk-span3 { grid-column: 1 / -1; }
+}
+
+/* ── RECORDING THE PAYMENT IN THE APPOINTMENT POPUP ──
+   Appears once she is marked arrived, because that is the moment the stylist
+   is standing with her and about to be paid. Set inside its own panel so it
+   reads as the next step in the visit rather than another detail about the
+   booking. */
+.popup-paid-box {
+  margin-top: 1.1rem;
+  padding: 0.9rem 1rem 1rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 14px;
+  background: var(--sched-bg);
+  text-align: left;
+}
+.popup-paid-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--sched-text);
+  margin-bottom: 0.75rem;
+}
+.popup-paid-title i { color: var(--sched-accent-strong); }
+.popup-paid-label {
+  display: block;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sched-text-muted);
+  margin-bottom: 0.3rem;
+}
+.popup-paid-input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 8px;
+  background: var(--sched-surface);
+  font-family: var(--font-body);
+  /* 16px or larger, or iOS Safari zooms the whole panel in on focus and the
+     stylist has to pinch back out mid-transaction. */
+  font-size: 1rem;
+  color: var(--sched-text);
+}
+.popup-paid-input:focus {
+  outline: none;
+  border-color: var(--sched-accent-strong);
+}
+.popup-paid-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--sched-text-muted);
+}
+.popup-paid-btn {
+  width: 100%;
+  margin-top: 0.8rem;
+  padding: 0.7rem;
+  border: none;
+  border-radius: 10px;
+  background: #047857;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.popup-paid-btn:hover:not(:disabled) { background: #065f46; }
+.popup-paid-btn:disabled { opacity: 0.6; cursor: default; }
+.popup-paid-status {
+  font-size: 0.75rem;
+  min-height: 1.1em;
+  margin-top: 0.5rem;
+  text-align: center;
 }
