@@ -198,6 +198,18 @@
         </div>
     </div>
 
+    <!-- Shown across the top of the schedule while an appointment is being
+         moved. The schedule stays exactly as it is underneath - the day strip,
+         both stylists, everything already booked - because that is the thing
+         you need to look at to decide where something goes. -->
+    <div id="moveBar" class="move-bar" hidden>
+        <div class="move-bar-text">
+            <strong id="moveBarWho"></strong>
+            <span>Pick a day, then tap where it should go.</span>
+        </div>
+        <button type="button" id="moveBarCancel" class="move-bar-cancel">Cancel</button>
+    </div>
+
     <!-- AFTER A NO-SHOW - nothing is sent unless someone says so -->
     <div id="noShowModal" class="appt-popup-overlay" style="display:none;">
         <div class="appt-popup">
@@ -270,50 +282,31 @@
 
     <!-- MOVE (RESCHEDULE) BOOKING MODAL -->
     <div id="rescheduleModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup wide-popup resched-popup">
+        <div class="appt-popup resched-popup">
             <button type="button" class="appt-popup-close" id="rescheduleClose" aria-label="Close">&times;</button>
             <h3 class="block-modal-title">Move Appointment</h3>
-            <!-- One wrapper below the heading. The popup pads its own
-                 children, so a bare button as a direct child had that padding
-                 applied to its own box and ran edge to edge. -->
             <div class="resched-body">
                 <p class="block-modal-sub" id="rescheduleSub"></p>
 
-                <div class="resched-grid">
-                    <div class="block-field resched-date">
-                        <label>New date</label>
-                        <div class="calendar-pick-wrap">
-                            <button type="button" id="btnRescheduleDatePick" class="owner-date-pick-btn"><i class="fa-regular fa-calendar-days"></i> <span id="rescheduleDateLabel">Pick a date</span></button>
-                            <div id="rescheduleCalendarPopover" class="calendar-popover" style="display:none;">
-                                <div class="calendar-header">
-                                    <button type="button" id="reschedCalPrev" class="calendar-nav-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
-                                    <span class="calendar-month-label" id="reschedCalMonthLabel"></span>
-                                    <button type="button" id="reschedCalNext" class="calendar-nav-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
-                                </div>
-                                <div class="calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-                                <div class="calendar-grid" id="reschedCalGrid"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="block-field resched-stylist"><label>Stylist</label><select id="rescheduleStaffSelect"></select></div>
+                <!-- Where it is going. Filled in from the tap on the schedule
+                     behind this, so the day was chosen by looking at the day
+                     rather than by reading a date out of a picker. -->
+                <div class="move-to" id="moveTo"></div>
+
+                <!-- Asked because a client who rings to change her time often
+                     changes her mind about the service in the same breath.
+                     Prefilled with what she already has, so leaving it alone
+                     is the default and saving is one press. -->
+                <div class="block-field">
+                    <label for="rescheduleService">Service</label>
+                    <select id="rescheduleService"></select>
+                    <span class="block-field-hint">Leave it unless she is having something different - the length follows the service.</span>
                 </div>
 
-                <!-- The chosen start time. Kept as a hidden input because the
-                     conflict check reads it, but it is never typed into: the
-                     time is picked off the day below, where a stylist can see
-                     what is already taken. A bare <input type="time"> also
-                     renders AM/PM on any phone set to a 12-hour clock, which
-                     is not how a Norwegian salon reads its own day. -->
                 <input type="hidden" id="rescheduleTime" />
+                <input type="hidden" id="rescheduleStaffSelect" />
 
-                <div class="resched-picker">
-                    <p class="resched-picker-title">Pick the new time</p>
-                    <div id="reschedSlots" class="resched-slots"><p class="resched-slots-empty">Choose a date first.</p></div>
-                </div>
-
-                <div id="rescheduleAvailability" class="reschedule-availability"></div>
-
-                <button type="button" id="btnSaveReschedule" class="block-save-btn"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move Appointment</button>
+                <button type="button" id="btnSaveReschedule" class="block-save-btn"><i class="fa-solid fa-check"></i> Save the move</button>
                 <div id="rescheduleStatus" class="block-status"></div>
             </div>
         </div>

@@ -873,6 +873,16 @@ function renderGrid() {
   // (snapped to the nearest quarter-hour) into the Add Booking modal.
   gridWrap.querySelectorAll('.sched-col-body').forEach((body) => {
     body.addEventListener('click', (e) => {
+      // In move mode a tap anywhere in a column places the appointment there -
+      // including on top of something already booked, which the salon does on
+      // purpose. Only then does it ask anything.
+      if (moveTarget) {
+        const staffId = body.closest('.sched-col').dataset.staff;
+        const offsetY = e.clientY - body.getBoundingClientRect().top;
+        const minutes = Math.round((start + offsetY / PX_PER_MIN) / 15) * 15;
+        openMoveConfirm({ staffId, date: selectedDate, time: minutesToTimeStr(minutes) });
+        return;
+      }
       if (e.target.closest('.sched-block, .sched-block-unavailable')) return;
       const staffId = body.closest('.sched-col').dataset.staff;
       const offsetY = e.clientY - body.getBoundingClientRect().top;
@@ -1033,7 +1043,7 @@ function openPopup(id) {
     amountEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitPaid(); } });
   }
   const moveBtn = document.getElementById('popupMove');
-  if (moveBtn) moveBtn.addEventListener('click', () => { closePopup(); openRescheduleModal(b); });
+  if (moveBtn) moveBtn.addEventListener('click', () => { closePopup(); startMoveMode(b); });
   const historyBtn = document.getElementById('popupCheckHistory');
   if (historyBtn) historyBtn.addEventListener('click', () => { closePopup(); runSearch(b.customer_phone || b.customer_name); });
   apptPopup.style.display = 'flex';
@@ -1409,202 +1419,97 @@ function markConflictsIn(el, busyRanges, newStart, newEnd, saveBtn) {
   return mustBlock ? conflicts : [];
 }
 
-// ── MOVE (RESCHEDULE) BOOKING MODAL ── (Owner Panel Bookings tab's "Move")
+// ── MOVE (RESCHEDULE) ──
 let rescheduleBookingTarget = null;
-let rescheduleBusyRanges = [];
-const rescheduleDatePicker = wireOwnerDatePicker({
-  btnId: 'btnRescheduleDatePick', labelId: 'rescheduleDateLabel', popoverId: 'rescheduleCalendarPopover',
-  prevId: 'reschedCalPrev', nextId: 'reschedCalNext', monthLabelId: 'reschedCalMonthLabel', gridId: 'reschedCalGrid',
-  placeholder: 'Pick a date', onSelect: () => loadRescheduleAvailability(),
-});
+// The day and time now come from a tap on the schedule, not a date picker.
+let moveToDate = null;
 
-async function loadRescheduleAvailability() {
-  const date = rescheduleDatePicker.value;
-  const staffId = rescheduleStaffSelect.value;
-  // The day itself is the only thing shown now. It used to be drawn twice -
-  // once as the day, and again underneath as an "already busy" list with a
-  // warning under that - which is three tellings of one fact. Someone looking
-  // at the day can see what is on it, so there is nothing left to warn about.
-  rescheduleAvailability.innerHTML = '';
-  if (!date || !staffId) { rescheduleBusyRanges = []; renderReschedSlots(); return; }
-  const slots = document.getElementById('reschedSlots');
-  if (slots) slots.innerHTML = '<p class="resched-slots-empty">Loading that day…</p>';
-  rescheduleBusyRanges = await fetchBusyRangesFor(date, staffId, rescheduleBookingTarget?.id);
-  renderReschedSlots();
+// ── MOVING AN APPOINTMENT ON THE SCHEDULE ITSELF ──
+// Move does not open a picker. It puts the schedule into move mode and leaves
+// the page exactly as it is - the day strip, both stylists, everything already
+// booked - because that is the thing you look at to decide where something
+// goes. Choose any day, tap where it should sit, confirm.
+//
+// Earlier attempts drew a small copy of the day inside a modal, then listed
+// the same appointments underneath it, then warned that the chosen time
+// overlapped one of them. All of it was working around not being on the
+// schedule. Being on the schedule removes the need for any of it.
+let moveTarget = null;
+
+const moveBar = document.getElementById('moveBar');
+const moveBarWho = document.getElementById('moveBarWho');
+const moveToEl = document.getElementById('moveTo');
+const rescheduleService = document.getElementById('rescheduleService');
+
+function startMoveMode(booking) {
+  moveTarget = booking;
+  moveBarWho.textContent = `Moving ${booking.customer_name} - ${booking.service_name}`;
+  moveBar.hidden = false;
+  document.body.classList.add('is-moving');
+  rescheduleStatus.textContent = '';
 }
 
-// Returns the current conflict list (not just a side effect) so the Save
-// handler can independently re-verify at the moment of saving — belt and
-// suspenders on top of the disabled button, so a stale/bypassed disabled
-// state can never let a double-booking through.
-// Kept as a no-op so the call sites read the same. Nothing is blocked here any
-// more: the day is on screen, so choosing a time that sits alongside another
-// appointment is a decision being made deliberately, not a mistake to catch.
-function checkRescheduleConflict() { return []; }
-
-// ── PICKING THE NEW TIME OFF THE DAY ITSELF ──
-// Moving an appointment used to mean typing into <input type="time">, which
-// asks the stylist to already know what is free - and renders AM/PM on any
-// phone set to a 12-hour clock, which is not how this salon reads its day.
-// The day is drawn instead: every quarter hour the stylist works, marked
-// free or taken, and the move is a tap on one of them.
-
-/** "4 hours", "1½ hours", "45 min" - how a stylist says it, not 240. */
-function fmtDuration(mins) {
-  if (mins < 60) return mins + ' min';
-  const h = Math.floor(mins / 60);
-  const rest = mins % 60;
-  const half = rest === 30 ? '½' : '';
-  const label = half ? h + half : String(h);
-  if (!half && rest) return h + ' h ' + rest + ' min';
-  return label + (h === 1 && !half ? ' hour' : ' hours');
+function cancelMoveMode() {
+  moveTarget = null;
+  moveBar.hidden = true;
+  document.body.classList.remove('is-moving');
 }
 
-/** The stylist's own working window for that date - their override if they
- *  have one, otherwise the salon's hours. Null when the salon is shut. */
-function dayWindowFor(dateIso, staffId) {
-  const weekday = new Date(dateIso + 'T00:00:00').getDay();
-  const dayHours = (currentBusinessHours || []).find((h) => h.weekday === weekday);
-  if (!dayHours || dayHours.closed || !dayHours.open_time || !dayHours.close_time) return null;
-  const override = (currentHoursOverrides || []).find((o) => o.staff_id === staffId && o.weekday === weekday);
-  return {
-    open: timeToMinutes(dayHours.open_time),
-    close: timeToMinutes(override && override.close_time ? override.close_time : dayHours.close_time),
-  };
-}
+/** The tap on the schedule landed. Ask the one question worth asking - is it
+ *  still the same service - and let it be saved. */
+function openMoveConfirm({ staffId, date, time }) {
+  if (!moveTarget) return;
+  rescheduleBookingTarget = moveTarget;
+  rescheduleSub.textContent = `${moveTarget.customer_name} - ${moveTarget.service_name}`;
+  moveToDate = date;
+  rescheduleTime.value = time;
+  rescheduleStaffSelect.value = staffId;
 
-let reschedSelectedMin = null;
+  const staff = (currentStaff || []).find((x) => String(x.id) === String(staffId));
+  const d = new Date(date + 'T00:00:00');
+  moveToEl.innerHTML = `
+    <div class="move-to-when">${d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+    <div class="move-to-detail">${escHtml(time)}${staff ? ' &middot; ' + escHtml(staff.name) : ''}</div>`;
 
-// The day is drawn at this scale inside the move panel - tight enough that a
-// full shift fits without endless scrolling, loose enough that a 45-minute
-// appointment is still a real block rather than a line.
-const RESCHED_PX_PER_MIN = 1.1;
+  // Prefilled with what she already has: leaving it alone is the default.
+  const services = (addBkServicesSource || []).slice();
+  rescheduleService.innerHTML = services.length
+    ? services.map((sv) => `<option value="${escHtml(sv.id)}"${String(sv.id) === String(moveTarget.service_id) ? ' selected' : ''}>${escHtml(sv.name)}</option>`).join('')
+    : `<option value="">${escHtml(moveTarget.service_name || 'Same service')}</option>`;
 
-function renderReschedSlots() {
-  const el = document.getElementById('reschedSlots');
-  if (!el) return;
-  const date = rescheduleDatePicker.value;
-  const staffId = rescheduleStaffSelect.value;
-  if (!date || !staffId || !rescheduleBookingTarget) {
-    el.innerHTML = '<p class="resched-slots-empty">Choose a date first.</p>';
-    return;
-  }
-  const win = dayWindowFor(date, staffId);
-  if (!win) {
-    el.innerHTML = '<p class="resched-slots-empty">The salon is closed that day.</p>';
-    return;
-  }
-  const duration = timeToMinutes(fmtTime(rescheduleBookingTarget.end_time))
-    - timeToMinutes(fmtTime(rescheduleBookingTarget.start_time));
-  if (win.open + duration > win.close) {
-    el.innerHTML = '<p class="resched-slots-empty">This appointment is longer than that day.</p>';
-    return;
-  }
-
-  const height = (win.close - win.open) * RESCHED_PX_PER_MIN;
-  const y = (min) => (min - win.open) * RESCHED_PX_PER_MIN;
-
-  // The hours down the side, so the day can be read rather than counted.
-  let hours = '';
-  for (let m = Math.ceil(win.open / 60) * 60; m <= win.close; m += 60) {
-    hours += `<div class="rd-hour" style="top:${y(m)}px;"><span>${minutesToTimeStr(m)}</span></div>`;
-  }
-
-  // What is already there. The same information the busy list gives, but in
-  // the shape of the day, which is how a stylist decides where something fits.
-  const taken = (rescheduleBusyRanges || []).map((r) => {
-    const top = Math.max(0, y(r.startMin));
-    const h = Math.max(y(Math.min(r.endMin, win.close)) - top, 14);
-    return `<div class="rd-busy${r.isBlock ? ' is-block' : ''}" style="top:${top}px;height:${h}px;" title="${escHtml(r.label)}">
-        <span class="rd-busy-time">${minutesToTimeStr(r.startMin)}</span>
-        <span class="rd-busy-label">${escHtml(r.label)}</span>
-      </div>`;
-  }).join('');
-
-  // Every quarter hour it could start at, as an invisible target laid over
-  // the day. Tapping the day itself is the whole point - you put it where you
-  // want it rather than reading a time off a list and typing it in.
-  let targets = '';
-  for (let m = win.open; m + duration <= win.close; m += 15) {
-    const clash = (rescheduleBusyRanges || []).some((r) => m < r.endMin && (m + duration) > r.startMin);
-    targets += `<button type="button" class="rd-target${clash ? ' clash' : ''}" data-min="${m}"
-        style="top:${y(m)}px;height:${15 * RESCHED_PX_PER_MIN}px;"
-        aria-label="Move to ${minutesToTimeStr(m)}"></button>`;
-  }
-
-  // Where it would land, drawn as the appointment itself.
-  let ghost = '';
-  if (reschedSelectedMin != null) {
-    const gTop = y(reschedSelectedMin);
-    const gH = Math.max(duration * RESCHED_PX_PER_MIN, 18);
-    const clash = (rescheduleBusyRanges || []).some(
-      (r) => reschedSelectedMin < r.endMin && (reschedSelectedMin + duration) > r.startMin);
-    // Sitting alongside something already booked, the appointment steps into
-    // the right-hand lane instead of covering it - the same thing the real
-    // grid does with two at once. Not a warning: it is simply where it would
-    // go, and both are visible so the choice is an informed one.
-    ghost = `<div class="rd-ghost${clash ? ' clash' : ''}" style="top:${gTop}px;height:${gH}px;">
-        <span class="rd-ghost-time">${minutesToTimeStr(reschedSelectedMin)} - ${minutesToTimeStr(reschedSelectedMin + duration)}</span>
-        <span class="rd-ghost-name">${escHtml(rescheduleBookingTarget.customer_name)}</span>
-      </div>`;
-  }
-
-  el.innerHTML = `
-    <div class="rd-day" style="height:${height}px;">
-      <div class="rd-gutter">${hours}</div>
-      <div class="rd-lane">
-        ${taken}
-        ${targets}
-        ${ghost}
-      </div>
-    </div>`;
-
-  el.querySelectorAll('.rd-target').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      reschedSelectedMin = Number(btn.dataset.min);
-      rescheduleTime.value = minutesToTimeStr(reschedSelectedMin);
-      const keep = el.scrollTop;
-      renderReschedSlots();
-      el.scrollTop = keep;
-      checkRescheduleConflict();
-      rescheduleStatus.textContent = '';
-    });
-  });
-
-  // Open on the appointment rather than at the top of the shift.
-  if (reschedSelectedMin != null) {
-    el.scrollTop = Math.max(0, y(reschedSelectedMin) - el.clientHeight / 3);
-  }
-}
-
-function openRescheduleModal(booking) {
-  rescheduleBookingTarget = booking;
-  rescheduleSub.textContent = `${booking.customer_name} - ${booking.service_name}`;
-  rescheduleDatePicker.setValue(booking.date);
-  rescheduleTime.value = booking.start_time.slice(0, 5);
-  reschedSelectedMin = timeToMinutes(fmtTime(booking.start_time));
-  rescheduleStaffSelect.innerHTML = currentStaff.map((s) => `<option value="${s.id}"${s.id === booking.staff_id ? ' selected' : ''}>${s.name}</option>`).join('');
   rescheduleStatus.textContent = '';
   rescheduleModal.style.display = 'flex';
-  loadRescheduleAvailability();
 }
+
 function closeRescheduleModal() { rescheduleModal.style.display = 'none'; rescheduleBookingTarget = null; }
+
+// Kept so the old call sites read the same. Nothing is blocked: the schedule
+// is on screen, so a time chosen on it is a decision, not a mistake to catch.
+function checkRescheduleConflict() { return []; }
+
+document.getElementById('moveBarCancel').addEventListener('click', cancelMoveMode);
 rescheduleClose.addEventListener('click', closeRescheduleModal);
 rescheduleModal.addEventListener('click', (e) => { if (e.target === rescheduleModal) closeRescheduleModal(); });
-rescheduleStaffSelect.addEventListener('change', loadRescheduleAvailability);
 btnSaveReschedule.addEventListener('click', async () => {
   if (!rescheduleBookingTarget) return;
-  const date = rescheduleDatePicker.value;
+  const date = moveToDate;
   const time = rescheduleTime.value;
-  if (!date || !time) { rescheduleStatus.textContent = 'Pick a day, then a time on it.'; rescheduleStatus.style.color = '#dc2626'; return; }
+  if (!date || !time) { rescheduleStatus.textContent = 'Pick a day, then tap where it should go.'; rescheduleStatus.style.color = '#dc2626'; return; }
   rescheduleStatus.textContent = 'Saving…'; rescheduleStatus.style.color = 'var(--sched-text-muted)';
+  // serviceId only when it actually changed, so an unchanged move sends
+  // exactly what it always sent.
+  const chosenService = rescheduleService.value;
+  const serviceChanged = chosenService && String(chosenService) !== String(rescheduleBookingTarget.service_id);
   const { error } = await rescheduleBookingAdmin({
-    pin: currentPin, bookingId: rescheduleBookingTarget.id, date, startTime: time, staffId: rescheduleStaffSelect.value,
+    pin: currentPin, bookingId: rescheduleBookingTarget.id, date, startTime: time,
+    staffId: rescheduleStaffSelect.value,
+    serviceId: serviceChanged ? chosenService : null,
   });
   if (error) { rescheduleStatus.textContent = 'Error: ' + error.message; rescheduleStatus.style.color = '#dc2626'; return; }
   rescheduleStatus.textContent = '✓ Moved.'; rescheduleStatus.style.color = '#059669';
   setTimeout(async () => {
     closeRescheduleModal();
+    cancelMoveMode();
     // The move can be started from the grid or from the owner panel, and the
     // grid is where it has to be seen to have happened. Reload the window and
     // redraw it; refresh the panel list only if the panel is actually open.
@@ -3018,7 +2923,7 @@ async function renderOwnerBookingsTab() {
       card.querySelectorAll('.owner-action-btn').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const booking = loadedRows.find((bk) => bk.id === card.dataset.id);
-          if (btn.dataset.type === 'move') { if (booking) openRescheduleModal(booking); return; }
+          if (btn.dataset.type === 'move') { if (booking) { closeOwnerPanel(); startMoveMode(booking); } return; }
           if (btn.dataset.type === 'status' && btn.dataset.status === 'completed') { if (booking) openCompleteModal(booking); return; }
           const status = btn.dataset.status;
           if (status === 'cancelled' && !confirm('Cancel this booking?')) return;

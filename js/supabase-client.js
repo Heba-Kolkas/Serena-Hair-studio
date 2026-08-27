@@ -270,8 +270,9 @@ export async function updateBookingStatusAdmin({ pin, bookingId, status }) {
   return supabase.rpc('admin_update_booking_status', { p_pin: pin, p_booking_id: bookingId, p_status: status });
 }
 
-export async function rescheduleBookingAdmin({ pin, bookingId, date, startTime, staffId }) {
+export async function rescheduleBookingAdmin({ pin, bookingId, date, startTime, staffId, serviceId }) {
   return supabase.rpc('admin_reschedule_booking', {
+    p_service_id: serviceId || null,
     p_pin: pin, p_booking_id: bookingId, p_date: date, p_start_time: startTime, p_staff_id: staffId || null,
   });
 }

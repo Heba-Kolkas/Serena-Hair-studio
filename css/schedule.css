@@ -2064,133 +2064,6 @@ body.modal-open { overflow: hidden; }
   color: var(--sched-text-muted);
   margin: 0 0 0.5rem;
 }
-/* ── THE DAY, INSIDE THE MOVE PANEL ──
-   The same day the stylist reads on the schedule, at a smaller scale: hours
-   down the side, what is already booked in place, and the appointment being
-   moved drawn where it would land. Choosing a time is putting it somewhere,
-   not reading a figure off a list and typing it in. */
-.resched-slots {
-  max-height: 17rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  padding: 0.6rem;
-  border: 1px solid var(--sched-border);
-  border-radius: 12px;
-  background: var(--sched-bg);
-}
-.resched-slots-empty {
-  margin: 0;
-  padding: 0.5rem 0.2rem;
-  font-size: 0.78rem;
-  color: var(--sched-text-muted);
-}
-.rd-day {
-  position: relative;
-  display: grid;
-  grid-template-columns: 2.6rem minmax(0, 1fr);
-  gap: 0.4rem;
-}
-.rd-gutter { position: relative; }
-.rd-hour {
-  position: absolute;
-  right: 0;
-  transform: translateY(-50%);
-  font-size: 0.62rem;
-  color: var(--sched-text-muted);
-  white-space: nowrap;
-}
-.rd-lane {
-  position: relative;
-  border-left: 1px solid var(--sched-border);
-  border-radius: 8px;
-  background: var(--sched-surface);
-  /* The same quarter-hour banding the real grid uses, so the two read as the
-     same day at two sizes. */
-  background-image: repeating-linear-gradient(
-    to bottom, transparent 0, transparent 16.5px,
-    rgba(63,54,50,0.05) 16.5px, rgba(63,54,50,0.05) 33px
-  );
-}
-/* What is already booked. Shown, not hidden: deciding where to put someone
-   is mostly a question about what is already in the way. */
-.rd-busy {
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  overflow: hidden;
-  padding: 0.15rem 0.35rem;
-  border-radius: 6px;
-  border-left: 3px solid #9aa4b2;
-  background: #eef1f5;
-  color: #47525f;
-  font-size: 0.6rem;
-  line-height: 1.3;
-  text-align: left;
-  pointer-events: none;
-}
-.rd-busy.is-block {
-  border-left-color: var(--sched-text-muted);
-  background: repeating-linear-gradient(45deg, #ececf0, #ececf0 5px, #f5f5f8 5px, #f5f5f8 10px);
-}
-.rd-busy-time { font-weight: 600; margin-right: 0.25rem; }
-.rd-busy-label { opacity: 0.85; }
-/* Invisible targets over the whole day - the surface you tap. */
-.rd-target {
-  position: absolute;
-  left: 0;
-  right: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  z-index: 2;
-}
-.rd-target:hover { background: rgba(63,54,50,0.06); }
-.rd-target:focus-visible {
-  outline: 2px solid var(--sched-text);
-  outline-offset: -2px;
-}
-/* The appointment itself, where it would go. */
-.rd-ghost {
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  z-index: 3;
-  overflow: hidden;
-  padding: 0.2rem 0.4rem;
-  border-radius: 7px;
-  background: var(--sched-text);
-  color: var(--sched-surface);
-  font-size: 0.62rem;
-  line-height: 1.3;
-  text-align: left;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(10,10,20,0.22);
-}
-/* Sitting alongside something already booked. It moves into the right-hand
-   lane and leaves the booked one showing on the left, which is exactly what
-   the real grid does when two appointments share an hour.
-
-   Same colour as any other placement - it is not an alarm. The salon doubles
-   up on purpose, and with the whole day on screen this is a choice being made
-   with everything in view, not a mistake to be caught. */
-.rd-ghost.clash {
-  left: 50%;
-}
-/* The lane it steps out of, so the split is visible rather than implied. */
-.rd-ghost.clash::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -1px;
-  border-left: 1px dashed rgba(255,255,255,0.5);
-}
-.rd-ghost-time { display: block; font-weight: 700; }
-.rd-ghost-name { display: block; opacity: 0.9; }
-
 /* Move, on the appointment popup itself, so any booking on the grid can be
    moved by opening it - not only from the list inside the owner panel. */
 .popup-move-btn {
@@ -2213,7 +2086,6 @@ body.modal-open { overflow: hidden; }
 
 @media (max-width: 560px) {
   .resched-grid { grid-template-columns: minmax(0, 1fr); }
-  .resched-slots { grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr)); }
 }
 
 /* ── A NOTE ON A BOOKING ──
@@ -2327,4 +2199,70 @@ body.modal-open { overflow: hidden; }
   border-left: 1px dashed rgba(63, 54, 50, 0.14);
   pointer-events: none;
   z-index: 0;
+}
+
+/* ── MOVE MODE ──
+   The schedule stays exactly as it is while an appointment is being moved -
+   the day strip, both stylists, everything already booked - because that is
+   what you look at to decide where something goes. This bar sits over the top
+   of it saying what is in hand, and how to put it down. */
+.move-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 90;
+  width: min(30rem, calc(100vw - 1.5rem));
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.75rem 0.7rem 1rem;
+  border-radius: 14px;
+  background: var(--sched-text);
+  color: var(--sched-surface);
+  box-shadow: 0 12px 32px rgba(10, 10, 20, 0.3);
+}
+.move-bar[hidden] { display: none; }
+.move-bar-text { flex: 1; min-width: 0; text-align: left; line-height: 1.35; }
+.move-bar-text strong { display: block; font-size: 0.82rem; }
+.move-bar-text span { font-size: 0.72rem; opacity: 0.75; }
+.move-bar-cancel {
+  flex: none;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50px;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.move-bar-cancel:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* While moving, the whole column is a target - so it should look like one. */
+body.is-moving .sched-col-body { cursor: copy; }
+body.is-moving .sched-col-body:hover { background-color: rgba(63, 54, 50, 0.03); }
+/* The blocks stop swallowing the tap: dropping on top of something already
+   booked is allowed, and is sometimes exactly the intention. */
+body.is-moving .sched-block { pointer-events: none; }
+/* Room for the bar, so it never sits over the last appointment of the day. */
+body.is-moving #gridWrap { padding-bottom: 5rem; }
+
+/* Where it is going, in the confirm step. */
+.move-to {
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: var(--sched-bg);
+  border: 1px solid var(--sched-border);
+  text-align: left;
+}
+.move-to-when { font-size: 0.9rem; font-weight: 600; color: var(--sched-text); }
+.move-to-detail { margin-top: 0.15rem; font-size: 0.8rem; color: var(--sched-text-muted); }
+.resched-popup .block-field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--sched-text-muted);
 }
