@@ -11,7 +11,6 @@ import { fetchFeaturedServices, fetchProductImages } from '/js/supabase-client.j
 const FALLBACK_SERVICES = [
   { id: 'svc-balayage', name: 'Balayage / Highlights', price_from: 3750, price_is_from: true, image_url: '/html/Pics/Covers/balayage-and-highlights.jpeg' },
   { id: 'svc-cut-blowdry', name: 'Haircut + Blowdry', price_from: 950, image_url: '/html/Pics/Covers/haircuts-and-styling.jpeg' },
-  { id: 'svc-keratin', name: 'Keratin Treatment', price_label: 'Price on Consultation', image_url: '/html/Pics/Covers/keratin-and-treatments.jpeg' },
   { id: 'svc-ext-50', name: 'Hair Extensions', price_from: 3000, image_url: '/html/Pics/Covers/hair-extensions.jpeg' },
 ];
 

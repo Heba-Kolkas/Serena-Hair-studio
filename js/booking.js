@@ -328,8 +328,6 @@ const FALLBACK_SERVICES = [
   // Not on the printed list, but still booked here.
   { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, duration_minutes: 180, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true, addons: [ADDON_HAIRCUT] },
   { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_on_consultation: true, duration_minutes: 240, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true, addons: [ADDON_HAIRCUT] },
-  { id: 'svc-keratin', name: 'Keratin Treatment', name_no: 'Keratinbehandling', category: 'Keratin & Hair Treatments', price_on_consultation: true, duration_minutes: 150, image_url: './html/Pics/Covers/keratin-and-treatments.jpeg', ...EXTERNAL_TANIYA },
-  { id: 'svc-botox', name: 'Hair Botox', name_no: 'Hår Botox', category: 'Keratin & Hair Treatments', price_on_consultation: true, duration_minutes: 120, image_url: './html/Pics/Covers/keratin-and-treatments.jpeg', ...EXTERNAL_TANIYA },
   { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, duration_minutes: 10, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL, consultationRule: true },
 ];
 const FALLBACK_STAFF = [

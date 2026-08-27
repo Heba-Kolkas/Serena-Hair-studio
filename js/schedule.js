@@ -162,8 +162,6 @@ const FALLBACK_SERVICES_ADMIN = [
   { id: 'svc-bridal', name: 'Bridal Hair', name_no: 'Brudehår', category: 'Bridal', price_from: 4000, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/bridal-and-updos.jpeg', color: '#A8506E', featured: false, active: true, sort_order: 17 },
   { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 180, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/hair-extensions.jpeg', color: '#A97FC9', featured: true, active: true, sort_order: 18 },
   { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_from: null, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/hair-extensions.jpeg', color: '#8C5EAD', featured: false, active: true, sort_order: 19 },
-  { id: 'svc-keratin', name: 'Keratin Treatment', name_no: 'Keratinbehandling', category: 'Keratin & Hair Treatments', price_from: null, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 150, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/keratin-and-treatments.jpeg', color: '#6FAF7A', featured: false, active: true, sort_order: 20 },
-  { id: 'svc-botox', name: 'Hair Botox', name_no: 'Hår Botox', category: 'Keratin & Hair Treatments', price_from: null, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 120, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/keratin-and-treatments.jpeg', color: '#549260', featured: false, active: true, sort_order: 21 },
   { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 10, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', color: '#9a9aa2', featured: false, active: true, sort_order: 22 },
 ];
 const FALLBACK_STAFF_ADMIN = [
@@ -2053,7 +2051,7 @@ ownerTabs.addEventListener('click', (e) => {
 });
 
 const OWNER_CATEGORIES = ['Balayage & Highlights', 'Color', 'Haircuts & Styling', 'Styling',
-  'Special Occasions', 'Bridal', 'Hair Extensions', 'Keratin & Hair Treatments', 'Consultation'];
+  'Special Occasions', 'Bridal', 'Hair Extensions', 'Consultation'];
 
 // Real file-upload photo picker, shared by the Services and Staff forms —
 // stores the uploaded file's public URL in a hidden input (still the same
