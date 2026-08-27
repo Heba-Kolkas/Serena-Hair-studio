@@ -531,21 +531,65 @@ function renderPills() {
   const options = [{ id: 'all', name: 'All Stylists' }]
     .concat(currentStaff.map((s) => ({ id: s.id, name: s.name })));
 
+  const current = options.find((o) => o.id === staffFilter) || options[0];
+
+  // A <select> was styled into a pill here, but only the closed control can be
+  // styled - the open list is drawn by the operating system, so it dropped a
+  // grey system menu in the middle of the app. This is a real listbox instead,
+  // so the open state looks like the rest of the panel.
   staffPillsEl.innerHTML =
     '<div class="staff-pill-row">'
-    + options.map((o) => `<button type="button" class="staff-pill" data-staff="${o.id}">${o.name}</button>`).join('')
+    + options.map((o) => `<button type="button" class="staff-pill" data-staff="${escHtml(o.id)}">${escHtml(o.name)}</button>`).join('')
     + '</div>'
-    + '<select class="staff-pill-select" aria-label="Filter by stylist">'
-    + options.map((o) => `<option value="${o.id}">${o.name}</option>`).join('')
-    + '</select>';
+    + '<div class="staff-select">'
+    +   '<button type="button" class="staff-select-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter by stylist">'
+    +     `<span class="staff-select-value">${escHtml(current.name)}</span>`
+    +     '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>'
+    +   '</button>'
+    +   '<div class="staff-select-menu" role="listbox" hidden>'
+    +     options.map((o) => `<button type="button" class="staff-select-option" role="option" data-staff="${escHtml(o.id)}" aria-selected="${o.id === staffFilter}">${escHtml(o.name)}</button>`).join('')
+    +   '</div>'
+    + '</div>';
 
   staffPillsEl.querySelectorAll('.staff-pill').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.staff === staffFilter);
     btn.addEventListener('click', () => applyStaffFilter(btn.dataset.staff));
   });
-  const sel = staffPillsEl.querySelector('.staff-pill-select');
-  sel.value = staffFilter;
-  sel.addEventListener('change', () => applyStaffFilter(sel.value));
+
+  const wrap = staffPillsEl.querySelector('.staff-select');
+  const trigger = wrap.querySelector('.staff-select-btn');
+  const menu = wrap.querySelector('.staff-select-menu');
+  const opts = [...menu.querySelectorAll('.staff-select-option')];
+
+  const closeMenu = () => {
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    wrap.classList.remove('open');
+  };
+  const openMenu = () => {
+    menu.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    wrap.classList.add('open');
+    (opts.find((o) => o.dataset.staff === staffFilter) || opts[0]).focus();
+  };
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.hidden ? openMenu() : closeMenu();
+  });
+  opts.forEach((o, i) => {
+    o.addEventListener('click', () => { closeMenu(); applyStaffFilter(o.dataset.staff); });
+    // Arrow keys, because a listbox that only answers to a tap is not one.
+    o.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); opts[(i + 1) % opts.length].focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); opts[(i - 1 + opts.length) % opts.length].focus(); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeMenu(); trigger.focus(); }
+    });
+  });
+  // Anywhere else on the page dismisses it, the way a real menu does.
+  document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) closeMenu(); });
+  trigger.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMenu(); }
+  });
 }
 
 // ── OVERLAP-AWARE COLUMN LAYOUT ──

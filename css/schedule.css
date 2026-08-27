@@ -1607,14 +1607,25 @@ body.modal-open { overflow: hidden; }
    stylist you wanted was the one you could not reach. The dropdown holds the
    same choice in the width of one control. */
 .staff-pill-row { display: contents; }
-.staff-pill-select { display: none; }
+.staff-select { display: none; }
 
 @media (max-width: 700px) {
   .staff-pill-row { display: none; }
-  .staff-pill-select {
+
+  /* A <select> can only be styled shut. The open list belongs to the
+     operating system, so a grey system menu appeared over the app however
+     carefully the closed pill was drawn. This is a listbox built out of the
+     same parts as everything else in the panel, so both states match. */
+  .staff-select {
     display: block;
+    position: relative;
+  }
+  .staff-select-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     max-width: 9.5rem;
-    padding: 0.34rem 1.6rem 0.34rem 0.8rem;
+    padding: 0.34rem 0.7rem 0.34rem 0.8rem;
     border-radius: 50px;
     border: 1px solid var(--sched-border);
     background: var(--sched-surface);
@@ -1622,171 +1633,62 @@ body.modal-open { overflow: hidden; }
     font: inherit;
     font-size: 0.76rem;
     cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    /* The arrow the native control would have drawn, redrawn so the pill
-       shape survives appearance:none. */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.65rem center;
-    background-size: 0.6rem;
+  }
+  .staff-select-value {
+    overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .sched-topbar .staff-pills { margin-right: 0.5rem; }
-}
-
-/* ══ OWNER PANEL ═══════════════════════════════════════════════════════
-   Ten sections as pills wrapping across a narrow modal spent half the height
-   on navigation before any content showed, and the wrapped second row read as
-   a different kind of thing from the first. It is a workspace now: sections
-   down the side, the chosen one filling the rest.
-
-   Written to stand on its own rather than adjust the shared .appt-popup rules,
-   because those are set twice in this file and the later block wins - layering
-   another opinion on top is how the last attempt broke. Everything the panel
-   needs is stated here explicitly. */
-.appt-popup.owner-panel {
-  display: flex;
-  flex-direction: column;
-  width: min(1080px, calc(100vw - 2.5rem));
-  max-width: none;
-  height: calc(100vh - 2.5rem);
-  height: calc(100dvh - 2.5rem);
-  max-height: none;
-  overflow: hidden;
-  padding: 0;
-}
-.owner-panel > .owner-head {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 1.15rem 3rem 1.15rem 1.5rem;
-  border-bottom: 1px solid var(--sched-border);
-  background: var(--sched-surface);
-}
-.owner-panel > .owner-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 13.5rem minmax(0, 1fr);
-  padding: 0 !important;
-}
-.owner-panel .owner-tabs {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.1rem;
-  margin: 0;
-  padding: 0.75rem 0.7rem 1.5rem;
-  border: none;
-  border-right: 1px solid var(--sched-border);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  min-height: 0;
-  background: var(--sched-bg, transparent);
-}
-.owner-panel .owner-tab {
-  text-align: left;
-  border: none;
-  border-radius: 9px;
-  padding: 0.58rem 0.8rem;
-  font-size: 0.85rem;
-  background: none;
-  color: var(--sched-text);
-  white-space: nowrap;
-}
-.owner-panel .owner-tab:hover { background: var(--sched-border); }
-.owner-panel .owner-tab.active { background: var(--sched-text); color: var(--sched-surface); }
-/* ── THE SECTION PANE IS THE SCROLLER, AND IT HAS TO WIN ──
-   Two older rules fight this one and both were beating it.
-
-   `.owner-panel #ownerTabContent { overflow-y: visible }` further up carries
-   an ID, so (1,1,0) beat this rule's three classes (0,3,0) no matter that it
-   is written later. That rule was right for the old panel, which scrolled as
-   one long column - a second scrolling box inside a scrolling panel just
-   traps the gesture in whichever one the finger lands on. This panel does not
-   scroll: it is a flex column with overflow hidden and a pane that scrolls.
-   So with the pane forced to `visible`, nothing scrolled at all - every
-   section past the fold was simply unreachable on a phone.
-
-   `.owner-tab-content { max-height: 62vh }` is the other. 62vh of an 844px
-   phone is 523px, which is where every section was being cut.
-
-   Selected by id here so it outranks both. */
-.owner-panel > .owner-body > #ownerTabContent {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  /* The pane is the scroller, so the finger must be allowed to pan it. */
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: touch;
-  min-height: 0;
-  max-height: none;
-  padding: 1.4rem 1.6rem 2.5rem !important;
-}
-.owner-back {
-  display: none;
-  border: none;
-  background: none;
-  color: var(--sched-text-muted);
-  font-size: 0.95rem;
-  cursor: pointer;
-  padding: 0.2rem 0.3rem;
-  flex: none;
-}
-.owner-back:hover { color: var(--sched-text); }
-
-/* ── PHONE: A MENU YOU TAP INTO ──
-   One thing at a time. The section list is the whole screen; choosing one
-   replaces it and the heading becomes that section's name with a back arrow. */
-@media (max-width: 760px) {
-  .appt-popup.owner-panel {
-    width: calc(100vw - 1rem);
-    height: calc(100dvh - 1rem);
-  }
-  .owner-panel > .owner-body { grid-template-columns: minmax(0, 1fr); }
-  .owner-panel .owner-tabs { border-right: none; padding: 0.4rem 0.6rem 1.5rem; }
-  .owner-panel .owner-tab {
-    padding: 0.9rem 0.85rem;
-    font-size: 0.94rem;
-    border-radius: 0;
-    border-bottom: 1px solid var(--sched-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .owner-panel .owner-tab.active { background: none; color: var(--sched-text); font-weight: 600; }
-  /* A chevron, so each row reads as somewhere to go rather than a filter. */
-  .owner-panel .owner-tab::after {
-    content: '\203A';
+  .staff-select-btn i {
+    font-size: 0.6rem;
     color: var(--sched-text-muted);
-    font-size: 1.15rem;
-    line-height: 1;
+    transition: transform 0.18s ease;
   }
-  .owner-panel > .owner-body > #ownerTabContent {
-    display: none;
-    padding: 1.1rem 1rem 2.5rem !important;
+  .staff-select.open .staff-select-btn {
+    border-color: var(--sched-text);
   }
-  .owner-panel.owner-viewing .owner-tabs { display: none; }
-  /* Also by id: the rule above it that hides the pane is now id-weighted, so
-     a class-only rule here could not turn it back on. */
-  .owner-panel.owner-viewing > .owner-body > #ownerTabContent { display: block; }
+  .staff-select.open .staff-select-btn i { transform: rotate(180deg); }
 
-  /* ── ONE SCROLLER PER SCREEN ──
-     .stf-service-checklist is a 260px scrolling box. Inside a scrolling pane
-     that gives a phone two nested scrollers, and a finger landing on the list
-     scrolls the list while the section behind it appears frozen - which is
-     exactly what "Add-ons doesn't work" looks like from the outside.
-
-     There is no need for it here: the pane already scrolls, and the panel is
-     the whole screen. Let the list be as tall as it is and the pane carry the
-     whole section. */
-  .stf-service-checklist {
-    max-height: none;
-    overflow-y: visible;
+  .staff-select-menu {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    /* Anchored to the right: the control sits near the right edge of the
+       topbar, so a left-anchored menu would hang off the screen. */
+    right: 0;
+    z-index: 60;
+    min-width: 10.5rem;
+    padding: 0.3rem;
+    border-radius: 14px;
+    border: 1px solid var(--sched-border);
+    background: var(--sched-surface);
+    box-shadow: 0 16px 36px rgba(10, 10, 20, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
   }
-  .owner-panel.owner-viewing .owner-back { display: inline-flex; }
+  .staff-select-menu[hidden] { display: none; }
+  .staff-select-option {
+    text-align: left;
+    padding: 0.55rem 0.7rem;
+    border: none;
+    border-radius: 9px;
+    background: none;
+    color: var(--sched-text);
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .staff-select-option:hover { background: var(--sched-border); }
+  .staff-select-option:focus-visible {
+    outline: 2px solid var(--sched-text);
+    outline-offset: -2px;
+  }
+  /* The one in force reads as chosen, not merely highlighted. */
+  .staff-select-option[aria-selected="true"] {
+    background: var(--sched-text);
+    color: var(--sched-surface);
+  }
 }
 
 /* ── ADD BOOKING ──
