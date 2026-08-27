@@ -1,6 +1,7 @@
 import {
   fetchActiveServices,
   fetchServiceAddons,
+  fetchAllStaffServices,
   fetchStaffForService,
   fetchBusinessHours,
   fetchBookingHorizonDays,
@@ -459,12 +460,35 @@ async function loadServices() {
   // the wizard its add-ons, never its real service list.
   if (data !== FALLBACK_SERVICES) {
     try {
-      const addonRes = await fetchServiceAddons();
+      const [addonRes, ssRes] = await Promise.all([
+        fetchServiceAddons(),
+        fetchAllStaffServices(),
+      ]);
+
+      // Who performs what. An add-on that is really a service in disguise -
+      // extensions - carries requires_service_id, and only a stylist who does
+      // THAT service may be offered alongside it.
+      //
+      // Without this the narrowing in loadStaffForService silently did
+      // nothing: requiresStaff existed only on the hardcoded fallback add-ons,
+      // so as soon as the add-ons came from the database the filter had no
+      // property to read and Kani was offered for extensions she does not fit.
+      const staffByService = {};
+      if (!ssRes.error && ssRes.data) {
+        ssRes.data.forEach((row) => {
+          (staffByService[row.service_id] = staffByService[row.service_id] || []).push(row.staff_id);
+        });
+      }
+
       const byService = {};
       if (!addonRes.error && addonRes.data) {
         addonRes.data.forEach((row) => {
           if (!row.addon || row.addon.active === false) return;
-          (byService[row.service_id] = byService[row.service_id] || []).push(row.addon);
+          const a = row.addon;
+          if (a.requires_service_id && staffByService[a.requires_service_id]) {
+            a.requiresStaff = staffByService[a.requires_service_id];
+          }
+          (byService[row.service_id] = byService[row.service_id] || []).push(a);
         });
       }
       data.forEach((svc) => { svc.addons = byService[svc.id] || []; });

@@ -37,6 +37,14 @@ export async function fetchServiceAddons() {
     .order('sort_order');
 }
 
+// Every stylist-to-service assignment, in one round trip. The wizard needs it
+// to work out who may take an add-on that is really a service in disguise:
+// the extensions add-ons carry requires_service_id, and only a stylist who
+// performs THAT service may be offered.
+export async function fetchAllStaffServices() {
+  return supabase.from('staff_services').select('staff_id, service_id');
+}
+
 // How far ahead bookings are accepted. A rolling window from today, so the
 // wizard asks each time rather than caching a date that would go stale.
 export async function fetchBookingHorizonDays() {
