@@ -687,13 +687,45 @@ function statusBadgeHtml(b) {
   }
   return '';
 }
-/** A note on a booking is often an allergy - Mona Iqbal's says to check
- *  before using anything ammonia-based. That cannot live only behind a tap:
- *  the stylist has to know it is there while reading the day. Marked on the
- *  block, and the note itself is in the popup. */
-function noteFlagHtml(b) {
+/** A note on a booking is usually something that changes the appointment -
+ *  Mona Iqbal's says to check before using anything ammonia-based. It cannot
+ *  live only behind a tap.
+ *
+ *  Where the block has room, the note is simply shown: a stylist reading the
+ *  day should not have to open an appointment to find out there was a warning
+ *  on it. Where it does not, a quiet dot beside the name says there is one.
+ *  An icon alone was both cryptic and ugly - a saturated orange glyph jammed
+ *  against the client's name, telling you a note existed but not what it
+ *  said, on a block with empty space going spare underneath. */
+/** Whether the words will fit. Height is what actually decides it - the text
+ *  wraps, so a half-width block still reads fine. The earlier test used the
+ *  same `narrow` flag as the service line, which is a 50% split; that ruled
+ *  out precisely the case this was built for, since a booking that overlaps
+ *  another is split in two and Mona's does. Only a three-or-more-way split is
+ *  genuinely too tight. */
+function hasRoomForNote(b, height) {
+  return height >= 72 && b.widthPct >= 40;
+}
+
+function noteChipHtml(b, height, narrow) {
   if (!b.notes || !String(b.notes).trim()) return '';
-  return `<i class="fa-solid fa-note-sticky sched-block-note" title="${escHtml(b.notes)}" aria-label="This client has a note"></i>`;
+  if (!hasRoomForNote(b, height)) return '';
+  return `
+      <div class="sched-block-note" title="${escHtml(b.notes)}">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <span>${escHtml(b.notes)}</span>
+      </div>`;
+}
+
+/** The quiet version, for a block too small to carry the words.
+ *  Always rendered when there is a note; CSS hides it wherever the strip is
+ *  actually showing. Whether the words fit depends on the real width of the
+ *  column, which a percentage cannot see - on a phone two columns and an
+ *  overlap split leave about 85px, where "Allergic to..." is all that fits.
+ *  That is a question about the viewport, so the viewport answers it. */
+function noteDotHtml(b, height, narrow) {
+  if (!b.notes || !String(b.notes).trim()) return '';
+  return `<span class="sched-block-note-dot" title="${escHtml(b.notes)}" aria-label="This client has a note"></span>`;
 }
 
 function blockHtml(b, gridStart) {
@@ -705,10 +737,11 @@ function blockHtml(b, gridStart) {
   return `
     <div class="${blockClass(b)}" data-id="${b.id}" style="top:${top}px; height:${height}px; width:calc(${b.widthPct}% - 4px); left:calc(${b.leftPct}% + 2px); background:${bg}; border-left-color:${color};">
       ${statusBadgeHtml(b)}
-      <div class="sched-block-name">${noteFlagHtml(b)}${b.customer_name}</div>
+      <div class="sched-block-name">${noteDotHtml(b, height, narrow)}${b.customer_name}</div>
       ${narrow ? '' : `<div class="sched-block-meta">${b.service_name}</div>`}
       <div class="sched-block-meta">${fmtTime(b.start_time)}</div>
       ${isPaid(b) && !narrow ? `<div class="sched-block-paid">${escHtml(money(b.amount_charged))}</div>` : ''}
+      ${noteChipHtml(b, height, narrow)}
     </div>
   `;
 }

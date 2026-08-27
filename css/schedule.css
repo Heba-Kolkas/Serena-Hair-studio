@@ -2153,15 +2153,68 @@ body.modal-open { overflow: hidden; }
   text-align: left;
 }
 
-/* A note on a booking - usually an allergy or something to check before
-   starting. Visible on the block itself, so it is known while the day is
-   being read rather than only after the appointment is opened. */
+/* ── A NOTE ON A BOOKING ──
+   Usually something that changes the appointment - an allergy, a thing to
+   check first - so it is shown on the block rather than hidden behind a tap.
+
+   Written as a soft amber strip along the bottom of the block, using the
+   space a longer appointment already has going spare. Amber, not red:
+   nothing is wrong, there is something to know. */
 .sched-block-note {
-  margin-right: 0.3rem;
-  font-size: 0.7rem;
-  color: #b45309;
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 0.4rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.28rem 0.4rem;
+  border-radius: 7px;
+  background: rgba(253, 230, 138, 0.55);
+  color: #8a5209;
+  font-size: 0.64rem;
+  line-height: 1.35;
+  text-align: left;
+  pointer-events: none;
 }
-.sched-block-dim .sched-block-note { opacity: 1; }
+.sched-block-note i {
+  flex: none;
+  margin-top: 0.08rem;
+  font-size: 0.6rem;
+}
+.sched-block-note span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* On a small block there is no room for the words, so it becomes a dot beside
+   the name - enough to say "open this one" without crowding it. */
+.sched-block-note-dot {
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-right: 0.32rem;
+  border-radius: 50%;
+  background: #d97706;
+  vertical-align: middle;
+}
+/* The dot and the strip are two ways of saying the same thing, so only one
+   shows. Wherever the strip is drawn, the dot steps aside. */
+.sched-block:has(.sched-block-note) .sched-block-note-dot { display: none; }
+
+/* A finished booking is dimmed, but a warning on it still has to be legible. */
+.sched-block-dim .sched-block-note,
+.sched-block-dim .sched-block-note-dot { opacity: 1; }
+
+@media (max-width: 700px) {
+  /* Two stylist columns on a phone, halved again where appointments overlap,
+     leaves roughly 85px - narrower than the warning's first three words. The
+     strip is dropped and the dot carries it; the note itself is one tap away
+     in the appointment. */
+  .sched-block-note { display: none; }
+  .sched-block:has(.sched-block-note) .sched-block-note-dot { display: inline-block; }
+}
 
 /* Charging for a no-show is set apart from the message, because it is the
    decision with money on it and should not be made in passing. */
