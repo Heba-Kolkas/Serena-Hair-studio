@@ -768,8 +768,11 @@ insert into staff_day_policy (
   late_fill_days, colour_hold_days
 )
 -- Mon / Wed / Fri
-select s.id, w.weekday, 1, true, 2, '11:00', '17:00', '12:00', '15:00', '17:30', '12:00',
-       null, 1
+-- Cast explicitly: inside a UNION the bare literals resolve as text and
+-- Postgres refuses to write them into a time column.
+select s.id, w.weekday, 1, true, 2,
+       '11:00'::time, '17:00'::time, '12:00'::time, '15:00'::time, '17:30'::time, '12:00'::time,
+       null::int, 1
 from staff s cross join (values (1), (3), (5)) as w(weekday)
 where s.name = 'Kani M.'
 union all
@@ -777,7 +780,8 @@ union all
 -- point the day takes the same shape as a Mon/Wed/Fri one. It keeps two
 -- differences: two colours fit rather than one, and an early colour keeps
 -- her to 18:00 rather than 17:30.
-select s.id, w.weekday, 2, false, null, '11:00', '17:00', '12:00', '15:00', '18:00', '11:00',
+select s.id, w.weekday, 2, false, null::int,
+       '11:00'::time, '17:00'::time, '12:00'::time, '15:00'::time, '18:00'::time, '11:00'::time,
        3, 1
 from staff s cross join (values (2), (4)) as w(weekday)
 where s.name = 'Kani M.';
