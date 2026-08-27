@@ -663,9 +663,16 @@ body { background: var(--sched-bg); }
   position: relative;
   cursor: pointer;
   border-left: 1px solid var(--sched-border);
-  /* Faint 15-min banding, like a dense professional scheduler grid. */
+  /* Faint banding, one stripe per quarter hour.
+
+     A quarter hour is 24px here - PX_PER_HOUR is 96 in js/schedule.js - but
+     this was drawn on a 20px stripe with a 40px period, so the shading walked
+     steadily out of step with the quarter-hour lines above it. By the middle
+     of the afternoon a stripe straddled two quarters and the rows stopped
+     lining up with the times beside them, which is what made the grid hard to
+     read. 24px stripe, 48px period: one shaded quarter, one clear. */
   background-image: repeating-linear-gradient(
-    to bottom, transparent 0, transparent 20px, rgba(63,54,50,0.025) 20px, rgba(63,54,50,0.025) 40px
+    to bottom, transparent 0, transparent 24px, rgba(63,54,50,0.03) 24px, rgba(63,54,50,0.03) 48px
   );
 }
 .sched-hour-line {
@@ -2265,4 +2272,43 @@ body.is-moving #gridWrap { padding-bottom: 5rem; }
   font-size: 0.72rem;
   line-height: 1.5;
   color: var(--sched-text-muted);
+}
+
+/* ── THE MOVE PREVIEW ──
+   The appointment drawn where it would land, in the column it would land in,
+   at the length it would actually be. See-through on purpose: a highlighted
+   row tells you which row you hit, but not whether a four-hour colour clears
+   the booking underneath it. This does, and what is beneath stays readable. */
+.sched-move-preview {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  overflow: hidden;
+  padding: 0.3rem 0.45rem;
+  border-radius: 8px;
+  border: 2px dashed rgba(63, 54, 50, 0.55);
+  background: rgba(63, 54, 50, 0.16);
+  color: var(--sched-text);
+  text-align: left;
+  pointer-events: none;
+  backdrop-filter: blur(1px);
+}
+.smp-time { font-size: 0.68rem; font-weight: 700; }
+.smp-name { font-size: 0.66rem; opacity: 0.8; }
+
+@media (max-width: 700px) {
+  /* The confirm arrives as a sheet from the bottom rather than a box in the
+     middle, so the preview it is asking about is still on screen above it.
+     A centred dialog covered the very thing being confirmed. */
+  #rescheduleModal { align-items: flex-end; }
+  #rescheduleModal .appt-popup {
+    width: 100%;
+    max-width: none;
+    border-radius: 20px 20px 0 0;
+    max-height: 72dvh;
+  }
 }

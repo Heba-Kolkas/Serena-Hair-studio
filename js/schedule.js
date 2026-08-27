@@ -740,6 +740,16 @@ function laneDividersHtml(lanes) {
   return html;
 }
 
+/** The quarter-hour row a tap landed in.
+ *
+ *  This rounded to the nearest quarter, which is not what a row of boxes
+ *  means. The 11:00 row runs from 11:00 to 11:15, so tapping the middle of it
+ *  gave 11:07 and rounded up: you pressed the row labelled 11:00 and got
+ *  11:15. Anywhere inside a row now means that row's own time. */
+function snapToRow(minutes) {
+  return Math.floor(minutes / 15) * 15;
+}
+
 function blockHtml(b, gridStart) {
   const top = (timeToMinutes(b.start_time) - gridStart) * PX_PER_MIN;
   const height = Math.max((timeToMinutes(b.end_time) - timeToMinutes(b.start_time)) * PX_PER_MIN, 30);
@@ -841,6 +851,7 @@ function columnHtml(staff, bookings, blocked, gridStart, gridEnd) {
   `;
 }
 
+let currentGridStart = GRID_DEFAULT_START;
 function renderGrid() {
   const staffList = staffFilter === 'all' ? currentStaff : currentStaff.filter((s) => s.id === staffFilter);
   if (!staffList.length) { gridWrap.innerHTML = '<p class="sched-empty-note">No stylists to show.</p>'; return; }
@@ -849,6 +860,10 @@ function renderGrid() {
   const dayBlocked = currentBlocked.filter((s) => s.date === selectedDate);
   const relevantBookings = staffFilter === 'all' ? dayBookings : dayBookings.filter((b) => b.staff_id === staffFilter);
   const { start, end } = computeGridRange(relevantBookings);
+  // The grid does not always begin at 11:00 - it stretches to cover whatever
+  // is booked - so the move preview has to position itself against the range
+  // actually on screen, not the default one.
+  currentGridStart = start;
   const nowDot = selectedDate === todayStr() && nowMinutes() >= start && nowMinutes() <= end
     ? `<div class="sched-now-dot" style="top:${HEADER_OFFSET_PX + (nowMinutes() - start) * PX_PER_MIN}px;"></div>`
     : '';
@@ -872,6 +887,12 @@ function renderGrid() {
   // pre-fills that stylist, the day being viewed, and the clicked time
   // (snapped to the nearest quarter-hour) into the Add Booking modal.
   gridWrap.querySelectorAll('.sched-col-body').forEach((body) => {
+    body.addEventListener('mousemove', (e) => {
+      if (!moveTarget) return;
+      const staffId = body.closest('.sched-col').dataset.staff;
+      const offsetY = e.clientY - body.getBoundingClientRect().top;
+      renderMovePreview(staffId, snapToRow(start + offsetY / PX_PER_MIN));
+    });
     body.addEventListener('click', (e) => {
       // In move mode a tap anywhere in a column places the appointment there -
       // including on top of something already booked, which the salon does on
@@ -879,14 +900,15 @@ function renderGrid() {
       if (moveTarget) {
         const staffId = body.closest('.sched-col').dataset.staff;
         const offsetY = e.clientY - body.getBoundingClientRect().top;
-        const minutes = Math.round((start + offsetY / PX_PER_MIN) / 15) * 15;
+        const minutes = snapToRow(start + offsetY / PX_PER_MIN);
+        renderMovePreview(staffId, minutes);
         openMoveConfirm({ staffId, date: selectedDate, time: minutesToTimeStr(minutes) });
         return;
       }
       if (e.target.closest('.sched-block, .sched-block-unavailable')) return;
       const staffId = body.closest('.sched-col').dataset.staff;
       const offsetY = e.clientY - body.getBoundingClientRect().top;
-      const minutes = Math.round((start + offsetY / PX_PER_MIN) / 15) * 15;
+      const minutes = snapToRow(start + offsetY / PX_PER_MIN);
       openAddBookingModal({ staffId, date: selectedDate, time: minutesToTimeStr(minutes) });
     });
   });
@@ -1441,6 +1463,30 @@ const moveBarWho = document.getElementById('moveBarWho');
 const moveToEl = document.getElementById('moveTo');
 const rescheduleService = document.getElementById('rescheduleService');
 
+/** Draws the appointment where it would land, in the column it would land in,
+ *  at the size it would actually be - see-through, so what is underneath is
+ *  still readable. A row highlight says which row you hit; it does not say
+ *  whether a four-hour colour clears the 15:00 booking below it. This does. */
+function renderMovePreview(staffId, minutes) {
+  clearMovePreview();
+  if (!moveTarget) return;
+  const col = gridWrap.querySelector(`.sched-col[data-staff="${staffId}"] .sched-col-body`);
+  if (!col) return;
+  const duration = timeToMinutes(fmtTime(moveTarget.end_time)) - timeToMinutes(fmtTime(moveTarget.start_time));
+  const gridStart = currentGridStart;
+  const el = document.createElement('div');
+  el.className = 'sched-move-preview';
+  el.style.top = `${(minutes - gridStart) * PX_PER_MIN}px`;
+  el.style.height = `${Math.max(duration * PX_PER_MIN, 24)}px`;
+  el.innerHTML = `<span class="smp-time">${minutesToTimeStr(minutes)} - ${minutesToTimeStr(minutes + duration)}</span>`
+    + `<span class="smp-name">${escHtml(moveTarget.customer_name)}</span>`;
+  col.appendChild(el);
+}
+
+function clearMovePreview() {
+  gridWrap.querySelectorAll('.sched-move-preview').forEach((el) => el.remove());
+}
+
 function startMoveMode(booking) {
   moveTarget = booking;
   moveBarWho.textContent = `Moving ${booking.customer_name} - ${booking.service_name}`;
@@ -1451,6 +1497,7 @@ function startMoveMode(booking) {
 
 function cancelMoveMode() {
   moveTarget = null;
+  clearMovePreview();
   moveBar.hidden = true;
   document.body.classList.remove('is-moving');
 }
@@ -1481,7 +1528,13 @@ function openMoveConfirm({ staffId, date, time }) {
   rescheduleModal.style.display = 'flex';
 }
 
-function closeRescheduleModal() { rescheduleModal.style.display = 'none'; rescheduleBookingTarget = null; }
+function closeRescheduleModal() {
+  rescheduleModal.style.display = 'none';
+  rescheduleBookingTarget = null;
+  // Backing out of the question leaves you still moving, so the preview goes
+  // but the bar stays and another spot can be picked.
+  clearMovePreview();
+}
 
 // Kept so the old call sites read the same. Nothing is blocked: the schedule
 // is on screen, so a time chosen on it is a decision, not a mistake to catch.
