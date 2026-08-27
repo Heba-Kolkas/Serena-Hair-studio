@@ -732,6 +732,25 @@ body { background: var(--sched-bg); }
 }
 .sched-block-badge.badge-arrived { background: #059669; }
 .sched-block-badge.badge-noshow { background: #dc2626; }
+/* Paid is the same green as arrived on purpose - it is the same visit, one
+   step further on - but doubled, so the two are not confused at a glance. */
+.sched-block-badge.badge-paid { background: #047857; }
+/* Finished with nothing entered against it. Amber, not red: nothing has gone
+   wrong, but there is money here that the revenue figures do not have. */
+.sched-block-badge.badge-unpaid { background: #d97706; }
+
+/* The figure on the block itself, so a day can be read down the column
+   without opening anything. */
+.sched-block-paid {
+  margin-top: 0.1rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #047857;
+  letter-spacing: 0.01em;
+}
+/* A completed booking is dimmed, but the amount on it is the one thing worth
+   reading, so it keeps its strength. */
+.sched-block-dim .sched-block-paid { opacity: 1; }
 
 .sched-block-unavailable {
   position: absolute;
@@ -1691,6 +1710,160 @@ body.modal-open { overflow: hidden; }
   }
 }
 
+/* ══ OWNER PANEL ═══════════════════════════════════════════════════════
+   Ten sections as pills wrapping across a narrow modal spent half the height
+   on navigation before any content showed, and the wrapped second row read as
+   a different kind of thing from the first. It is a workspace now: sections
+   down the side, the chosen one filling the rest.
+
+   Written to stand on its own rather than adjust the shared .appt-popup rules,
+   because those are set twice in this file and the later block wins - layering
+   another opinion on top is how the last attempt broke. Everything the panel
+   needs is stated here explicitly. */
+.appt-popup.owner-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(1080px, calc(100vw - 2.5rem));
+  max-width: none;
+  height: calc(100vh - 2.5rem);
+  height: calc(100dvh - 2.5rem);
+  max-height: none;
+  overflow: hidden;
+  padding: 0;
+}
+.owner-panel > .owner-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 1.15rem 3rem 1.15rem 1.5rem;
+  border-bottom: 1px solid var(--sched-border);
+  background: var(--sched-surface);
+}
+.owner-panel > .owner-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+  padding: 0 !important;
+}
+.owner-panel .owner-tabs {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0.75rem 0.7rem 1.5rem;
+  border: none;
+  border-right: 1px solid var(--sched-border);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  background: var(--sched-bg, transparent);
+}
+.owner-panel .owner-tab {
+  text-align: left;
+  border: none;
+  border-radius: 9px;
+  padding: 0.58rem 0.8rem;
+  font-size: 0.85rem;
+  background: none;
+  color: var(--sched-text);
+  white-space: nowrap;
+}
+.owner-panel .owner-tab:hover { background: var(--sched-border); }
+.owner-panel .owner-tab.active { background: var(--sched-text); color: var(--sched-surface); }
+/* ── THE SECTION PANE IS THE SCROLLER, AND IT HAS TO WIN ──
+   Two older rules fight this one and both were beating it.
+
+   `.owner-panel #ownerTabContent { overflow-y: visible }` further up carries
+   an ID, so (1,1,0) beat this rule's three classes (0,3,0) no matter that it
+   is written later. That rule was right for the old panel, which scrolled as
+   one long column - a second scrolling box inside a scrolling panel just
+   traps the gesture in whichever one the finger lands on. This panel does not
+   scroll: it is a flex column with overflow hidden and a pane that scrolls.
+   So with the pane forced to `visible`, nothing scrolled at all - every
+   section past the fold was simply unreachable on a phone.
+
+   `.owner-tab-content { max-height: 62vh }` is the other. 62vh of an 844px
+   phone is 523px, which is where every section was being cut.
+
+   Selected by id here so it outranks both. */
+.owner-panel > .owner-body > #ownerTabContent {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The pane is the scroller, so the finger must be allowed to pan it. */
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  max-height: none;
+  padding: 1.4rem 1.6rem 2.5rem !important;
+}
+.owner-back {
+  display: none;
+  border: none;
+  background: none;
+  color: var(--sched-text-muted);
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  flex: none;
+}
+.owner-back:hover { color: var(--sched-text); }
+
+/* ── PHONE: A MENU YOU TAP INTO ──
+   One thing at a time. The section list is the whole screen; choosing one
+   replaces it and the heading becomes that section's name with a back arrow. */
+@media (max-width: 760px) {
+  .appt-popup.owner-panel {
+    width: calc(100vw - 1rem);
+    height: calc(100dvh - 1rem);
+  }
+  .owner-panel > .owner-body { grid-template-columns: minmax(0, 1fr); }
+  .owner-panel .owner-tabs { border-right: none; padding: 0.4rem 0.6rem 1.5rem; }
+  .owner-panel .owner-tab {
+    padding: 0.9rem 0.85rem;
+    font-size: 0.94rem;
+    border-radius: 0;
+    border-bottom: 1px solid var(--sched-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .owner-panel .owner-tab.active { background: none; color: var(--sched-text); font-weight: 600; }
+  /* A chevron, so each row reads as somewhere to go rather than a filter. */
+  .owner-panel .owner-tab::after {
+    content: '\203A';
+    color: var(--sched-text-muted);
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+  .owner-panel > .owner-body > #ownerTabContent {
+    display: none;
+    padding: 1.1rem 1rem 2.5rem !important;
+  }
+  .owner-panel.owner-viewing .owner-tabs { display: none; }
+  /* Also by id: the rule above it that hides the pane is now id-weighted, so
+     a class-only rule here could not turn it back on. */
+  .owner-panel.owner-viewing > .owner-body > #ownerTabContent { display: block; }
+
+  /* ── ONE SCROLLER PER SCREEN ──
+     .stf-service-checklist is a 260px scrolling box. Inside a scrolling pane
+     that gives a phone two nested scrollers, and a finger landing on the list
+     scrolls the list while the section behind it appears frozen - which is
+     exactly what "Add-ons doesn't work" looks like from the outside.
+
+     There is no need for it here: the pane already scrolls, and the panel is
+     the whole screen. Let the list be as tall as it is and the pane carry the
+     whole section. */
+  .stf-service-checklist {
+    max-height: none;
+    overflow-y: visible;
+  }
+  .owner-panel.owner-viewing .owner-back { display: inline-flex; }
+}
+
 /* ── ADD BOOKING ──
    The form is four kinds of question - who she is, what she is having and
    with whom, when, and whether she has paid - so it is laid out as four
@@ -1827,4 +2000,40 @@ body.modal-open { overflow: hidden; }
   min-height: 1.1em;
   margin-top: 0.5rem;
   text-align: center;
+}
+
+/* ── PAID, IN THE APPOINTMENT POPUP ──
+   Once the money is recorded the popup should say so plainly, with the
+   figure - "Completed" alone does not tell the stylist whether anyone ever
+   entered what was taken. */
+.popup-paid-done {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 0.85rem;
+}
+.popup-paid-done strong { font-weight: 700; }
+/* The opposite case, and the more important one: the visit happened, the
+   money did not get written down, and the day's takings are short by however
+   much this was. */
+.popup-paid-missing {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: left;
 }

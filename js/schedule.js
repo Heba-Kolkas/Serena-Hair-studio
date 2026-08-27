@@ -662,9 +662,23 @@ function blockClass(b) {
   const dim = b.status === 'no_show' || b.status === 'completed' ? ' sched-block-dim' : '';
   return `sched-block${dim}`;
 }
+/** The amount as it should be read in a Norwegian salon: thin space between
+ *  thousands, "kr" after the figure. */
+function money(n) { return Number(n).toLocaleString('nb-NO') + ' kr'; }
+
+function isPaid(b) { return b.status === 'completed' && b.amount_charged != null; }
+
 function statusBadgeHtml(b) {
   if (b.status === 'arrived') return '<span class="sched-block-badge badge-arrived"><i class="fa-solid fa-check"></i></span>';
   if (b.status === 'no_show') return '<span class="sched-block-badge badge-noshow"><i class="fa-solid fa-xmark"></i></span>';
+  if (isPaid(b)) {
+    return `<span class="sched-block-badge badge-paid" title="Paid ${escHtml(money(b.amount_charged))}"><i class="fa-solid fa-check-double"></i></span>`;
+  }
+  // Finished, but nothing was ever entered against it. That is money the day's
+  // takings will not show, and the only place it can still be noticed is here.
+  if (b.status === 'completed') {
+    return '<span class="sched-block-badge badge-unpaid" title="Completed, but no amount recorded"><i class="fa-solid fa-exclamation"></i></span>';
+  }
   return '';
 }
 function blockHtml(b, gridStart) {
@@ -679,6 +693,7 @@ function blockHtml(b, gridStart) {
       <div class="sched-block-name">${b.customer_name}</div>
       ${narrow ? '' : `<div class="sched-block-meta">${b.service_name}</div>`}
       <div class="sched-block-meta">${fmtTime(b.start_time)}</div>
+      ${isPaid(b) && !narrow ? `<div class="sched-block-paid">${escHtml(money(b.amount_charged))}</div>` : ''}
     </div>
   `;
 }
@@ -870,6 +885,12 @@ function openPopup(id) {
          </div>`
       : `<span class="sched-status ${b.status}">${STATUS_LABELS[b.status] || b.status}</span>
          ${canUndo ? `<button type="button" class="popup-undo-btn" data-action="confirmed" data-id="${b.id}"><i class="fa-solid fa-rotate-left"></i> Pressed by mistake? Undo</button>` : ''}`}
+    ${isPaid(b)
+      ? `<div class="popup-paid-done"><i class="fa-solid fa-circle-check"></i> Paid &middot; <strong>${escHtml(money(b.amount_charged))}</strong></div>`
+      : ''}
+    ${b.status === 'completed' && b.amount_charged == null
+      ? '<div class="popup-paid-missing"><i class="fa-solid fa-triangle-exclamation"></i> Completed, but no amount was recorded - this visit is not in the revenue.</div>'
+      : ''}
     ${awaitingPayment ? paidBox(b) : ''}
     ${b.customer_phone || b.customer_name ? `<button type="button" class="popup-history-btn" id="popupCheckHistory"><i class="fa-solid fa-clock-rotate-left"></i> Check history of this person</button>` : ''}
   `;
