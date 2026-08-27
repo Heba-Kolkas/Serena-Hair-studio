@@ -888,7 +888,8 @@ function renderGrid() {
   // (snapped to the nearest quarter-hour) into the Add Booking modal.
   gridWrap.querySelectorAll('.sched-col-body').forEach((body) => {
     body.addEventListener('mousemove', (e) => {
-      if (!moveTarget) return;
+      // Once it has been put down, the preview stays where it was put.
+      if (!moveTarget || pendingMove) return;
       const staffId = body.closest('.sched-col').dataset.staff;
       const offsetY = e.clientY - body.getBoundingClientRect().top;
       renderMovePreview(staffId, snapToRow(start + offsetY / PX_PER_MIN));
@@ -901,8 +902,12 @@ function renderGrid() {
         const staffId = body.closest('.sched-col').dataset.staff;
         const offsetY = e.clientY - body.getBoundingClientRect().top;
         const minutes = snapToRow(start + offsetY / PX_PER_MIN);
-        renderMovePreview(staffId, minutes);
-        openMoveConfirm({ staffId, date: selectedDate, time: minutesToTimeStr(minutes) });
+        // Placing it and agreeing to it are two different acts. The tap puts
+        // the appointment down so it can be looked at against the day around
+        // it; the tick is where it is agreed to. Opening the question straight
+        // away meant the sheet arrived over the preview before it had been
+        // read, and tapping a slightly wrong row cost a dismissal each time.
+        setPendingMove({ staffId, date: selectedDate, minutes });
         return;
       }
       if (e.target.closest('.sched-block, .sched-block-unavailable')) return;
@@ -1461,7 +1466,32 @@ let moveTarget = null;
 const moveBar = document.getElementById('moveBar');
 const moveBarWho = document.getElementById('moveBarWho');
 const moveToEl = document.getElementById('moveTo');
+const moveBarHint = document.getElementById('moveBarHint');
+const moveBarConfirm = document.getElementById('moveBarConfirm');
 const rescheduleService = document.getElementById('rescheduleService');
+
+/** Where the appointment has been put down, before anyone has agreed to it. */
+let pendingMove = null;
+
+function setPendingMove({ staffId, date, minutes }) {
+  pendingMove = { staffId, date, minutes };
+  renderMovePreview(staffId, minutes);
+  const staff = (currentStaff || []).find((x) => String(x.id) === String(staffId));
+  const duration = moveTarget
+    ? timeToMinutes(fmtTime(moveTarget.end_time)) - timeToMinutes(fmtTime(moveTarget.start_time))
+    : 0;
+  moveBarHint.textContent = `${minutesToTimeStr(minutes)} - ${minutesToTimeStr(minutes + duration)}`
+    + (staff ? ` · ${staff.name}` : '')
+    + ' · tap again to move it, or press the tick.';
+  moveBarConfirm.hidden = false;
+}
+
+function clearPendingMove() {
+  pendingMove = null;
+  moveBarConfirm.hidden = true;
+  moveBarHint.textContent = 'Pick a day, then tap where it should go.';
+  clearMovePreview();
+}
 
 /** Draws the appointment where it would land, in the column it would land in,
  *  at the size it would actually be - see-through, so what is underneath is
@@ -1489,6 +1519,7 @@ function clearMovePreview() {
 
 function startMoveMode(booking) {
   moveTarget = booking;
+  clearPendingMove();
   moveBarWho.textContent = `Moving ${booking.customer_name} - ${booking.service_name}`;
   moveBar.hidden = false;
   document.body.classList.add('is-moving');
@@ -1497,7 +1528,7 @@ function startMoveMode(booking) {
 
 function cancelMoveMode() {
   moveTarget = null;
-  clearMovePreview();
+  clearPendingMove();
   moveBar.hidden = true;
   document.body.classList.remove('is-moving');
 }
@@ -1531,9 +1562,9 @@ function openMoveConfirm({ staffId, date, time }) {
 function closeRescheduleModal() {
   rescheduleModal.style.display = 'none';
   rescheduleBookingTarget = null;
-  // Backing out of the question leaves you still moving, so the preview goes
-  // but the bar stays and another spot can be picked.
-  clearMovePreview();
+  // Backing out of the question does not undo the placement: the preview and
+  // the tick stay, so the answer to "not there, then" is one more tap rather
+  // than starting the move again.
 }
 
 // Kept so the old call sites read the same. Nothing is blocked: the schedule
@@ -1541,6 +1572,14 @@ function closeRescheduleModal() {
 function checkRescheduleConflict() { return []; }
 
 document.getElementById('moveBarCancel').addEventListener('click', cancelMoveMode);
+moveBarConfirm.addEventListener('click', () => {
+  if (!pendingMove) return;
+  openMoveConfirm({
+    staffId: pendingMove.staffId,
+    date: pendingMove.date,
+    time: minutesToTimeStr(pendingMove.minutes),
+  });
+});
 rescheduleClose.addEventListener('click', closeRescheduleModal);
 rescheduleModal.addEventListener('click', (e) => { if (e.target === rescheduleModal) closeRescheduleModal(); });
 btnSaveReschedule.addEventListener('click', async () => {

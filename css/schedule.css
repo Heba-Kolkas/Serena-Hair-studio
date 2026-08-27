@@ -2312,3 +2312,23 @@ body.is-moving #gridWrap { padding-bottom: 5rem; }
     max-height: 72dvh;
   }
 }
+
+/* The tick: agreeing to where the appointment has been put. Separate from
+   placing it, so a slightly wrong row costs another tap rather than a
+   dismissed dialog. */
+.move-bar-confirm {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: #059669;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.move-bar-confirm:hover { background: #047857; }
+.move-bar-confirm[hidden] { display: none; }
