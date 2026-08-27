@@ -37,12 +37,16 @@ const EMAIL_FROM = Deno.env.get('BOOKING_FROM') ?? `${SALON.name} <bookings@stud
 const EMAIL_REPLY_TO = Deno.env.get('BOOKING_REPLY_TO') ?? SALON.email;
 
 // Sveve: Norwegian, billed in NOK. The sender name is capped at 11 characters
-// by the GSM standard, which "Studio Serena" (13) does not fit - hence
-// SerenaHair. Every message body also opens with the salon's full name,
-// because Norwegian networks do not always show an alphanumeric sender.
+// by the GSM standard, which "Studio Serena" (13) does not fit. The salon's
+// account already has SALONSERENA registered - exactly 11 - so that is what
+// goes out, rather than the SerenaHair this once assumed.
+//
+// Alphanumeric senders cannot receive replies. Every message body therefore
+// opens with the salon's full name and ends by giving the phone number, so a
+// client who wants to answer has somewhere to go.
 const SVEVE_USER = Deno.env.get('SVEVE_USER');
 const SVEVE_PASSWORD = Deno.env.get('SVEVE_PASSWORD');
-const SVEVE_SENDER = (Deno.env.get('SVEVE_SENDER') ?? 'SerenaHair').slice(0, 11);
+const SVEVE_SENDER = (Deno.env.get('SVEVE_SENDER') ?? 'SALONSERENA').slice(0, 11);
 
 // Nobody is texted between these hours. A cancellation at 23:40 is not worth
 // waking a client for, and a salon that does it looks careless. Email is not
