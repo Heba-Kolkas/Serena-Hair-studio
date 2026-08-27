@@ -728,6 +728,18 @@ function noteDotHtml(b, height, narrow) {
   return `<span class="sched-block-note-dot" title="${escHtml(b.notes)}" aria-label="This client has a note"></span>`;
 }
 
+/** The faint rules between a column's lanes. Drawn under the blocks, so a
+ *  half-width appointment reads as one of two lanes rather than as a block
+ *  that failed to fill its column. */
+function laneDividersHtml(lanes) {
+  if (!lanes || lanes < 2) return '';
+  let html = '';
+  for (let i = 1; i < lanes; i++) {
+    html += `<div class="sched-lane-line" style="left:${(100 / lanes) * i}%;"></div>`;
+  }
+  return html;
+}
+
 function blockHtml(b, gridStart) {
   const top = (timeToMinutes(b.start_time) - gridStart) * PX_PER_MIN;
   const height = Math.max((timeToMinutes(b.end_time) - timeToMinutes(b.start_time)) * PX_PER_MIN, 30);
@@ -802,15 +814,24 @@ function columnHtml(staff, bookings, blocked, gridStart, gridEnd) {
   const gridHeight = (gridEnd - gridStart) * PX_PER_MIN;
   // Hassan and Kani can both be double-booked by hand, so both columns keep
   // a second lane open. Anyone else gets full-width blocks.
+  const minLanes = staff.allow_manual_overlap ? 2 : 1;
   const positioned = layoutBlocks(
-    bookings, !!staff.allow_overlap_booking, true,
-    staff.allow_manual_overlap ? 2 : 1,
+    bookings, !!staff.allow_overlap_booking, true, minLanes,
   );
+  // How many appointments this column can hold side by side. A stylist who
+  // takes overlapping work has two lanes whether or not both are used today,
+  // and with only one booking in it the column looks like a plain single
+  // column - so the second lane is drawn, and it is clear there is room there
+  // rather than the block simply being oddly narrow.
+  const laneCount = positioned.length
+    ? Math.max(minLanes, ...positioned.map((b) => Math.round(100 / (b.widthPct || 100))))
+    : minLanes;
   return `
     <div class="sched-col" data-staff="${staff.id}">
       <div class="sched-col-header">${staff.name}</div>
       <div class="sched-col-body" style="height:${gridHeight}px;">
         ${hourLinesHtml(gridStart, gridEnd)}
+        ${laneDividersHtml(laneCount)}
         ${blocked.map((s) => unavailBlockHtml(s, gridStart)).join('')}
         ${!bookings.length && !blocked.length ? '<div class="sched-col-empty">No appointments</div>' : ''}
         ${positioned.map((b) => blockHtml(b, gridStart)).join('')}
@@ -1454,6 +1475,11 @@ function dayWindowFor(dateIso, staffId) {
 
 let reschedSelectedMin = null;
 
+// The day is drawn at this scale inside the move panel - tight enough that a
+// full shift fits without endless scrolling, loose enough that a 45-minute
+// appointment is still a real block rather than a line.
+const RESCHED_PX_PER_MIN = 1.1;
+
 function renderReschedSlots() {
   const el = document.getElementById('reschedSlots');
   if (!el) return;
@@ -1470,41 +1496,94 @@ function renderReschedSlots() {
   }
   const duration = timeToMinutes(fmtTime(rescheduleBookingTarget.end_time))
     - timeToMinutes(fmtTime(rescheduleBookingTarget.start_time));
-
-  const slots = [];
-  for (let m = win.open; m + duration <= win.close; m += 15) {
-    // Taken means this appointment, at this length, would land on something
-    // already there - not merely that the quarter hour itself is busy.
-    const clash = (rescheduleBusyRanges || []).some((r) => m < r.endMin && (m + duration) > r.startMin);
-    slots.push({ min: m, clash });
-  }
-  if (!slots.length) {
+  if (win.open + duration > win.close) {
     el.innerHTML = '<p class="resched-slots-empty">This appointment is longer than that day.</p>';
     return;
   }
-  // A long appointment on a busy day can leave nothing clear at all. Saying so
-  // is kinder than a wall of hatched boxes with no explanation - and the salon
-  // does allow an overlap to be saved on purpose, so it is a note, not a stop.
-  const freeCount = slots.filter((sl) => !sl.clash).length;
-  const note = freeCount === 0
-    ? `<p class="resched-slots-note"><i class="fa-solid fa-circle-info"></i> Nothing is free for ${fmtDuration(duration)} that day. You can still put it on a taken time - it will sit alongside.</p>`
-    : '';
 
-  el.innerHTML = note + slots.map((sl) => `
-    <button type="button" class="resched-slot${sl.clash ? ' taken' : ''}${sl.min === reschedSelectedMin ? ' chosen' : ''}"
-            data-min="${sl.min}" aria-pressed="${sl.min === reschedSelectedMin}">
-      ${minutesToTimeStr(sl.min)}
-    </button>`).join('');
+  const height = (win.close - win.open) * RESCHED_PX_PER_MIN;
+  const y = (min) => (min - win.open) * RESCHED_PX_PER_MIN;
 
-  el.querySelectorAll('.resched-slot').forEach((btn) => {
+  // The hours down the side, so the day can be read rather than counted.
+  let hours = '';
+  for (let m = Math.ceil(win.open / 60) * 60; m <= win.close; m += 60) {
+    hours += `<div class="rd-hour" style="top:${y(m)}px;"><span>${minutesToTimeStr(m)}</span></div>`;
+  }
+
+  // What is already there. The same information the busy list gives, but in
+  // the shape of the day, which is how a stylist decides where something fits.
+  const taken = (rescheduleBusyRanges || []).map((r) => {
+    const top = Math.max(0, y(r.startMin));
+    const h = Math.max(y(Math.min(r.endMin, win.close)) - top, 14);
+    return `<div class="rd-busy${r.isBlock ? ' is-block' : ''}" style="top:${top}px;height:${h}px;" title="${escHtml(r.label)}">
+        <span class="rd-busy-time">${minutesToTimeStr(r.startMin)}</span>
+        <span class="rd-busy-label">${escHtml(r.label)}</span>
+      </div>`;
+  }).join('');
+
+  // Every quarter hour it could start at, as an invisible target laid over
+  // the day. Tapping the day itself is the whole point - you put it where you
+  // want it rather than reading a time off a list and typing it in.
+  let targets = '';
+  for (let m = win.open; m + duration <= win.close; m += 15) {
+    const clash = (rescheduleBusyRanges || []).some((r) => m < r.endMin && (m + duration) > r.startMin);
+    targets += `<button type="button" class="rd-target${clash ? ' clash' : ''}" data-min="${m}"
+        style="top:${y(m)}px;height:${15 * RESCHED_PX_PER_MIN}px;"
+        aria-label="Move to ${minutesToTimeStr(m)}"></button>`;
+  }
+
+  // Where it would land, drawn as the appointment itself.
+  let ghost = '';
+  if (reschedSelectedMin != null) {
+    const gTop = y(reschedSelectedMin);
+    const gH = Math.max(duration * RESCHED_PX_PER_MIN, 18);
+    const clash = (rescheduleBusyRanges || []).some(
+      (r) => reschedSelectedMin < r.endMin && (reschedSelectedMin + duration) > r.startMin);
+    // Landing on something already booked, the appointment steps into the
+    // right-hand lane instead of covering it - the same thing the real grid
+    // does with two appointments at once. An opaque block over the top hid
+    // the very thing the stylist is trying to look at.
+    ghost = `<div class="rd-ghost${clash ? ' clash' : ''}" style="top:${gTop}px;height:${gH}px;">
+        <span class="rd-ghost-time">${minutesToTimeStr(reschedSelectedMin)} - ${minutesToTimeStr(reschedSelectedMin + duration)}</span>
+        <span class="rd-ghost-name">${escHtml(rescheduleBookingTarget.customer_name)}</span>
+      </div>`;
+  }
+
+  const anyFree = (() => {
+    for (let m = win.open; m + duration <= win.close; m += 15) {
+      if (!(rescheduleBusyRanges || []).some((r) => m < r.endMin && (m + duration) > r.startMin)) return true;
+    }
+    return false;
+  })();
+  const note = anyFree ? '' :
+    `<p class="resched-slots-note"><i class="fa-solid fa-circle-info"></i> Nothing is free for ${fmtDuration(duration)} that day. You can still put it on a taken time - it will sit alongside.</p>`;
+
+  el.innerHTML = note + `
+    <div class="rd-day" style="height:${height}px;">
+      <div class="rd-gutter">${hours}</div>
+      <div class="rd-lane">
+        ${taken}
+        ${targets}
+        ${ghost}
+      </div>
+    </div>`;
+
+  el.querySelectorAll('.rd-target').forEach((btn) => {
     btn.addEventListener('click', () => {
       reschedSelectedMin = Number(btn.dataset.min);
       rescheduleTime.value = minutesToTimeStr(reschedSelectedMin);
+      const keep = el.scrollTop;
       renderReschedSlots();
+      el.scrollTop = keep;
       checkRescheduleConflict();
       rescheduleStatus.textContent = '';
     });
   });
+
+  // Open on the appointment rather than at the top of the shift.
+  if (reschedSelectedMin != null) {
+    el.scrollTop = Math.max(0, y(reschedSelectedMin) - el.clientHeight / 3);
+  }
 }
 
 function openRescheduleModal(booking) {
