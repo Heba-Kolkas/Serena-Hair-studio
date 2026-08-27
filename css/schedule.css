@@ -2234,3 +2234,20 @@ body.modal-open { overflow: hidden; }
   line-height: 1.5;
   color: var(--sched-text-muted);
 }
+
+/* ── EXTENSIONS PANEL ──
+   The same generous width as the owner panel, but none of its workspace
+   behaviour. It used to carry the owner-panel class outright, which since the
+   panel became a flex column with overflow:hidden meant this screen was
+   clipped at the fold: the order form ran past Deposit with no way to scroll
+   to the rest of it, or to the Save button under that.
+
+   This one scrolls as a single column, which is what .appt-popup already does
+   on its own - so it needs a width and nothing else. */
+.appt-popup.ext-panel {
+  width: min(1080px, calc(100vw - 2.5rem));
+  max-width: none;
+}
+@media (max-width: 700px) {
+  .appt-popup.ext-panel { width: calc(100vw - 1rem); }
+}

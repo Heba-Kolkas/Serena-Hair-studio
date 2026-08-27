@@ -158,7 +158,12 @@
 
     <!-- EXTENSIONS ORDER BOOK -->
     <div id="extModal" class="appt-popup-overlay" style="display:none;">
-        <div class="appt-popup owner-panel">
+        <!-- ext-panel, not owner-panel. It borrowed that class for the wide
+             size, but owner-panel is now a workspace shell - a flex column
+             with overflow hidden and its own scrolling pane - and this screen
+             has neither, so it was simply clipped with no way to reach the
+             rest of the form. -->
+        <div class="appt-popup ext-panel">
             <button type="button" class="appt-popup-close" id="extClose" aria-label="Close">&times;</button>
             <h3 class="block-modal-title">Extensions</h3>
 
