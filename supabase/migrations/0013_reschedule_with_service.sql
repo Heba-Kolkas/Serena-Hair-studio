@@ -13,8 +13,12 @@
 -- booking, because the length is a fact about the service and must never be
 -- carried over from the old one.
 --
--- NOT YET APPLIED. This project's migrations from 0005 on are still waiting on
--- the Supabase project being resumed.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
+-- 0004's version took five arguments; this takes six. That is an overload,
+-- not a replacement, so the bare GRANT below would be ambiguous with both
+-- present. The old signature goes first.
+drop function if exists admin_reschedule_booking(text, uuid, date, time, uuid);
+
 create or replace function admin_reschedule_booking(
   p_pin text,
   p_booking_id uuid,

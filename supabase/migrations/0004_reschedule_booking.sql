@@ -1,12 +1,6 @@
 -- Lets the Owner Panel "Move" a booking to a new date/time (and optionally a
 -- different stylist) instead of only being able to Confirm/Complete/Cancel.
--- NOT YET APPLIED — same status as 0001-0003, run this once those are in.
---
--- Deliberately does not re-run book_appointment's full conflict/business-hours
--- validation: this is an owner override, not a public booking, and the owner
--- can already see the whole day's grid before deciding where to move someone.
--- It does still recompute end_time from the service's real duration so the
--- moved booking doesn't end up with a stale/mismatched length.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 create or replace function admin_reschedule_booking(
   p_pin text, p_booking_id uuid, p_date date, p_start_time time, p_staff_id uuid default null
 ) returns bookings language plpgsql security definer set search_path = public as $$

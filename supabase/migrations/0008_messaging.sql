@@ -1,17 +1,5 @@
 -- ── MESSAGES: THE LEDGER AND THE REMINDER QUEUE ──
--- NOT YET APPLIED — run after 0001-0007.
---
--- Two problems this solves, both of which cost real money.
---
--- 1. A reminder job runs on a schedule. Schedules get retried, redeployed and
---    occasionally run twice. Without a record of what has already gone out, the
---    second run texts every client again — they are annoyed and the salon pays
---    twice. sent_messages makes a repeat physically impossible rather than
---    unlikely: the unique index rejects it.
---
--- 2. "Did she get told?" currently has no answer. Now it does, per client, per
---    message, per channel, with the provider's own id for anything that has to
---    be chased.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 create table sent_messages (
   id uuid primary key default gen_random_uuid(),

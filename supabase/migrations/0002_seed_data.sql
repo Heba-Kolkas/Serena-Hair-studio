@@ -1,5 +1,5 @@
 -- Seed data for the booking schema (0001_booking_schema.sql).
--- NOT YET APPLIED — see note at the top of 0001. Run this once, right after 0001.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 -- ── BUSINESS HOURS (real data — Mon-Fri 11:00-17:30, Sat/Sun closed) ──
 insert into business_hours (weekday, open_time, close_time, closed) values

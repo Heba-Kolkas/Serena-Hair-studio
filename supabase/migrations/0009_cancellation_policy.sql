@@ -1,34 +1,5 @@
 -- ── CANCELLATION POLICY ──
--- NOT YET APPLIED — run after 0001-0008.
---
--- Cancel more than 48 hours ahead and it costs nothing. Inside 48 hours, half
--- the price is owed.
---
--- THE DESIGN DECISION WORTH ARGUING WITH
--- The obvious implementation is to refuse a late cancellation online — "too
--- late, ring the salon". Do that and a good number of people simply do not
--- ring. They say nothing and do not turn up, and the salon loses the whole
--- slot with no warning instead of half of it with two days' notice.
---
--- So a late cancellation is always allowed to go through. What changes is that
--- it is recorded, priced, and the client is told the fee before she confirms.
--- The salon ends up knowing about the empty slot in time to sell it, which is
--- worth more than the fee itself.
---
--- HOW THE FEE IS ACTUALLY COLLECTED
--- Not by invoice. An invoice sent to a consumer after a no-show gets paid by
--- some people and ignored by others, and chasing 1 875 kroner costs about what
--- the debt is worth while turning a client into an enemy.
---
--- Instead the fee becomes an outstanding balance on the client, and the next
--- time she is in the chair it goes on the bill. The salon already has a card
--- terminal and she already comes back — so collection uses the one piece of
--- leverage that still exists after she has gone home, which is her next visit.
--- No payment provider, nothing to integrate, nothing to wait for.
---
--- The salon can waive it in one click. Most of the time it should: the point of
--- the policy is that people stop cancelling late, not that the salon collects
--- fees.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 alter table bookings add column cancelled_at timestamptz;
 -- Whether it fell inside the notice period. Stored rather than recalculated:

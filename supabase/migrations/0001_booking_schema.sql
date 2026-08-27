@@ -1,7 +1,5 @@
 -- Studio Serena booking system schema.
--- NOT YET APPLIED — the studio-serena Supabase project is paused pending a Pro
--- upgrade. Apply via Supabase MCP `apply_migration` (or `supabase db push`)
--- once the project is restored. Seed data lives in 0002_seed_data.sql.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 -- ── SERVICES ──
 create table services (

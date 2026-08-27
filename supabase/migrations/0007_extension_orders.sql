@@ -1,19 +1,5 @@
 -- ── THE EXTENSIONS ORDER BOOK ──
--- NOT YET APPLIED — run after 0001-0006.
---
--- Extensions are bought in before they are fitted, and the gap between the two
--- is where the work goes wrong: a box arrives with four clients' hair in it and
--- nobody remembers whose is whose, or a client waits three weeks because the
--- person who took her consultation was off when the delivery came.
---
--- So the order is a record in its own right, not a note on a booking. It
--- exists from the consultation, before there is any appointment to attach it
--- to, and it survives being fitted so last time's colour and length can be
--- looked up when she comes back.
---
--- Colour, length and quantity are free text on purpose. Shades are named
--- differently by every supplier, and an order must never be blocked because a
--- code is not in a dropdown yet.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 create table extension_orders (
   id uuid primary key default gen_random_uuid(),

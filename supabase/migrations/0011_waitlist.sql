@@ -1,32 +1,5 @@
 -- ── THE WAITING LIST ──
--- NOT YET APPLIED — run after 0001-0010.
---
--- Two jobs, and the second one is the bigger money.
---
---   1. A cancellation frees a slot. Somebody wants it.
---   2. A four-hour block is still unsold two days out, or an hour-long gap is
---      still unsold the day before. Nobody cancelled — it simply never sold,
---      and without a list there is nobody to offer it to.
---
--- HOW AN OFFER WORKS, AND WHAT IT IS NOT
--- Three people are told at a time, and two hours later three more, and so on.
--- Nobody is ever locked out: an earlier batch can still book the slot for as
--- long as it is free. The slot is NOT held for anyone — first to book gets it,
--- and the messages say so plainly, because a client who thinks a time is
--- reserved for her and finds it gone is angrier than one who was told it was a
--- race.
---
--- WHO IS SKIPPED
--- Anyone with a confirmed booking within seven days of the open slot. Moving a
--- client from Thursday to Tuesday earns the salon nothing — it relocates the
--- same money and leaves a Thursday hole to refill at short notice. Clients
--- booked further out are kept: bringing one forward fills an urgent gap and
--- frees a distant slot that has weeks to resell.
---
--- WHO IS OFFERED FIRST
--- Whoever fills the most of the gap. A four-hour cancellation goes to someone
--- wanting colour before it goes to someone wanting a blowdry — otherwise a 680
--- NOK booking swallows a 3 750 NOK hole. Ties break on who has waited longest.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 create table waitlist_entries (
   id uuid primary key default gen_random_uuid(),

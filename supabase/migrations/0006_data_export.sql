@@ -1,20 +1,5 @@
 -- ── EXPORTING THE BOOKS ──
--- NOT YET APPLIED — run after 0001-0005.
---
--- Two exports, not one, and the split is deliberate.
---
--- The export the owner reaches for every month is the accounting one, and
--- bookkeeping needs no names: what was sold, when, by whom, for how much. So
--- that file carries no personal data at all, which means a copy sitting in a
--- Downloads folder or emailed to an accountant is not a personal-data
--- incident waiting to happen. It is the safest file precisely because it is
--- the one that gets handled most.
---
--- The client export exists because occasionally it is genuinely needed. It
--- carries names, phone numbers and emails, so it writes a line to
--- activity_log every time it runs — not to police the owner, but so that if
--- a client ever asks "who has my data and when was it touched", there is an
--- answer.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 -- activity_log's action list is a closed check constraint, so the new action
 -- has to be admitted before it can be written.

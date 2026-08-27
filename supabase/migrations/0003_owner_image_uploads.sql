@@ -1,7 +1,6 @@
 -- Lets the Owner Panel (schedule.html) upload real photo files for Services
 -- and Staff, instead of the owner having to paste an already-hosted image
--- link. NOT YET APPLIED — same status as 0001/0002, run this once Supabase
--- is restored and the other two have been applied.
+-- link. APPLIED 27 August 2026.
 --
 -- Assumes the 'gallery' storage bucket already exists (created earlier via
 -- the Supabase dashboard — it's already used read-only by

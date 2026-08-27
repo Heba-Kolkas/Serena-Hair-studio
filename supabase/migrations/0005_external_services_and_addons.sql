@@ -28,7 +28,7 @@ set check_function_bodies = off;
 --      per-service offer list, and a snapshot line-item table, plus an
 --      expected_total on the booking itself.
 --
--- NOT YET APPLIED — same status as 0001-0004, run this once those are in.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 -- ═══════════════════════════════════════════════════════════════════
 --  PART 1 — EXTERNALLY BOOKED SERVICES

@@ -1,21 +1,5 @@
 -- ── INVOICES FOR MISSED APPOINTMENTS ──
--- NOT YET APPLIED — run after 0001-0011.
---
--- The salon does not store card details and does not want to. A missed or
--- late-cancelled appointment produces an invoice instead: an email with the
--- amount, a reference, and a way to pay it.
---
--- DELIBERATELY PROVIDER-AGNOSTIC
--- Written so it works before any payment provider exists. Today the email can
--- carry a Vipps number and a reference, the client pays in ten seconds, and
--- whoever sees the money marks it paid here. When a hosted checkout is set up
--- later, pay_url is filled in and the same email grows a button — nothing else
--- in this file changes, and no invoice already sent becomes wrong.
---
--- WHAT THIS DOES NOT DO
--- It does not guarantee payment, and nothing built without holding money or a
--- card ever could. It makes paying easy and being chased polite, which is what
--- actually gets most invoices settled.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 create table invoices (
   id uuid primary key default gen_random_uuid(),

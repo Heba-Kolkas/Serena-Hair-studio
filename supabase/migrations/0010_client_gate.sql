@@ -1,19 +1,5 @@
 -- ── "PLEASE CALL US TO BOOK" ──
--- NOT YET APPLIED — run after 0001-0009.
---
--- The one piece of leverage that survives after a client has gone home is
--- access to the calendar. Money cannot be taken from someone who has left, but
--- a booking she wants can be made conditional.
---
--- DELIBERATELY MANUAL. The obvious version flips automatically after two
--- no-shows, and it would be wrong: the owner knows which client had a genuinely
--- terrible fortnight and which is taking the mickey, and a database counting to
--- two knows neither. So the panel shows who the candidates are and the owner
--- decides. The report suggests; a person judges.
---
--- Scoped to the long services only. A client who no-showed a four-hour colour
--- can still book a blowdry online — the point is to stop the salon losing whole
--- afternoons, not to punish her out of the business.
+-- APPLIED 27-28 August 2026 to the studio-serena project.
 
 create table gated_clients (
   -- Phone, because it is the one thing a client keeps across email addresses
