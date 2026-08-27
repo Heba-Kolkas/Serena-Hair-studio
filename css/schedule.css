@@ -2169,15 +2169,15 @@ body.modal-open { overflow: hidden; }
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(10,10,20,0.22);
 }
-/* Landing on something already there. Allowed - the salon does double up on
-   purpose - but it should not be possible to do by accident, and it must not
-   hide what it is landing on. It moves into the right-hand lane and leaves
-   the booked one showing on the left, which is exactly what the real grid
-   does when two appointments share an hour. */
+/* Sitting alongside something already booked. It moves into the right-hand
+   lane and leaves the booked one showing on the left, which is exactly what
+   the real grid does when two appointments share an hour.
+
+   Same colour as any other placement - it is not an alarm. The salon doubles
+   up on purpose, and with the whole day on screen this is a choice being made
+   with everything in view, not a mistake to be caught. */
 .rd-ghost.clash {
   left: 50%;
-  background: #b45309;
-  box-shadow: 0 4px 12px rgba(180,83,9,0.3);
 }
 /* The lane it steps out of, so the split is visible rather than implied. */
 .rd-ghost.clash::before {
@@ -2214,21 +2214,6 @@ body.modal-open { overflow: hidden; }
 @media (max-width: 560px) {
   .resched-grid { grid-template-columns: minmax(0, 1fr); }
   .resched-slots { grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr)); }
-}
-/* Shown when a long appointment has nowhere clear to go that day. */
-.resched-slots-note {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 0.45rem;
-  margin: 0 0 0.5rem;
-  padding: 0.5rem 0.6rem;
-  border-radius: 9px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #92400e;
-  font-size: 0.74rem;
-  line-height: 1.5;
-  text-align: left;
 }
 
 /* ── A NOTE ON A BOOKING ──

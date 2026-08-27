@@ -1421,26 +1421,26 @@ const rescheduleDatePicker = wireOwnerDatePicker({
 async function loadRescheduleAvailability() {
   const date = rescheduleDatePicker.value;
   const staffId = rescheduleStaffSelect.value;
-  if (!date || !staffId) { rescheduleAvailability.innerHTML = ''; rescheduleBusyRanges = []; checkRescheduleConflict(); return; }
-  rescheduleAvailability.innerHTML = '<p class="reschedule-availability-title">Checking availability…</p>';
+  // The day itself is the only thing shown now. It used to be drawn twice -
+  // once as the day, and again underneath as an "already busy" list with a
+  // warning under that - which is three tellings of one fact. Someone looking
+  // at the day can see what is on it, so there is nothing left to warn about.
+  rescheduleAvailability.innerHTML = '';
+  if (!date || !staffId) { rescheduleBusyRanges = []; renderReschedSlots(); return; }
+  const slots = document.getElementById('reschedSlots');
+  if (slots) slots.innerHTML = '<p class="resched-slots-empty">Loading that day…</p>';
   rescheduleBusyRanges = await fetchBusyRangesFor(date, staffId, rescheduleBookingTarget?.id);
-  renderBusyRangesInto(rescheduleAvailability, rescheduleBusyRanges);
   renderReschedSlots();
-  checkRescheduleConflict();
 }
 
 // Returns the current conflict list (not just a side effect) so the Save
 // handler can independently re-verify at the moment of saving — belt and
 // suspenders on top of the disabled button, so a stale/bypassed disabled
 // state can never let a double-booking through.
-function checkRescheduleConflict() {
-  const time = rescheduleTime.value;
-  if (!time || !rescheduleBookingTarget) return markConflictsIn(rescheduleAvailability, [], 0, 0, btnSaveReschedule);
-  const duration = timeToMinutes(fmtTime(rescheduleBookingTarget.end_time)) - timeToMinutes(fmtTime(rescheduleBookingTarget.start_time));
-  const newStart = timeToMinutes(time);
-  const staff = currentStaff.find((s) => s.id === rescheduleStaffSelect.value);
-  return markConflictsIn(rescheduleAvailability, rescheduleBusyRanges, newStart, newStart + duration, btnSaveReschedule);
-}
+// Kept as a no-op so the call sites read the same. Nothing is blocked here any
+// more: the day is on screen, so choosing a time that sits alongside another
+// appointment is a decision being made deliberately, not a mistake to catch.
+function checkRescheduleConflict() { return []; }
 
 // ── PICKING THE NEW TIME OFF THE DAY ITSELF ──
 // Moving an appointment used to mean typing into <input type="time">, which
@@ -1539,26 +1539,17 @@ function renderReschedSlots() {
     const gH = Math.max(duration * RESCHED_PX_PER_MIN, 18);
     const clash = (rescheduleBusyRanges || []).some(
       (r) => reschedSelectedMin < r.endMin && (reschedSelectedMin + duration) > r.startMin);
-    // Landing on something already booked, the appointment steps into the
-    // right-hand lane instead of covering it - the same thing the real grid
-    // does with two appointments at once. An opaque block over the top hid
-    // the very thing the stylist is trying to look at.
+    // Sitting alongside something already booked, the appointment steps into
+    // the right-hand lane instead of covering it - the same thing the real
+    // grid does with two at once. Not a warning: it is simply where it would
+    // go, and both are visible so the choice is an informed one.
     ghost = `<div class="rd-ghost${clash ? ' clash' : ''}" style="top:${gTop}px;height:${gH}px;">
         <span class="rd-ghost-time">${minutesToTimeStr(reschedSelectedMin)} - ${minutesToTimeStr(reschedSelectedMin + duration)}</span>
         <span class="rd-ghost-name">${escHtml(rescheduleBookingTarget.customer_name)}</span>
       </div>`;
   }
 
-  const anyFree = (() => {
-    for (let m = win.open; m + duration <= win.close; m += 15) {
-      if (!(rescheduleBusyRanges || []).some((r) => m < r.endMin && (m + duration) > r.startMin)) return true;
-    }
-    return false;
-  })();
-  const note = anyFree ? '' :
-    `<p class="resched-slots-note"><i class="fa-solid fa-circle-info"></i> Nothing is free for ${fmtDuration(duration)} that day. You can still put it on a taken time - it will sit alongside.</p>`;
-
-  el.innerHTML = note + `
+  el.innerHTML = `
     <div class="rd-day" style="height:${height}px;">
       <div class="rd-gutter">${hours}</div>
       <div class="rd-lane">
@@ -1605,12 +1596,7 @@ btnSaveReschedule.addEventListener('click', async () => {
   if (!rescheduleBookingTarget) return;
   const date = rescheduleDatePicker.value;
   const time = rescheduleTime.value;
-  if (!date || !time) { rescheduleStatus.textContent = 'Pick a date and time.'; rescheduleStatus.style.color = '#dc2626'; return; }
-  if (checkRescheduleConflict().length) {
-    rescheduleStatus.textContent = 'That time overlaps something already booked - pick another time.';
-    rescheduleStatus.style.color = '#dc2626';
-    return;
-  }
+  if (!date || !time) { rescheduleStatus.textContent = 'Pick a day, then a time on it.'; rescheduleStatus.style.color = '#dc2626'; return; }
   rescheduleStatus.textContent = 'Saving…'; rescheduleStatus.style.color = 'var(--sched-text-muted)';
   const { error } = await rescheduleBookingAdmin({
     pin: currentPin, bookingId: rescheduleBookingTarget.id, date, startTime: time, staffId: rescheduleStaffSelect.value,
