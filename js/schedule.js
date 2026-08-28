@@ -7,6 +7,7 @@ import {
   fetchBookingsAdmin, updateBookingStatusAdmin, rescheduleBookingAdmin, completeBookingAdmin,
   upsertBusinessHoursAdmin, addBlockedSlotAdmin, removeBlockedSlotAdmin,
   fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage, fetchSmsBalance,
+  waiveCancellationFee, unwaiveCancellationFee, setCancellationFee,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
   markExtensionsNotified, setExtensionOrderStatus, fetchExtensionHistory,
@@ -3077,6 +3078,47 @@ async function renderOwnerBookingsTab() {
   const searchClear = document.getElementById('admBkSearchClear');
   let loadedRows = [];
 
+  /** The fee on a late cancellation or a no-show, and what can be done about
+   *  it. Priced automatically at half the booking, but whether to charge it -
+   *  and how much - is a judgement about a particular client, so the waiver
+   *  and a different figure are both one press away.
+   *
+   *  Shown only where there is a fee to decide about; an ordinary booking
+   *  carries none of this. */
+  function cancellationFeeHtml(b) {
+    if (!b.late_cancellation && b.status !== 'no_show') return '';
+    const why = b.status === 'no_show' ? 'Did not turn up' : 'Cancelled late';
+    const notice = (b.hours_notice != null && b.status !== 'no_show')
+      ? ' &middot; ' + Math.max(0, Math.round(b.hours_notice)) + 'h notice' : '';
+
+    if (b.cancellation_fee_waived) {
+      return '<div class="owner-fee-box waived">'
+        + '<span><i class="fa-solid fa-circle-check"></i> ' + why + notice
+        + ' &middot; <strong>not charged</strong></span>'
+        + '<button type="button" class="owner-fee-btn" data-fee-unwaive="' + escHtml(b.id) + '">Charge after all</button>'
+        + '</div>';
+    }
+    if (b.cancellation_fee == null) {
+      // No fixed price means no half to take. Saying so beats an empty space.
+      return '<div class="owner-fee-box none">'
+        + '<span><i class="fa-solid fa-circle-info"></i> ' + why + notice
+        + ' &middot; no set price, so no fee was worked out</span>'
+        + '<button type="button" class="owner-fee-btn" data-fee-set="' + escHtml(b.id) + '">Set an amount</button>'
+        + '</div>';
+    }
+    const paid = b.cancellation_fee_settled;
+    return '<div class="owner-fee-box' + (paid ? ' settled' : '') + '">'
+      + '<span><i class="fa-solid fa-triangle-exclamation"></i> ' + why + notice
+      + ' &middot; <strong>' + Number(b.cancellation_fee).toLocaleString('nb-NO') + ' kr</strong> '
+      + (paid ? 'paid' : 'owed') + '</span>'
+      + (paid ? '' :
+          '<span class="owner-fee-actions">'
+          + '<button type="button" class="owner-fee-btn" data-fee-set="' + escHtml(b.id) + '">Change amount</button>'
+          + '<button type="button" class="owner-fee-btn waive" data-fee-waive="' + escHtml(b.id) + '">Do not charge</button>'
+          + '</span>')
+      + '</div>';
+  }
+
   function renderList() {
     const list = document.getElementById('admBkList');
     const countLine = document.getElementById('admBkCount');
@@ -3108,6 +3150,7 @@ async function renderOwnerBookingsTab() {
           ${b.status === 'completed' && b.amount_charged != null
             ? `<div class="owner-booking-amount">${Number(b.amount_charged).toLocaleString('en-US')} NOK charged${expectedLabel(b) ? ` · expected ${expectedLabel(b)}` : ''}</div>`
             : (expectedLabel(b) ? `<div class="owner-booking-amount owner-booking-expected">Expected ${expectedLabel(b)}</div>` : '')}
+          ${cancellationFeeHtml(b)}
           ${actions.length ? `
           <div class="owner-booking-actions">
             ${actions.map((a) => `<button type="button" class="owner-action-btn ${a.cls}" data-type="${a.type}"${a.status ? ` data-status="${a.status}"` : ''}><i class="fa-solid ${a.icon}"></i> ${a.label}</button>`).join('')}
@@ -3116,6 +3159,36 @@ async function renderOwnerBookingsTab() {
       `;
     });
     list.innerHTML = html;
+    list.querySelectorAll('[data-fee-waive]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const { error } = await waiveCancellationFee({ pin: currentPin, bookingId: btn.dataset.feeWaive });
+        if (error) { alert('Could not save: ' + error.message); btn.disabled = false; return; }
+        load();
+      });
+    });
+    list.querySelectorAll('[data-fee-unwaive]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const { error } = await unwaiveCancellationFee({ pin: currentPin, bookingId: btn.dataset.feeUnwaive });
+        if (error) { alert('Could not save: ' + error.message); btn.disabled = false; return; }
+        load();
+      });
+    });
+    list.querySelectorAll('[data-fee-set]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        // Zero is a real answer here - it waives the fee - so it is offered
+        // rather than making the owner guess which button means nothing.
+        const raw = prompt('What should she be charged, in kroner? Enter 0 to charge nothing.');
+        if (raw === null) return;
+        const amount = parseFloat(String(raw).replace(',', '.'));
+        if (!Number.isFinite(amount) || amount < 0) { alert('Enter a number of zero or more.'); return; }
+        btn.disabled = true;
+        const { error } = await setCancellationFee({ pin: currentPin, bookingId: btn.dataset.feeSet, amount });
+        if (error) { alert('Could not save: ' + error.message); btn.disabled = false; return; }
+        load();
+      });
+    });
     list.querySelectorAll('.owner-booking-card').forEach((card) => {
       card.querySelectorAll('.owner-action-btn').forEach((btn) => {
         btn.addEventListener('click', async () => {

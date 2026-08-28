@@ -551,6 +551,19 @@ export async function fetchSmsBalance(pin) {
   }
 }
 
+// Whether a late cancellation is actually charged, and how much. Priced
+// automatically at half the booking; these three are the owner overriding
+// that for a particular client.
+export async function waiveCancellationFee({ pin, bookingId }) {
+  return supabase.rpc('admin_waive_cancellation_fee', { p_pin: pin, p_booking_id: bookingId });
+}
+export async function unwaiveCancellationFee({ pin, bookingId }) {
+  return supabase.rpc('admin_unwaive_cancellation_fee', { p_pin: pin, p_booking_id: bookingId });
+}
+export async function setCancellationFee({ pin, bookingId, amount }) {
+  return supabase.rpc('admin_set_cancellation_fee', { p_pin: pin, p_booking_id: bookingId, p_amount: amount });
+}
+
 export async function fetchBookingsInRangeAdmin({ pin, dateFrom, dateTo, staffId }) {
   return supabase.rpc('admin_get_bookings_in_range', {
     p_pin: pin, p_date_from: dateFrom, p_date_to: dateTo, p_staff_id: staffId || null,

@@ -20,18 +20,45 @@ function fmtDate(dateStr, timeStr) {
     ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
+// Escapes anything the client typed. Her own notes come back to her here, and
+// a booking is not a place to trust a string just because she wrote it.
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+const STATUS_WORDS = {
+  pending: 'Awaiting confirmation', confirmed: 'Confirmed', arrived: 'Arrived',
+  completed: 'Completed', cancelled: 'Cancelled', no_show: 'Missed',
+};
+
 function cardHtml(b, cancellable) {
+  // The names come from the RPC now. It used to read b.services.name and
+  // b.staff.name - nested objects the query never returned - so every card
+  // said "Appointment" with no service and no stylist on it.
+  const price = b.amount_charged != null
+    ? `<span class="appt-card-paid">Paid ${Number(b.amount_charged).toLocaleString('nb-NO')} kr</span>`
+    : (b.expected_total != null
+        ? `<span class="appt-card-price">${b.expected_total_is_estimate ? 'From ' : ''}${Number(b.expected_total).toLocaleString('nb-NO')} kr</span>`
+        : '');
+
   return `
-    <div class="appt-card" data-id="${b.id}">
+    <div class="appt-card" data-id="${esc(b.id)}">
       <div class="appt-card-info">
-        <div class="appt-card-service">${b.services ? b.services.name : 'Appointment'}</div>
-        <div class="appt-card-meta">${fmtDate(b.date, b.start_time)}${b.staff ? ' · ' + b.staff.name : ''}</div>
-        <span class="appt-card-status ${b.status}">${b.status}</span>
-        ${b.amount_charged != null
-          ? `<span class="appt-card-paid">Paid ${Number(b.amount_charged).toLocaleString('nb-NO')} NOK</span>`
-          : ''}
+        <div class="appt-card-service">${esc(b.service_name || 'Appointment')}</div>
+        <div class="appt-card-meta">
+          ${fmtDate(b.date, b.start_time)}${b.staff_name ? ' &middot; with ' + esc(b.staff_name) : ''}
+        </div>
+        ${b.addons ? `<div class="appt-card-addons">+ ${esc(b.addons)}</div>` : ''}
+        ${b.notes ? `<div class="appt-card-notes"><i class="fa-solid fa-note-sticky"></i> ${esc(b.notes)}</div>` : ''}
+        <div class="appt-card-tags">
+          <span class="appt-card-status ${esc(b.status)}">${esc(STATUS_WORDS[b.status] || b.status)}</span>
+          ${price}
+          ${b.booking_ref ? `<span class="appt-card-ref">Ref ${esc(b.booking_ref)}</span>` : ''}
+        </div>
       </div>
-      ${cancellable ? `<button class="appt-cancel-btn" data-cancel="${b.id}">Cancel</button>` : ''}
+      ${cancellable ? `<button class="appt-cancel-btn" data-cancel="${esc(b.id)}">Cancel</button>` : ''}
     </div>
   `;
 }

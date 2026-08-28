@@ -88,3 +88,39 @@
   color: var(--greige, #9f948e);
   font-variant-numeric: tabular-nums;
 }
+
+/* The booking, said in full: what she booked, with whom, what it costs, and
+   the reference. It used to say only "Appointment" and a date. */
+.appt-card-addons {
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  color: var(--taupe, #9a8577);
+}
+.appt-card-notes {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(253, 230, 138, 0.4);
+  color: #8a5209;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+.appt-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+.appt-card-price,
+.appt-card-ref {
+  font-size: 0.74rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 50px;
+  background: var(--warmgrey, #e9e3db);
+  color: var(--espresso, #3f3632);
+}
+.appt-card-ref { font-variant-numeric: tabular-nums; opacity: 0.75; }

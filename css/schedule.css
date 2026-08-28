@@ -2361,3 +2361,28 @@ body.is-moving #gridWrap { padding-bottom: 5rem; }
    not be going out, and that is the same problem to the salon. */
 .sms-balance.out,
 .sms-balance.error  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+/* ── THE FEE ON A LATE CANCELLATION ──
+   Shown only where there is one to decide about. Amber while it is owed,
+   quiet once waived or paid - the colour says whether anything is still open
+   before the words are read. */
+.owner-fee-box {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  justify-content: space-between;
+  margin-top: 0.5rem; padding: 0.5rem 0.7rem;
+  border-radius: 10px; border: 1px solid #fde68a; background: #fffbeb;
+  color: #92400e; font-size: 0.78rem; line-height: 1.45; text-align: left;
+}
+.owner-fee-box.waived,
+.owner-fee-box.settled,
+.owner-fee-box.none {
+  border-color: var(--sched-border); background: var(--sched-bg); color: var(--sched-text-muted);
+}
+.owner-fee-actions { display: flex; gap: 0.4rem; flex: none; }
+.owner-fee-btn {
+  padding: 0.3rem 0.7rem; border-radius: 50px;
+  border: 1px solid currentColor; background: transparent; color: inherit;
+  font-family: var(--font-body); font-size: 0.72rem; cursor: pointer; white-space: nowrap;
+}
+.owner-fee-btn:hover { background: rgba(0,0,0,0.06); }
+.owner-fee-btn.waive { border-color: #047857; color: #047857; }
