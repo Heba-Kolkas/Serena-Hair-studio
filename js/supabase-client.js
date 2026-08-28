@@ -45,6 +45,13 @@ export async function fetchAllStaffServices() {
   return supabase.from('staff_services').select('staff_id, service_id');
 }
 
+// Which (stylist, service, weekday) pairs run at fixed times, and what those
+// times are. The wizard has to honour the same rows book_appointment_core
+// checks, or it offers slots the booking will then refuse.
+export async function fetchStaffServiceSchedule() {
+  return supabase.from('staff_service_schedule').select('staff_id, service_id, weekday, start_time');
+}
+
 // How far ahead bookings are accepted. A rolling window from today, so the
 // wizard asks each time rather than caching a date that would go stale.
 export async function fetchBookingHorizonDays() {

@@ -2,6 +2,7 @@ import {
   fetchActiveServices,
   fetchServiceAddons,
   fetchAllStaffServices,
+  fetchStaffServiceSchedule,
   fetchStaffForService,
   fetchBusinessHours,
   fetchBookingHorizonDays,
@@ -112,7 +113,37 @@ const GAP_FILL_BOUNDARY = '15:00';
 // the end of computeSlotsFor for why the list is deliberately short.
 const POLICY_VISIBLE_SLOTS = 3;
 
+// The real staff_service_schedule rows, once loaded: "staffId|serviceId|weekday"
+// -> ['13:00', '16:30']. Empty until the fetch lands, and empty forever if the
+// database is unreachable, which is when the hardcoded fallback below applies.
+const staffSchedule = new Map();
+
+function loadStaffScheduleRows(rows) {
+  staffSchedule.clear();
+  (rows || []).forEach((r) => {
+    const key = `${r.staff_id}|${r.service_id}|${r.weekday}`;
+    const t = String(r.start_time).slice(0, 5);
+    const list = staffSchedule.get(key);
+    if (list) list.push(t); else staffSchedule.set(key, [t]);
+  });
+  staffSchedule.forEach((list) => list.sort());
+}
+
+/** When a stylist may start this service on this weekday.
+ *
+ *  Reads the real staff_service_schedule rows first. The constants below it
+ *  match on fallback ids - 'staff-1', 'svc-ext-50' - which are never the ids
+ *  the database returns, so with Supabase live every one of those tests was
+ *  false and the wizard fell through to the open grid. Hassan's two slots
+ *  stopped applying to anything, which is why extensions offered every time
+ *  of day while the booking itself still refused all but two of them. */
 function getStaffFixedTimes(svc, staffId, weekday) {
+  const real = staffSchedule.get(`${staffId}|${svc.id}|${weekday}`);
+  if (real && real.length) return real;
+  // Rows exist for this pair but not this weekday: the stylist does not do it
+  // that day at all, rather than doing it at any hour.
+  if (staffScheduleHasPair(staffId, svc.id)) return [];
+
   if (staffId === 'staff-1') {
     if (HASSAN_UPDO_SERVICES.has(svc.id)) return HASSAN_UPDO_TIMES;
     if (HASSAN_SLOT_SERVICES.has(svc.id)) return HASSAN_SLOT_TIMES;
@@ -121,6 +152,12 @@ function getStaffFixedTimes(svc, staffId, weekday) {
   // Kani has no fixed times of her own: her day policy shapes everything,
   // updos included.
   return svc.fixed_times;
+}
+
+function staffScheduleHasPair(staffId, serviceId) {
+  const prefix = `${staffId}|${serviceId}|`;
+  for (const key of staffSchedule.keys()) if (key.startsWith(prefix)) return true;
+  return false;
 }
 
 function getStaffCloseOverride(staffId, weekday) {
@@ -460,10 +497,14 @@ async function loadServices() {
   // the wizard its add-ons, never its real service list.
   if (data !== FALLBACK_SERVICES) {
     try {
-      const [addonRes, ssRes] = await Promise.all([
+      const [addonRes, ssRes, schedRes] = await Promise.all([
         fetchServiceAddons(),
         fetchAllStaffServices(),
+        fetchStaffServiceSchedule(),
       ]);
+
+      // The fixed start times the booking rules actually enforce.
+      if (!schedRes.error && schedRes.data) loadStaffScheduleRows(schedRes.data);
 
       // Who performs what. An add-on that is really a service in disguise -
       // extensions - carries requires_service_id, and only a stylist who does
