@@ -448,7 +448,11 @@ body { background: var(--sched-bg); }
 .day-strip {
   display: flex;
   overflow-x: auto;
-  scroll-snap-type: x proximity;
+  /* No scroll-snap here. With `scroll-snap-align: start` on the cells, the
+     last snap position pins a cell to the LEFT edge, so scrolling to the end
+     of the ribbon left the final three days on the left and the rest of the
+     strip blank. Without snapping the scroller clamps normally and the last
+     day sits flush against the right edge, with no empty tail. */
   -webkit-overflow-scrolling: touch;
   margin-bottom: 0.25rem;
   background: var(--sched-surface);
@@ -461,7 +465,6 @@ body { background: var(--sched-bg); }
 }
 .day-strip::-webkit-scrollbar { display: none; }
 .day-cell {
-  scroll-snap-align: start;
   /* grow to fill extra width on wide screens; never shrink below the base
      size, so a narrow screen scrolls instead of squeezing the cells. */
   flex: 1 0 2.9rem;

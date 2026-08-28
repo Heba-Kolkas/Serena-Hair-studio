@@ -545,15 +545,36 @@ document.addEventListener('click', closeMoreMenu);
 // Both arrows only ever scroll the ribbon. They used to change which day was
 // selected when they hit an edge, so pressing "later" twice could land you on
 // a day a fortnight away that you had never asked for.
+// Load the next stretch of days BEFORE the ribbon runs out, not once it has.
+// Waiting for the exact end meant one press scrolled to a dead stop and only
+// the press after that fetched more days, so "later" looked broken at the
+// seam between one week and the next.
+const STRIP_PREFETCH_PX = () => dayStripEl.clientWidth;
 btnDayStripNext.addEventListener('click', async () => {
-  const atEnd = dayStripEl.scrollLeft + dayStripEl.clientWidth >= dayStripEl.scrollWidth - 4;
-  if (atEnd) await extendStripForward();
+  const remaining = dayStripEl.scrollWidth - (dayStripEl.scrollLeft + dayStripEl.clientWidth);
+  if (remaining <= STRIP_PREFETCH_PX()) await extendStripForward();
   dayStripEl.scrollBy({ left: dayStripEl.clientWidth * 0.6, behavior: 'smooth' });
 });
 btnDayStripPrev.addEventListener('click', async () => {
-  if (dayStripEl.scrollLeft <= 4) await extendStripBackward();
+  if (dayStripEl.scrollLeft <= STRIP_PREFETCH_PX()) await extendStripBackward();
   dayStripEl.scrollBy({ left: -dayStripEl.clientWidth * 0.6, behavior: 'smooth' });
 });
+// Same prefetch when the ribbon is swiped rather than tapped. Forward only:
+// extending backward on its own would walk into the past the moment the strip
+// rendered at scrollLeft 0, spending the 12-week budget on days nobody asked
+// for. Going back stays on the arrow, where it is a deliberate press.
+let stripScrollTimer = null;
+let stripExtending = false;
+dayStripEl.addEventListener('scroll', () => {
+  clearTimeout(stripScrollTimer);
+  stripScrollTimer = setTimeout(async () => {
+    if (stripExtending) return;
+    const remaining = dayStripEl.scrollWidth - (dayStripEl.scrollLeft + dayStripEl.clientWidth);
+    if (remaining > STRIP_PREFETCH_PX()) return;
+    stripExtending = true;
+    try { await extendStripForward(); } finally { stripExtending = false; }
+  }, 160);
+}, { passive: true });
 
 // ── STAFF FILTER PILLS ──
 function applyStaffFilter(value) {
