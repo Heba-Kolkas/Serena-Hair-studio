@@ -964,104 +964,7 @@ body.has-sticky-bar #back-top.visible {
 }
 
 
-/* ── NEEDS-CONFIRMING NOTICE ──
-   Red enough to stop someone assuming their extensions slot is held, soft
-   enough to sit inside a cream page without shouting. A warm terracotta on a
-   pale wash rather than a browser-error red. */
-.notice-pending {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  margin-top: 0.7rem;
-  padding: 0.9rem 1rem;
-  border-radius: 10px;
-  border: 1px solid rgba(166, 74, 58, 0.25);
-  border-left: 2px solid #a64a3a;
-  background: rgba(166, 74, 58, 0.06);
-  color: #7d3a2e;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  text-align: left;
-}
-.notice-pending[hidden] { display: none; }
-.notice-pending i { color: #a64a3a; margin-top: 0.15rem; flex-shrink: 0; }
-.notice-pending strong { color: #8c3b2c; font-weight: 600; }
-.notice-pending-body { min-width: 0; flex: 1; }
-.notice-pending-lead { margin: 0; }
-.notice-pending .extensions-notice-link {
-  display: inline-block;
-  margin-top: 0.5rem;
-  background: none;
-  border: none;
-  padding: 0;
-  color: #a64a3a;
-  font-family: var(--font-body);
-  font-size: 0.76rem;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.notice-pending .extensions-notice-link:hover { color: #8c3b2c; }
 
-/* ── EXTENSIONS ORDER LOOKUP ──
-   Lives inside the pending notice, not beside it - one card, one border,
-   rather than a second panel repeating the same warning in a different
-   colour. Espresso-on-cream, frosted like the rest of the wizard's inputs,
-   so it reads as part of this form and not a separate widget dropped in. */
-.ext-lookup {
-  margin: 0.7rem 0 0.15rem;
-  padding: 0.75rem 0.8rem;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.55);
-  border: 1px solid rgba(166, 74, 58, 0.18);
-}
-.ext-lookup-intro { margin: 0 0 0.55rem; font-size: 0.78rem; color: var(--espresso); }
-.ext-lookup-fields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-.ext-lookup-fields input {
-  flex: 1 1 8.5rem;
-  min-width: 0;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid rgba(63, 54, 50, 0.18);
-  border-radius: 9px;
-  background: #fff;
-  font-family: var(--font-body);
-  font-size: 0.84rem;
-  color: var(--espresso);
-}
-.ext-lookup-fields input::placeholder { color: var(--greige); }
-.ext-lookup-fields input:focus-visible {
-  outline: none;
-  border-color: var(--taupe);
-}
-.ext-lookup-fields button {
-  flex: 1 1 100%;
-  padding: 0.6rem 1rem;
-  margin-top: 0.1rem;
-  border: none;
-  border-radius: 9px;
-  background: var(--taupe);
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-@media (min-width: 420px) {
-  /* Two fields and a button fit one row once there's room; below that they
-     stack, and the button stays full-width so it's never a thin sliver. */
-  .ext-lookup-fields button { flex: 0 0 auto; }
-}
-.ext-lookup-fields button:disabled { opacity: 0.6; cursor: default; }
-.ext-lookup-result { display: block; margin: 0.55rem 0 0; font-size: 0.8rem; font-weight: 500; }
-/* Colour carries the answer, but never alone - the message says it in words
-   too, for anyone who cannot tell the two apart. */
-.ext-lookup-result.ok  { color: #3B7355; }
-.ext-lookup-result.bad { color: #A8503C; }
 
 
 /* ── PHONE: COLLAPSE THE ADD-ONS UNTIL A SERVICE IS CHOSEN ──
@@ -1255,25 +1158,108 @@ body.has-sticky-bar #back-top.visible {
   .category-tab-img { width: 22px; height: 22px; }
 }
 
-/* ── WHAT THE EXTENSIONS ACTUALLY ARE ──
-   Informational, not a warning, so it is gold rather than terracotta and sits
-   apart from the red confirmation notice it appears alongside. */
-.notice-quality {
-  display: flex;
-  gap: 0.7rem;
-  align-items: flex-start;
+/* ── ONE PANEL FOR EVERYTHING ABOUT EXTENSIONS ──
+   What used to be three bordered boxes - a gold quality note, a red warning,
+   and a search panel nested inside a white box inside the red one - is one
+   card in one colour family. Nothing here is an error: every extensions
+   booking works this way, so it is fine print, not an alarm. A hairline rule
+   inside the card separates "what the hair is" from "what happens next"
+   instead of a second border and a second background.
+
+   The taupe/gold family the rest of the wizard already uses, not a new red -
+   this card and the calendar three taps later should look like the same
+   product. */
+.extensions-panel {
   margin: 0.7rem 0 0.2rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(201, 169, 110, 0.35);
-  border-left: 2px solid var(--gold, #C9A96E);
-  border-radius: 10px;
-  background: rgba(201, 169, 110, 0.07);
+  padding: 1.1rem 1.2rem;
+  border: 1px solid rgba(201, 169, 110, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(201, 169, 110, 0.09), rgba(201, 169, 110, 0.04));
   font-size: 0.83rem;
   line-height: 1.6;
   color: var(--espresso, #3f3632);
 }
-.notice-quality i { color: var(--gold, #C9A96E); margin-top: 0.15rem; flex: none; }
-.notice-quality strong { font-weight: 600; }
+.extensions-panel-quality { margin: 0; }
+.extensions-panel-request {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(201, 169, 110, 0.28);
+}
+.extensions-panel-lead { margin: 0; }
+/* The one thing worth a client's attention sits in the site's own editorial
+   voice - the same italic taupe the page titles already use for emphasis -
+   rather than bold red text playing the part of a system warning. */
+.extensions-panel-lead em {
+  font-style: italic;
+  font-family: var(--font-display);
+  font-size: 1.05em;
+  color: var(--taupe);
+  font-weight: 600;
+}
+.extensions-panel-link {
+  display: inline-block;
+  margin-top: 0.7rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--taupe);
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.extensions-panel-link:hover { color: var(--espresso); }
+
+/* ── THE LOOKUP, FLUSH IN THE SAME CARD ──
+   No inner box: the fields sit directly on the panel so there is one
+   background and one border for the whole thing, not a card inside a card. */
+.ext-lookup { margin-top: 0.75rem; }
+.ext-lookup-intro { margin: 0 0 0.6rem; font-size: 0.79rem; color: var(--espresso); }
+.ext-lookup-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+/* Frosted like every other input in this wizard (see .form-row on the
+   details step), so this reads as part of the same form rather than a
+   plain-HTML widget dropped into a styled page. */
+.ext-lookup-fields input {
+  flex: 1 1 9rem;
+  min-width: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 14px rgba(44,36,32,0.04);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--espresso);
+}
+.ext-lookup-fields input::placeholder { color: var(--greige); }
+.ext-lookup-fields input:focus-visible { outline: none; border-color: var(--taupe); }
+/* The site's own pill button, at the size this card calls for - full width
+   below the fields on a phone, sitting beside them once there's room, rather
+   than a flat rectangle in a different shape language from every other
+   button on the page. */
+.ext-lookup-fields .wizard-btn {
+  flex: 1 1 100%;
+  margin-left: 0;
+  padding: 0.7rem 1.4rem;
+}
+@media (min-width: 460px) {
+  .ext-lookup-fields .wizard-btn { flex: 0 0 auto; }
+}
+.ext-lookup-fields .wizard-btn:disabled { opacity: 0.55; cursor: default; }
+.ext-lookup-result { margin: 0.6rem 0 0; font-size: 0.8rem; font-weight: 500; }
+/* Colour carries the answer, but never alone - the message says it in words
+   too, for anyone who cannot tell the two apart. */
+.ext-lookup-result.ok  { color: #3B7355; }
+.ext-lookup-result.bad { color: #A8503C; }
 
 /* ── CATEGORY HEADING PHOTO ──
    Circular, beside the group heading. The same image appears smaller inside
@@ -1514,22 +1500,21 @@ body.has-sticky-bar #back-top.visible {
 /* The notices live inside the card they belong to now, so they no longer need
    to span the row - and must not, or they would stretch the card. Kept as a
    selector so an older cached page still lays them out sensibly. */
-.option-grid > .notice-pending,
-.option-grid > .notice-quality,
+.option-grid > .extensions-panel,
 .option-grid > .notice-external {
   grid-column: 1 / -1;
   margin-top: 0;
 }
 /* Inside a card: flush to its edges, sitting under the add-ons rather than
    floating in a gap of its own. */
-.option-card-wrap > .notice-pending,
-.option-card-wrap > .notice-quality,
+.option-card-wrap > .extensions-panel,
 .option-card-wrap > .notice-external {
   margin: 0;
   border-radius: 0;
-  border-left-width: 3px;
   border-right: none;
   border-bottom: none;
+  border-left: none;
+  border-top: 1px solid rgba(201, 169, 110, 0.3);
   font-size: 0.8rem;
 }
 

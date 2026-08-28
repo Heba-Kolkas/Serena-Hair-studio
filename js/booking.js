@@ -951,19 +951,6 @@ const EXTENSIONS_QUALITY = {
     + 'riktig pleie.',
 };
 
-function renderExtensionsQuality(svc) {
-  const existing = document.getElementById('extensionsQuality');
-  if (existing) existing.remove();
-  if (!isExtensionsBooking(svc)) return;
-  const card = document.querySelector(`#serviceGroups .option-card-wrap[data-service-id="${svc.id}"]`);
-  if (!card) return;
-  const el = document.createElement('div');
-  el.id = 'extensionsQuality';
-  el.className = 'notice-quality';
-  el.innerHTML = `<i class="fa-solid fa-certificate"></i><span>${EXTENSIONS_QUALITY[lang() === 'no' ? 'no' : 'en']}</span>`;
-  card.appendChild(el);
-}
-
 function switchToConsultation() {
   const consultation = state.services.find((x) => x.consultationRule)
     || state.services.find((x) => /consultation/i.test(x.name || ''));
@@ -973,49 +960,55 @@ function switchToConsultation() {
   if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ── ONE NOTICE, NOT THREE ──
-// This used to be two stacked boxes: a red "this is only a request" panel,
-// and below it a separate gold-bordered search panel repeating a lot of the
-// same ground and each carrying its own "book a consultation" link. On a
-// phone that was most of a screen of scrolling before she ever reached the
-// calendar, and the two panels disagreed slightly - the first promised the
-// salon would check her order "once submitted"; the second checked it
-// immediately. One box now does both jobs.
-function renderConsultationNotice(svc) {
+// ── ONE PANEL FOR EVERYTHING ABOUT EXTENSIONS ──
+//
+// This used to be three separate bordered boxes: a gold quality blurb, a red
+// "this is only a request" warning, and a second gold search panel nested
+// inside a white box inside that. Three borders, three backgrounds, two
+// competing colour languages (gold for information, red for warning) stacked
+// on a phone screen before a client ever reached the calendar.
+//
+// It is one card now, in one colour family. The alarm red is gone on
+// purpose: nothing here is dangerous or destructive, it is routine - every
+// extensions booking works this way - so it reads as fine print, the way the
+// rest of this wizard handles anything worth flagging but not worth
+// frightening anyone over. A hairline rule separates "what the hair is" from
+// "what happens next" instead of a second border.
+function renderExtensionsQuality(svc) {
   const existing = document.getElementById('extensionsNotice');
   if (existing) existing.remove();
-  renderExtensionsQuality(svc);
-  if (!needsConfirmation(svc)) { state.extensionsEarliest = null; return; }
+  if (!isExtensionsBooking(svc)) { state.extensionsEarliest = null; return; }
   const card = document.querySelector(`#serviceGroups .option-card-wrap[data-service-id="${svc.id}"]`);
   if (!card) return;
 
+  const needsConfirm = needsConfirmation(svc);
+  if (!needsConfirm) state.extensionsEarliest = null;
   const p = pendingCopy();
-  const isExt = isExtensionsBooking(svc);
   const lk = EXT_LOOKUP_COPY[lang() === 'no' ? 'no' : 'en'];
 
   const el = document.createElement('div');
   el.id = 'extensionsNotice';
-  el.className = 'notice-pending';
+  el.className = 'extensions-panel';
   el.innerHTML = `
-    <i class="fa-solid fa-circle-exclamation"></i>
-    <div class="notice-pending-body">
-      <p class="notice-pending-lead"><strong>${p.lead}</strong> ${p.body}</p>
-      ${isExt ? `
+    <p class="extensions-panel-quality">${EXTENSIONS_QUALITY[lang() === 'no' ? 'no' : 'en']}</p>
+    ${needsConfirm ? `
+    <div class="extensions-panel-request">
+      <p class="extensions-panel-lead"><em>${p.lead}</em> ${p.body}</p>
       <div class="ext-lookup">
         <p class="ext-lookup-intro">${lk.intro}</p>
         <div class="ext-lookup-fields">
           <input type="tel" id="extGatePhone" inputmode="tel" autocomplete="tel" placeholder="${lk.phone}">
           <input type="email" id="extGateEmail" inputmode="email" autocomplete="email" placeholder="${lk.email}">
-          <button type="button" id="extGateFind">${lk.find}</button>
+          <button type="button" id="extGateFind" class="wizard-btn wizard-btn-next">${lk.find}</button>
         </div>
         <p id="extGateResult" class="ext-lookup-result" hidden></p>
-      </div>` : ''}
-      <button type="button" class="extensions-notice-link" id="switchToConsultation">${lk.consult}</button>
-    </div>
+      </div>
+      <button type="button" class="extensions-panel-link" id="switchToConsultation">${lk.consult}</button>
+    </div>` : ''}
   `;
   card.appendChild(el);
+  if (!needsConfirm) return;
   document.getElementById('switchToConsultation').addEventListener('click', switchToConsultation);
-  if (!isExt) return;
 
   const run = async () => {
     const phone = document.getElementById('extGatePhone').value.trim();
@@ -1055,6 +1048,13 @@ function renderConsultationNotice(svc) {
       if (ev.key === 'Enter') { ev.preventDefault(); run(); }
     });
   });
+}
+
+// renderConsultationNotice used to be the sole entry point; the panel above
+// now covers everything it did (quality blurb, request warning, lookup), so
+// it is kept only as the name every call site already uses.
+function renderConsultationNotice(svc) {
+  renderExtensionsQuality(svc);
 }
 
 // ── STEP 2: STAFF ──
