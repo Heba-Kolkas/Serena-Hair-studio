@@ -616,8 +616,18 @@ const SMS: Record<MessageKey, (ctx: MessageContext, lang: Lang) => string | null
     ? `Studio Serena: timen din er bekreftet. ${shortDate(c, l)} hos ${firstName(c.staffName)}. Vi gleder oss!`
     : `Studio Serena: your appointment is confirmed. ${shortDate(c, l)} with ${firstName(c.staffName)}. See you then!`,
 
-  // A rejection needs room to explain and somewhere to reply. Email only.
-  request_rejected: () => null,
+  // A rejection now carries a text as well, because the useful half of it is
+  // not the apology - it is the way back in. She wanted extensions; extensions
+  // need a consultation first, to settle colour and length and the price. A
+  // client who reads "no" in her email and nothing else simply goes elsewhere,
+  // and the consultation is free.
+  //
+  // Deliberately short and warm, and it does not repeat the reason: the reason
+  // is in the email, where there is room to say it properly. This is the nudge
+  // that gets her to ring.
+  request_rejected: (c, l) => l === 'no'
+    ? `Studio Serena: vi far dessverre ikke satt av tiden ${shortDate(c, l)}. Extensions krever gratis konsultasjon forst. Ring ${SALON.phone}, sa finner vi tid.`
+    : `Studio Serena: sorry, we could not hold your time on ${shortDate(c, l)}. Extensions need a free consultation first. Call ${SALON.phone} to book one.`,
 
   rescheduled: (c, l) => l === 'no'
     ? `Studio Serena: timen din er flyttet til ${shortDate(c, l)}. Passer det ikke, ring ${SALON.phone}.`

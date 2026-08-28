@@ -650,6 +650,18 @@ function renderPills() {
 // around it on the right.
 const SECOND_LANE_STARTS = new Set([13 * 60, 16 * 60 + 30]);
 
+/** Whether this booking belongs in the right-hand lane.
+ *
+ *  The two paired start times, and every consultation. A consultation is
+ *  ten minutes that deliberately nests inside another appointment - it is
+ *  the one booking designed to sit alongside rather than instead of - so
+ *  drawing it in the first lane pushes the real appointment aside and makes
+ *  a ten-minute chat look like the substance of the afternoon. */
+function isSecondLane(b, startMin) {
+  if (SECOND_LANE_STARTS.has(startMin)) return true;
+  return /consultation|konsultasjon/i.test(b.service_name || '');
+}
+
 function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
   const entries = bookings.map((b) => ({ b, startMin: timeToMinutes(b.start_time), endMin: timeToMinutes(b.end_time) }));
   if (allowOverlap) {
@@ -683,7 +695,7 @@ function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
     // its column always has two lanes even when nothing else is in the
     // cluster - otherwise it would sit full width in the first lane and read
     // as the day's only appointment.
-    const hasPaired = cluster.some((e) => e.b && SECOND_LANE_STARTS.has(e.startMin));
+    const hasPaired = cluster.some((e) => e.b && isSecondLane(e.b, e.startMin));
     const n = Math.max(packed, minLanes || 1, hasPaired ? 2 : 1);
 
     // Those two times are Hassan's second chair: they run alongside an 11:00
@@ -693,7 +705,7 @@ function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
     // which happened to be booked first.
     const taken = new Set();
     cluster.forEach((e) => {
-      if (!e.b || !SECOND_LANE_STARTS.has(e.startMin)) return;
+      if (!e.b || !isSecondLane(e.b, e.startMin)) return;
       const lane = n - 1;
       positioned.push({ ...e.b, widthPct: 100 / n, leftPct: (100 / n) * lane });
       e.placed = true;
@@ -2490,18 +2502,26 @@ async function renderOwnerRequestsTab() {
       msg.textContent = decision === 'confirmed' ? '✓ Confirmed. Emailing…' : 'Rejected. Emailing…';
       msg.style.color = '#059669';
 
-      const mail = await sendBookingEmail({
+      // Routed through send-message rather than send-booking-email so a
+      // rejection can reach her by text as well. She is being turned down for
+      // a fitting she wanted, and the useful part of that message is the way
+      // back in - a consultation - which is worth more than an apology she
+      // may not open.
+      const mail = await sendMessage({
         pin: currentPin,
-        booking_id: btn.dataset.id,
-        decision,
-        reason: reason || '',
-        customer_name: d.customer_name || (row && row.customer_name) || '',
-        customer_email: d.customer_email || (row && row.customer_email) || '',
-        service_name: d.service_name || (row && row.service_name) || '',
-        staff_name: d.staff_name || (row && row.staff_name) || '',
-        date: d.date || (row && row.date) || '',
-        start_time: d.start_time || (row && row.start_time) || '',
-        booking_ref: d.booking_ref || (row && row.booking_ref) || '',
+        bookingId: btn.dataset.id,
+        key: decision === 'confirmed' ? 'request_approved' : 'request_rejected',
+        lang: 'no',
+        email: d.customer_email || (row && row.customer_email) || '',
+        phone: d.customer_phone || (row && row.customer_phone) || '',
+        context: {
+          customerName: d.customer_name || (row && row.customer_name) || '',
+          serviceName: d.service_name || (row && row.service_name) || '',
+          staffName: d.staff_name || (row && row.staff_name) || '',
+          date: d.date || (row && row.date) || '',
+          startTime: d.start_time || (row && row.start_time) || '',
+          reason: reason || '',
+        },
       });
 
       if (mail && mail.sent) {
