@@ -1442,7 +1442,19 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
       : windowSlots(open, close, duration, dayOpen, allRanges);
   }
 
-  const candidates = (svc.balayageSchedule || (isFourHourBooking(svc) && !isBridalService))
+  // A service with its own rows in staff_service_schedule uses those times,
+  // whatever its length. Extensions (100-150g) is 240 minutes, so the
+  // four-hour test below claimed it and offered the balayage hours - 11:00 and
+  // 15:00 - when the schedule says 13:00 and 16:30 and the booking itself
+  // refuses anything else. Length is not what decides a service's start times;
+  // the schedule rows are, which is the order book_appointment_core uses.
+  const scheduledTimes = staffScheduleHasPair(staff.id, svc.id)
+    ? getStaffFixedTimes(svc, staff.id, weekday)
+    : null;
+
+  const candidates = scheduledTimes
+    ? scheduledTimes.map(parseTime).filter((t) => t >= open)
+    : (svc.balayageSchedule || (isFourHourBooking(svc) && !isBridalService))
     ? getBalayageTimes(staff.id, weekday).map(parseTime).filter((t) => t >= open)
     : policyWindows
       ? policyWindows
