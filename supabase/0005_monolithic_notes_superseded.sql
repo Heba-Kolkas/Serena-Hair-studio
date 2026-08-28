@@ -1,3 +1,23 @@
+-- ══════════════════════════════════════════════════════════════════
+--  NOT A MIGRATION. DO NOT RUN THIS FILE.
+--
+--  What actually ran against the database is migrations/0005a..0005e.
+--  This was the single-file version: repaired so that it *could* run, but
+--  then applied as five parts instead, because one 77KB statement kept
+--  timing out. Running it now would try to create tables that already
+--  exist.
+--
+--  It is kept because it is the documented version. The five parts that
+--  ran carry 39 lines of comment between them; this carries 499, and the
+--  code is otherwise identical - verified function by function, table by
+--  table, statement by statement. When you need to understand WHY the
+--  booking core does something, read this. When you need to know what the
+--  database actually has, read migrations/0005a..0005e.
+--
+--  Moved out of migrations/ on 28 August 2026 so it cannot be applied by
+--  accident.
+-- ══════════════════════════════════════════════════════════════════
+
 -- REPAIRED ORDERING, 27 August 2026.
 -- book_appointment_core was split in two: it opened, ran as far as the
 -- staff_service_schedule count, and then stopped dead, while the whole of its
