@@ -737,6 +737,7 @@ function renderServices() {
       ).map((c) => offered.find((a) => String(a.id) === c.dataset.addonId)).filter(Boolean);
       renderConsultationNotice(svc); // an extensions add-on raises the notice too
       renderExtensionsGate(svc);     // ...and an extensions add-on needs the hair too
+      updateNext1(svc);              // adding or removing one changes the answer
       updateStickyBar(); // duration and total both move with the add-ons
     });
   });
@@ -818,7 +819,7 @@ function selectService(svc) {
   updateStickyBar();
   // An externally booked service has no stylist, date or slot to pick — the
   // only way forward is the hand-off link in its notice.
-  document.getElementById('next1').disabled = !!svc.external_booking_url;
+  updateNext1(svc);
 }
 
 // Keratin Treatment and Hair Botox are still services the studio offers, but
@@ -844,6 +845,23 @@ function renderExternalNotice(svc) {
     </span>
   `;
   card.appendChild(el);
+}
+
+/** Every reason step 1 might not be finished, in one place.
+ *
+ *  It used to be a line at the end of selectService that considered only the
+ *  external-booking case, and it ran AFTER renderExtensionsGate had disabled
+ *  the button - so it re-enabled it a moment later and the extensions gate sat
+ *  there with Next perfectly clickable straight past it. The add-on path had
+ *  the mirror of the same fault: picking an extensions add-on and then
+ *  removing it left the button stuck disabled with nothing explaining why.
+ *
+ *  Both call this now, so the two cannot drift apart again. */
+function updateNext1(svc) {
+  const btn = document.getElementById('next1');
+  if (!btn || !svc) return;
+  btn.disabled = !!svc.external_booking_url
+    || (isExtensionsBooking(svc) && !state.extensionsEarliest);
 }
 
 /** Escapes text before it goes into innerHTML. The gate's own copy is static,
@@ -955,11 +973,11 @@ function renderExtensionsGate(svc) {
         state.phone = phone;
         state.email = email;
         state.extensionsEarliest = row.earliest_date || null;
-        if (next1) next1.disabled = false;
+        updateNext1(svc);
       } else {
         out.classList.add('bad');
         state.extensionsEarliest = null;
-        if (next1) next1.disabled = true;
+        updateNext1(svc);
         // A dead end needs a door out of it. Most people who see this simply
         // have not been in yet, and the thing they actually need is the
         // consultation - so offer it rather than leaving them stuck.
@@ -979,7 +997,7 @@ function renderExtensionsGate(svc) {
       out.className = 'ext-gate-result bad';
       out.textContent = (e && e.message) || 'Could not check that just now.';
       state.extensionsEarliest = null;
-      if (next1) next1.disabled = true;
+      updateNext1(svc);
     } finally {
       btn.disabled = false;
     }
