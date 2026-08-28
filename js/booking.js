@@ -886,6 +886,16 @@ const PENDING_COPY = {
 };
 function pendingCopy() { return PENDING_COPY[lang() === 'no' ? 'no' : 'en']; }
 
+// Two other places still need this: the summary step ("you're about to send
+// a request") and the success screen after it ("here's your reference, but
+// it isn't confirmed"). Both are brief, single-purpose notices with no
+// search fields - they never needed the redesign the step-1 panel got, only
+// this markup, which the step-1 panel used to share before it grew its own.
+function pendingNoticeHtml() {
+  const c = pendingCopy();
+  return `<i class="fa-solid fa-circle-exclamation"></i><span><strong>${c.lead}</strong> ${c.body}</span>`;
+}
+
 // ── ORDER LOOKUP, INLINE IN THE SAME NOTICE ──
 // Phone AND email, because this is a public lookup: with the number alone it
 // would tell anyone who typed one whether that person has extensions on order

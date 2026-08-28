@@ -1158,6 +1158,34 @@ body.has-sticky-bar #back-top.visible {
   .category-tab-img { width: 22px; height: 22px; }
 }
 
+/* ── "NOT CONFIRMED YET" NOTICE ──
+   Used in three places unrelated to the step-1 extensions panel above: the
+   booking summary before she confirms, the success screen once she has, and
+   the "please call us" gate for a client the salon has flagged. All three
+   are one line, no search fields, and genuinely worth a client noticing -
+   so they keep the warmer terracotta the step-1 panel moved away from,
+   rather than being redesigned along with it. */
+.notice-pending {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 0.7rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(166, 74, 58, 0.25);
+  border-left: 2px solid #a64a3a;
+  background: rgba(166, 74, 58, 0.06);
+  color: #7d3a2e;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: left;
+}
+.notice-pending[hidden] { display: none; }
+.notice-pending i { color: #a64a3a; margin-top: 0.15rem; flex-shrink: 0; }
+.notice-pending strong { color: #8c3b2c; font-weight: 600; }
+.notice-pending p { margin: 0.35rem 0 0; }
+.notice-pending a { color: #8c3b2c; font-weight: 600; }
+
 /* ── ONE PANEL FOR EVERYTHING ABOUT EXTENSIONS ──
    What used to be three bordered boxes - a gold quality note, a red warning,
    and a search panel nested inside a white box inside the red one - is one
