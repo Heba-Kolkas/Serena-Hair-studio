@@ -1999,6 +1999,9 @@ async function confirmBooking() {
       notes: state.notes,
       addonIds: state.addons.map((a) => a.id),
       termsVersion,
+      firstName: state.firstName,
+      lastName: state.lastName,
+      instagram: state.instagram,
     });
     if (error) throw error;
     state.lastBooking = data;
@@ -2136,13 +2139,30 @@ document.getElementById('next2').addEventListener('click', () => {
 });
 document.getElementById('next3').addEventListener('click', () => showPanel('4'));
 document.getElementById('next4').addEventListener('click', () => {
-  const name = document.getElementById('custName').value.trim();
+  // Two name fields rather than one. A single box collects "Ada", "ada n" and
+  // "Ada Nordmann Hansen" from the same person on different visits, and the
+  // history search then shows her as three clients.
+  const firstName = document.getElementById('custFirstName').value.trim();
+  const lastName = document.getElementById('custLastName').value.trim();
+  const name = [firstName, lastName].filter(Boolean).join(' ');
   const email = document.getElementById('custEmail').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
   const notes = document.getElementById('custNotes').value.trim();
-  if (!name || !email || !phone) { showError('Please fill in your name, email and phone.'); return; }
+  // Optional, and stored bare: @ and a pasted profile URL are both stripped
+  // server-side, so she can type it however she has it to hand.
+  const instagram = (document.getElementById('custInstagram') || {}).value?.trim() || '';
+
+  if (!firstName || !lastName) { showError('Please give both your first and last name.'); return; }
+  if (!email || !phone) { showError('Please fill in your email and phone.'); return; }
   if (!/^\S+@\S+\.\S+$/.test(email)) { showError('Please enter a valid email address.'); return; }
+
+  // Kept in step with the two fields so anything still reading the old single
+  // input, including the summary, sees the same full name.
+  const hidden = document.getElementById('custName');
+  if (hidden) hidden.value = name;
+
   state.name = name; state.email = email; state.phone = phone; state.notes = notes;
+  state.firstName = firstName; state.lastName = lastName; state.instagram = instagram;
 
   // A gated client is told here, not at the last step. She has given her phone
   // number, which is the first moment we can know — and being turned away after

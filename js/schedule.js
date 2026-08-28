@@ -644,6 +644,12 @@ function renderPills() {
 // books it. `splitOverlaps` is the separate question of whether genuinely
 // overlapping bookings sit side by side — true for everyone now, since any
 // stylist can be double-booked by hand, and stacking them would hide one.
+// 13:00 and 16:30 - the two times a second client is taken alongside a
+// four-hour colour. Always drawn in the right-hand lane, so a day reads the
+// same way every time: the long appointment on the left, the one fitted
+// around it on the right.
+const SECOND_LANE_STARTS = new Set([13 * 60, 16 * 60 + 30]);
+
 function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
   const entries = bookings.map((b) => ({ b, startMin: timeToMinutes(b.start_time), endMin: timeToMinutes(b.end_time) }));
   if (allowOverlap) {
@@ -673,10 +679,34 @@ function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
     // renders one block at full width and there's nowhere visible to drop a
     // second appointment — the room has to be on screen before it's used.
     const packed = (splitOverlaps || allowOverlap) ? cluster.length : 1;
-    const n = Math.max(packed, minLanes || 1);
-    cluster.forEach((e, i) => {
-      if (!e.b) return;
-      positioned.push({ ...e.b, widthPct: 100 / n, leftPct: (100 / n) * i });
+    // A 13:00 or 16:30 booking is the second client of the day's pairing, so
+    // its column always has two lanes even when nothing else is in the
+    // cluster - otherwise it would sit full width in the first lane and read
+    // as the day's only appointment.
+    const hasPaired = cluster.some((e) => e.b && SECOND_LANE_STARTS.has(e.startMin));
+    const n = Math.max(packed, minLanes || 1, hasPaired ? 2 : 1);
+
+    // Those two times are Hassan's second chair: they run alongside an 11:00
+    // or 15:00 colour rather than instead of it. Pinning them right keeps the
+    // day readable at a glance - colour on the left, the client fitted around
+    // it on the right - and stops the pairing swapping sides depending on
+    // which happened to be booked first.
+    const taken = new Set();
+    cluster.forEach((e) => {
+      if (!e.b || !SECOND_LANE_STARTS.has(e.startMin)) return;
+      const lane = n - 1;
+      positioned.push({ ...e.b, widthPct: 100 / n, leftPct: (100 / n) * lane });
+      e.placed = true;
+      taken.add(lane);
+    });
+
+    let next = 0;
+    cluster.forEach((e) => {
+      if (!e.b || e.placed) return;
+      while (taken.has(next) && next < n - 1) next += 1;
+      positioned.push({ ...e.b, widthPct: 100 / n, leftPct: (100 / n) * next });
+      taken.add(next);
+      next += 1;
     });
   });
   return positioned;

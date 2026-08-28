@@ -95,7 +95,7 @@ export async function fetchBusySlotsRange(staffId, dateFrom, dateTo) {
   return supabase.rpc('get_busy_slots_range', { p_staff_id: staffId, p_date_from: dateFrom, p_date_to: dateTo });
 }
 
-export async function bookAppointment({ serviceId, staffId, date, startTime, name, email, phone, notes, addonIds, termsVersion }) {
+export async function bookAppointment({ serviceId, staffId, date, startTime, name, email, phone, notes, addonIds, termsVersion, firstName, lastName, instagram }) {
   return supabase.rpc('book_appointment', {
     p_service_id: serviceId,
     p_staff_id: staffId,
@@ -109,6 +109,9 @@ export async function bookAppointment({ serviceId, staffId, date, startTime, nam
     // The version of the cancellation policy she ticked. The RPC refuses the
     // booking without it — see migration 0009.
     p_terms_version: termsVersion ?? null,
+    p_first_name: firstName || null,
+    p_last_name: lastName || null,
+    p_instagram: instagram || null,
   });
 }
 

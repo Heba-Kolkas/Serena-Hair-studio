@@ -86,9 +86,14 @@
             <!-- STEP 4: CONTACT DETAILS -->
             <section class="wizard-panel" data-panel="4">
                 <h2 class="wizard-panel-title"><span data-en="Your" data-no="Dine">Your</span> <em data-en="Details" data-no="Detaljer">Details</em></h2>
-                <div class="form-row"><label for="custName" data-en="Full name" data-no="Fullt navn">Full name</label><input type="text" id="custName" autocomplete="name"></div>
+                <div class="form-row"><label for="custFirstName" data-en="First name" data-no="Fornavn">First name</label><input type="text" id="custFirstName" autocomplete="given-name"></div>
+                <div class="form-row"><label for="custLastName" data-en="Last name" data-no="Etternavn">Last name</label><input type="text" id="custLastName" autocomplete="family-name"></div>
+                <!-- Kept, hidden: the wizard still builds a full name from the two
+                     fields above, and everything downstream reads that one value. -->
+                <input type="hidden" id="custName">
                 <div class="form-row"><label for="custEmail" data-en="Email" data-no="E-post">Email</label><input type="email" id="custEmail" autocomplete="email"></div>
                 <div class="form-row"><label for="custPhone" data-en="Phone" data-no="Telefon">Phone</label><input type="tel" id="custPhone" autocomplete="tel"></div>
+                <div class="form-row"><label for="custInstagram" data-en="Instagram (optional)" data-no="Instagram (valgfritt)">Instagram (optional)</label><input type="text" id="custInstagram" autocomplete="off" placeholder="@yourname" inputmode="text"></div>
                 <div class="form-row"><label for="custNotes" data-en="Notes (optional)" data-no="Notater (valgfritt)">Notes (optional)</label><textarea id="custNotes" placeholder="Anything we should know before your visit?" data-placeholder-en="Anything we should know before your visit?" data-placeholder-no="Noe vi bør vite før besøket ditt?"></textarea></div>
                 <div class="wizard-nav">
                     <button class="wizard-btn wizard-btn-back" data-back="3" data-en="Back" data-no="Tilbake">Back</button>
