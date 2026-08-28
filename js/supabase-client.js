@@ -574,6 +574,12 @@ export async function setCancellationFee({ pin, bookingId, amount }) {
   return supabase.rpc('admin_set_cancellation_fee', { p_pin: pin, p_booking_id: bookingId, p_amount: amount });
 }
 
+// How many extensions requests are waiting. Staff PIN: every stylist needs
+// to know one is sitting there, even though only the owner decides it.
+export async function fetchPendingCount(pin) {
+  return supabase.rpc('staff_pending_count', { p_pin: pin });
+}
+
 export async function fetchBookingsInRangeAdmin({ pin, dateFrom, dateTo, staffId }) {
   return supabase.rpc('admin_get_bookings_in_range', {
     p_pin: pin, p_date_from: dateFrom, p_date_to: dateTo, p_staff_id: staffId || null,

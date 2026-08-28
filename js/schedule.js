@@ -6,7 +6,7 @@ import {
   fetchAllStaffAdmin, upsertStaffAdmin,
   fetchBookingsAdmin, updateBookingStatusAdmin, rescheduleBookingAdmin, completeBookingAdmin,
   upsertBusinessHoursAdmin, addBlockedSlotAdmin, removeBlockedSlotAdmin,
-  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage, fetchSmsBalance,
+  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage, fetchSmsBalance, fetchPendingCount,
   waiveCancellationFee, unwaiveCancellationFee, setCancellationFee,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
@@ -316,7 +316,7 @@ function minutesToTimeStr(m) { return `${String(Math.floor(m / 60) % 24).padStar
 function fmtTime(t) { return t.slice(0, 5); } // 24h, e.g. "13:00"
 
 const STATUS_LABELS = {
-  pending: 'Pending', confirmed: 'Confirmed', arrived: 'Arrived',
+  pending: 'Request waiting', confirmed: 'Confirmed', arrived: 'Arrived',
   no_show: 'No-show', completed: 'Completed', cancelled: 'Cancelled',
 };
 
@@ -1054,7 +1054,7 @@ function openPopup(id) {
            <button class="sched-btn sched-btn-arrived" data-action="arrived" data-id="${b.id}"><i class="fa-solid fa-check"></i> Arrived</button>
            <button class="sched-btn sched-btn-noshow" data-action="no_show" data-id="${b.id}">No-show</button>
          </div>`
-      : `<span class="sched-status ${b.status}">${STATUS_LABELS[b.status] || b.status}</span>
+      : `<span class="sched-status ${b.rejected_at ? 'rejected' : b.status}">${statusLabel(b)}</span>
          ${canUndo ? `<button type="button" class="popup-undo-btn" data-action="confirmed" data-id="${b.id}"><i class="fa-solid fa-rotate-left"></i> Pressed by mistake? Undo</button>` : ''}`}
     ${isPaid(b)
       ? `<div class="popup-paid-done"><i class="fa-solid fa-circle-check"></i> Paid &middot; <strong>${escHtml(money(b.amount_charged))}</strong></div>`
@@ -1173,7 +1173,7 @@ function renderHistoryRows(list, emptyMessage) {
           <div class="history-row-name">${b.customer_name}</div>
           <div class="history-row-meta">${b.service_name}${b.staff_name ? ' · ' + b.staff_name : ''}</div>
         </div>
-        <span class="sched-status ${b.status}">${STATUS_LABELS[b.status] || b.status}</span>
+        <span class="sched-status ${b.rejected_at ? 'rejected' : b.status}">${statusLabel(b)}</span>
       </div>
     `;
   });
@@ -2021,6 +2021,33 @@ let ownerActiveTab = 'services';
 // button is inserted here — guarded so it appears exactly once.
 // Two tabs that schedule.html does not carry markup for yet. Guarded so they
 // appear exactly once, however often the panel is opened.
+
+// ── REQUESTS WAITING ──
+// An extensions booking arrives as a request: it holds its slot for two days,
+// but it is not on the grid, because a stylist must not arrange her day around
+// a client nobody has accepted yet. That makes it invisible unless something
+// says so - hence the banner, above the day, where she is already looking.
+async function refreshRequestBanner() {
+  const bar = document.getElementById('requestBanner');
+  if (!bar || !currentPin) return;
+  const { data, error } = await fetchPendingCount(currentPin);
+  const n = (!error && Number(data)) || 0;
+  bar.hidden = n === 0;
+  if (n === 0) return;
+  document.getElementById('requestBannerText').textContent =
+    n === 1 ? '1 extensions request is waiting to be accepted or turned down.'
+            : `${n} extensions requests are waiting to be accepted or turned down.`;
+}
+
+/** What to call this booking's state. A rejected request is stored as
+ *  cancelled - forty availability queries depend on that - but calling it
+ *  "cancelled" tells the salon the client pulled out, when in fact they
+ *  turned her down. The distinction matters when reading back a day. */
+function statusLabel(b) {
+  if (b.rejected_at) return 'Rejected';
+  return STATUS_LABELS[b.status] || b.status;
+}
+
 function ensureRequestsTabButton() {
   if (!ownerTabs) return;
   const add = (tab, label, atStart) => {
@@ -3175,7 +3202,7 @@ async function renderOwnerBookingsTab() {
               ${b.addons ? `<div class="owner-booking-notes"><i class="fa-solid fa-plus"></i> ${b.addons}</div>` : ''}
               ${b.notes ? `<div class="owner-booking-notes"><i class="fa-solid fa-note-sticky"></i> ${b.notes}</div>` : ''}
             </div>
-            <span class="sched-status ${b.status}">${STATUS_LABELS[b.status] || b.status}</span>
+            <span class="sched-status ${b.rejected_at ? 'rejected' : b.status}">${statusLabel(b)}</span>
           </div>
           ${b.status === 'completed' && b.amount_charged != null
             ? `<div class="owner-booking-amount">${Number(b.amount_charged).toLocaleString('en-US')} NOK charged${expectedLabel(b) ? ` · expected ${expectedLabel(b)}` : ''}</div>`
@@ -3668,7 +3695,40 @@ function enterApp(pin) {
     renderDayStrip();
     updateDayLabel();
     renderGrid();
+    refreshRequestBanner();
+    startAutoRefresh();
   });
+}
+
+// ── THE DAY KEEPS ITSELF UP TO DATE ──
+// A booking made online, or by whoever is on the other phone, used to appear
+// only when somebody thought to reload. On a busy afternoon that means the
+// grid on the counter is quietly wrong, and two people take the same slot.
+//
+// Every 30 seconds, and immediately whenever the tab is brought back to the
+// front - coming back to it is exactly when the screen has been unwatched
+// longest, and is the moment it is most likely to be stale.
+const AUTO_REFRESH_MS = 30000;
+let autoRefreshTimer = null;
+
+async function refreshNow() {
+  // Nothing reloads underneath an open dialog. Half the modals here are a
+  // decision in progress - an amount being typed, a move being placed - and
+  // redrawing the grid beneath one is how a half-finished action is lost.
+  const busy = [...document.querySelectorAll('.appt-popup-overlay')]
+    .some((o) => getComputedStyle(o).display !== 'none');
+  if (busy || !currentPin || document.hidden) return;
+  try {
+    await loadWindow(currentPin, windowFrom, windowTo);
+    renderGrid();
+    await refreshRequestBanner();
+  } catch (e) { /* a failed poll is not worth interrupting anyone over */ }
+}
+
+function startAutoRefresh() {
+  if (autoRefreshTimer) return;
+  autoRefreshTimer = setInterval(refreshNow, AUTO_REFRESH_MS);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshNow(); });
 }
 
 function showGate() {
@@ -4070,6 +4130,11 @@ extSearch.addEventListener('input', () => {
     const q = extSearch.value.trim();
     refreshExtensions(q.length >= 2 ? q : undefined);
   }, 250);
+});
+
+document.getElementById('requestBannerOpen').addEventListener('click', () => {
+  openOwnerPanel();
+  switchOwnerTab('requests');
 });
 
 document.getElementById('btnExtensions').addEventListener('click', () => {

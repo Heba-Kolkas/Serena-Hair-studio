@@ -88,6 +88,15 @@
                 </div>
                 <p class="sched-day-label" id="todayLabel"></p>
             </div>
+            <!-- A pending extensions request holds a slot but is not on the
+                 grid, so without this it is invisible until someone thinks to
+                 open the owner panel. It sits above the day, where the
+                 stylist is already looking. -->
+            <div id="requestBanner" class="request-banner" hidden>
+                <i class="fa-solid fa-hourglass-half"></i>
+                <span id="requestBannerText"></span>
+                <button type="button" id="requestBannerOpen" class="request-banner-btn">Review</button>
+            </div>
             <div id="gridWrap" class="sched-grid-wrap"></div>
 
             <div id="historyView" style="display:none;">
