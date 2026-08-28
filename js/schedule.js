@@ -105,10 +105,10 @@ const FALLBACK_STAFF = [
   { id: 'staff-kani', name: 'Kani M.', allow_overlap_booking: false, allow_manual_overlap: true },
 ];
 // Hassan's Balayage overlap pairing (mirrors book_appointment/booking.js): an
-// 11:00 or 15:00 Balayage always visually reserves the paired 13:00/16:30
+// 11:00 or 15:00 Balayage always visually reserves the paired 13:00/17:00
 // half-slot for a second client, even before anyone's actually booked it —
 // not just once a real overlapping booking exists.
-const OVERLAP_ANCHORS = { 660: 780, 900: 990 };
+const OVERLAP_ANCHORS = { 660: 780, 900: 1020 };
 const BALAYAGE_DURATION = 240;
 const FALLBACK_SERVICES = [
   { id: 'svc-balayage', name: 'Balayage / Highlights', category: 'Balayage & Highlights', color: '#C9A96E' },
@@ -657,7 +657,7 @@ function renderPills() {
 // ── OVERLAP-AWARE COLUMN LAYOUT ──
 // Groups blocks that overlap in time into clusters and splits each cluster's
 // width evenly. For an overlap-eligible stylist, a Balayage anchor booking
-// (11:00/15:00) always reserves its paired half-slot (13:00/16:30) — a
+// (11:00/15:00) always reserves its paired half-slot (13:00/17:00) — a
 // phantom entry forces the 50/50 split even when no second client has
 // actually booked that pairing yet; phantoms are filtered out before render.
 // `allowOverlap` reserves the paired half-slot beside an online-overlap
@@ -665,11 +665,11 @@ function renderPills() {
 // books it. `splitOverlaps` is the separate question of whether genuinely
 // overlapping bookings sit side by side — true for everyone now, since any
 // stylist can be double-booked by hand, and stacking them would hide one.
-// 13:00 and 16:30 - the two times a second client is taken alongside a
+// 13:00 and 17:00 - the two times a second client is taken alongside a
 // four-hour colour. Always drawn in the right-hand lane, so a day reads the
 // same way every time: the long appointment on the left, the one fitted
 // around it on the right.
-const SECOND_LANE_STARTS = new Set([13 * 60, 16 * 60 + 30]);
+const SECOND_LANE_STARTS = new Set([13 * 60, 17 * 60]);
 
 /** Whether this booking belongs in the right-hand lane.
  *
@@ -712,7 +712,7 @@ function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
     // renders one block at full width and there's nowhere visible to drop a
     // second appointment — the room has to be on screen before it's used.
     const packed = (splitOverlaps || allowOverlap) ? cluster.length : 1;
-    // A 13:00 or 16:30 booking is the second client of the day's pairing, so
+    // A 13:00 or 17:00 booking is the second client of the day's pairing, so
     // its column always has two lanes even when nothing else is in the
     // cluster - otherwise it would sit full width in the first lane and read
     // as the day's only appointment.
@@ -917,7 +917,7 @@ function nowLineHtml(gridStart, gridEnd) {
   const top = (nowMin - gridStart) * PX_PER_MIN;
   // The line said "now" without saying when. Reading it meant tracing across
   // to the gutter and counting quarter-hour ticks, which is exactly the moment
-  // someone misreads 16:30 as 16:15 and books over a client.
+  // someone misreads 17:00 as 16:45 and books over a client.
   return `<div class="sched-now-line" style="top:${top}px;"></div>`;
 }
 

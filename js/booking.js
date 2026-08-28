@@ -126,7 +126,7 @@ function getDayPolicy(staffId, weekday) {
 
 // Kani takes clients until 18:00 on Mon/Wed/Fri — later than the salon's
 // general 17:30 close on those days. Mirrors staff_hours_override.
-// Hassan takes everything that isn't a four-hour colour at 13:00 or 16:30,
+// Hassan takes everything that isn't a four-hour colour at 13:00 or 17:00,
 // every day, colour or not — the same two times his overlap pairing uses.
 // Kani has no entry here and runs on the open grid inside her own hours.
 // Mirrors the staff_service_schedule rows in 0002_seed_data.sql.
@@ -137,7 +137,7 @@ const HASSAN_SLOT_SERVICES = new Set([
   'svc-blowdry', 'svc-wash-blowdry', 'svc-wash-blowdry-wavy',
   'svc-ext-50', 'svc-ext-100',
 ]);
-const HASSAN_SLOT_TIMES = ['13:00', '16:30'];
+const HASSAN_SLOT_TIMES = ['13:00', '17:00'];
 // Updos are the exception: ninety minutes at 11:00 leaves the rest of his day
 // free for a colour touch-up, haircut, toner or blowdry, and keeps the 15:00
 // balayage bookable.
@@ -146,7 +146,7 @@ const HASSAN_UPDO_TIMES = ['11:00'];
 // The hour the afternoon colour starts. Once something already fills part of
 // Hassan's morning, his 13:00 slot gives way to the open grid up to here, so
 // the leftover time gets used instead of sitting idle — an 11:00 updo ends at
-// 12:30 and the rest of the morning becomes bookable from 12:30. His 16:30
+// 12:30 and the rest of the morning becomes bookable from 12:30. His 17:00
 // slot is untouched, which is what keeps a 15:00 colour and a late short
 // appointment both on the table.
 const GAP_FILL_BOUNDARY = '15:00';
@@ -155,7 +155,7 @@ const GAP_FILL_BOUNDARY = '15:00';
 const POLICY_VISIBLE_SLOTS = 3;
 
 // The real staff_service_schedule rows, once loaded: "staffId|serviceId|weekday"
-// -> ['13:00', '16:30']. Empty until the fetch lands, and empty forever if the
+// -> ['13:00', '17:00']. Empty until the fetch lands, and empty forever if the
 // database is unreachable, which is when the hardcoded fallback below applies.
 const staffSchedule = new Map();
 
@@ -219,7 +219,7 @@ const CONSULTATION_DURATION = 10;
 // conversation on top of it delays the appointment it is sitting inside.
 // Half an hour in, the colour is already going on and the stylist is free to
 // talk - so the half hour after each of these is kept clear.
-const CONSULTATION_BLOCKED_STARTS = ['11:00', '13:00', '15:00', '16:30'];
+const CONSULTATION_BLOCKED_STARTS = ['11:00', '13:00', '15:00', '17:00'];
 const CONSULTATION_CLEARANCE = 30;
 
 function consultationTimeAllowed(t) {
@@ -232,10 +232,10 @@ function consultationTimeAllowed(t) {
 // block its paired "second client" time for a stylist with
 // allow_overlap_booking — mirrors the exemption carved out in the
 // book_appointment RPC. Keyed in minutes. The pairing times themselves
-// (13:00/16:30) are about when the colour is far enough into processing to
+// (13:00/17:00) are about when the colour is far enough into processing to
 // leave unattended, which doesn't shift just because the full appointment now
 // runs longer end-to-end.
-const OVERLAP_ANCHORS = { 660: 780, 900: 990 }; // 11:00->13:00, 15:00->16:30
+const OVERLAP_ANCHORS = { 660: 780, 900: 1020 }; // 11:00->13:00, 15:00->17:00
 const BALAYAGE_DURATION = 240;
 // The length that makes a booking a four-hour appointment, whatever service
 // it was booked under.
@@ -865,7 +865,18 @@ function pendingNoticeHtml() {
 // Extensions need confirming whether they're the service or an add-on on a
 // colour, so both paths ask the same question.
 function needsConfirmation(svc) {
-  if (svc && svc.requiresConsultation) return true;
+  // Both spellings, deliberately. requiresConsultation exists only on the
+  // hardcoded fallback services used when Supabase is unreachable; the real
+  // rows carry requires_confirmation, which is the column the booking function
+  // itself reads to decide whether a booking comes out pending.
+  //
+  // Reading only the fallback spelling meant that on the live site - where the
+  // services come from the database - booking extensions ON THEIR OWN showed
+  // no warning at all. The booking still came back pending, so the client was
+  // told nothing until the success screen, having believed she had an
+  // appointment. It only ever appeared for extensions added to a colour,
+  // because that path is decided by the add-on instead.
+  if (svc && (svc.requiresConsultation || svc.requires_confirmation)) return true;
   return (state.addons || []).some((a) => a.requires_confirmation || a.exclusive_group === 'extensions');
 }
 
@@ -1499,7 +1510,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   // Hassan's two slots leave gaps once his morning is partly booked: an 11:00
   // updo runs to 12:30, and a 13:00-only rule would waste 12:30-13:00 and
   // 14:00-15:00. So when a NON-colour booking already ends inside the morning,
-  // everything up to the colour boundary opens to the normal grid, and 16:30
+  // everything up to the colour boundary opens to the normal grid, and 17:00
   // stays as it was. A colour booked at 11:00 is deliberately excluded: its
   // 13:00 is the overlap pairing, and replacing that with a grid would offer
   // times that sit inside the colour.
@@ -1557,7 +1568,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   // A service with its own rows in staff_service_schedule uses those times,
   // whatever its length. Extensions (100-150g) is 240 minutes, so the
   // four-hour test below claimed it and offered the balayage hours - 11:00 and
-  // 15:00 - when the schedule says 13:00 and 16:30 and the booking itself
+  // 15:00 - when the schedule says 13:00 and 17:00 and the booking itself
   // refuses anything else. Length is not what decides a service's start times;
   // the schedule rows are, which is the order book_appointment_core uses.
   const scheduledTimes = staffScheduleHasPair(staff.id, svc.id)
@@ -1586,7 +1597,7 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
             : (() => { const arr = []; for (let t = open; t + duration <= close; t += 15) arr.push(t); return arr; })();
 
   // A stylist with allow_overlap_booking can take a second, non-bridal client
-  // at 13:00/16:30 while their own 11:00/15:00 lightening appointment
+  // at 13:00/17:00 while their own 11:00/15:00 lightening appointment
   // (240min) processes unattended — that specific pairing is exempt from the
   // overlap check below. A consultation can nest inside ANY other booking's
   // block; it just can't share that booking's exact start time (guaranteed by
