@@ -333,13 +333,13 @@
   padding: 0.9rem 1.1rem;
   margin-top: -0.4rem;
   border-radius: 14px;
-  background: rgba(212,175,55,0.1);
-  border: 1px solid rgba(212,175,55,0.35);
+  background: rgba(201, 169, 110, 0.08);
+  border: 1px solid rgba(201, 169, 110, 0.35);
   font-size: 0.78rem;
   color: var(--espresso);
   line-height: 1.5;
 }
-.extensions-notice i { color: var(--gold); margin-top: 0.15rem; flex-shrink: 0; }
+.extensions-notice i { color: var(--gold, #C9A96E); margin-top: 0.15rem; flex-shrink: 0; }
 .extensions-notice-link {
   display: inline-block;
   margin-top: 0.4rem;
@@ -972,38 +972,96 @@ body.has-sticky-bar #back-top.visible {
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
-  margin-top: 1rem;
-  padding: 0.9rem 1.1rem;
-  border-radius: 14px;
-  border: 1px solid rgba(166, 74, 58, 0.28);
-  background: rgba(166, 74, 58, 0.07);
+  margin-top: 0.7rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(166, 74, 58, 0.25);
+  border-left: 2px solid #a64a3a;
+  background: rgba(166, 74, 58, 0.06);
   color: #7d3a2e;
   font-size: 0.8rem;
-  line-height: 1.55;
+  line-height: 1.5;
   text-align: left;
 }
 .notice-pending[hidden] { display: none; }
-.notice-pending i {
-  color: #a64a3a;
-  margin-top: 0.15rem;
-  flex-shrink: 0;
-}
+.notice-pending i { color: #a64a3a; margin-top: 0.15rem; flex-shrink: 0; }
 .notice-pending strong { color: #8c3b2c; font-weight: 600; }
+.notice-pending-body { min-width: 0; flex: 1; }
+.notice-pending-lead { margin: 0; }
 .notice-pending .extensions-notice-link {
-  display: block;
-  margin-top: 0.45rem;
+  display: inline-block;
+  margin-top: 0.5rem;
   background: none;
   border: none;
   padding: 0;
   color: #a64a3a;
   font-family: var(--font-body);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
 }
 .notice-pending .extensions-notice-link:hover { color: #8c3b2c; }
+
+/* ── EXTENSIONS ORDER LOOKUP ──
+   Lives inside the pending notice, not beside it - one card, one border,
+   rather than a second panel repeating the same warning in a different
+   colour. Espresso-on-cream, frosted like the rest of the wizard's inputs,
+   so it reads as part of this form and not a separate widget dropped in. */
+.ext-lookup {
+  margin: 0.7rem 0 0.15rem;
+  padding: 0.75rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(166, 74, 58, 0.18);
+}
+.ext-lookup-intro { margin: 0 0 0.55rem; font-size: 0.78rem; color: var(--espresso); }
+.ext-lookup-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.ext-lookup-fields input {
+  flex: 1 1 8.5rem;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(63, 54, 50, 0.18);
+  border-radius: 9px;
+  background: #fff;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: var(--espresso);
+}
+.ext-lookup-fields input::placeholder { color: var(--greige); }
+.ext-lookup-fields input:focus-visible {
+  outline: none;
+  border-color: var(--taupe);
+}
+.ext-lookup-fields button {
+  flex: 1 1 100%;
+  padding: 0.6rem 1rem;
+  margin-top: 0.1rem;
+  border: none;
+  border-radius: 9px;
+  background: var(--taupe);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+@media (min-width: 420px) {
+  /* Two fields and a button fit one row once there's room; below that they
+     stack, and the button stays full-width so it's never a thin sliver. */
+  .ext-lookup-fields button { flex: 0 0 auto; }
+}
+.ext-lookup-fields button:disabled { opacity: 0.6; cursor: default; }
+.ext-lookup-result { display: block; margin: 0.55rem 0 0; font-size: 0.8rem; font-weight: 500; }
+/* Colour carries the answer, but never alone - the message says it in words
+   too, for anyone who cannot tell the two apart. */
+.ext-lookup-result.ok  { color: #3B7355; }
+.ext-lookup-result.bad { color: #A8503C; }
 
 
 /* ── PHONE: COLLAPSE THE ADD-ONS UNTIL A SERVICE IS CHOSEN ──
@@ -1585,62 +1643,3 @@ body.has-sticky-bar #back-top.visible {
 }
 .form-check input{width:auto; margin:.2rem 0 0; accent-color:var(--taupe,#9a8577); flex:none}
 
-/* ── EXTENSIONS ORDER LOOKUP ──
-   Sits inside the extensions notice on step 1. Two fields and a button, so a
-   client can be told her hair's due date before she picks a day rather than
-   after she has picked everything. */
-.ext-gate-fields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.65rem;
-}
-.ext-gate-fields input {
-  flex: 1 1 9rem;
-  min-width: 0;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid rgba(212,175,55,0.45);
-  border-radius: 10px;
-  background: #fff;
-  font-family: inherit;
-  font-size: 0.85rem;
-  color: var(--espresso);
-}
-.ext-gate-fields input:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 1px;
-}
-.ext-gate-fields button {
-  flex: 0 0 auto;
-  padding: 0.55rem 1rem;
-  border: none;
-  border-radius: 10px;
-  background: var(--taupe);
-  color: #fff;
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.ext-gate-fields button:disabled { opacity: 0.6; cursor: default; }
-
-.ext-gate-result { display: block; margin-top: 0.6rem; font-weight: 500; }
-/* Green and red carry the answer, but never alone: the message says it in
-   words too, for anyone who cannot tell the two apart. */
-.ext-gate-result.ok  { color: #3B7355; }
-.ext-gate-result.bad { color: #A8503C; }
-
-.ext-gate-consult {
-  display: inline-block;
-  margin-top: 0.6rem;
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--taupe);
-  border-radius: 10px;
-  background: none;
-  color: var(--taupe);
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.ext-gate-consult:hover { background: var(--taupe); color: #fff; }

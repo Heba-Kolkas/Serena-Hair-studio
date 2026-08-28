@@ -735,8 +735,7 @@ function renderServices() {
       state.addons = Array.from(
         document.querySelectorAll(`.combo-chip[data-service-id="${svc.id}"].active`)
       ).map((c) => offered.find((a) => String(a.id) === c.dataset.addonId)).filter(Boolean);
-      renderConsultationNotice(svc); // an extensions add-on raises the notice too
-      renderExtensionsGate(svc);     // ...and an extensions add-on needs the hair too
+      renderConsultationNotice(svc); // also covers the extensions order lookup
       updateNext1(svc);              // adding or removing one changes the answer
       updateStickyBar(); // duration and total both move with the add-ons
     });
@@ -814,8 +813,7 @@ function selectService(svc) {
     if (chip.dataset.serviceId !== svc.id) chip.classList.remove('active');
   });
   renderExternalNotice(svc);
-  renderConsultationNotice(svc);
-  renderExtensionsGate(svc);
+  renderConsultationNotice(svc); // also covers the extensions order lookup
   updateStickyBar();
   // An externally booked service has no stylist, date or slot to pick — the
   // only way forward is the hand-off link in its notice.
@@ -850,13 +848,14 @@ function renderExternalNotice(svc) {
 /** Every reason step 1 might not be finished, in one place.
  *
  *  It used to be a line at the end of selectService that considered only the
- *  external-booking case, and it ran AFTER renderExtensionsGate had disabled
- *  the button - so it re-enabled it a moment later and the extensions gate sat
- *  there with Next perfectly clickable straight past it. The add-on path had
- *  the mirror of the same fault: picking an extensions add-on and then
- *  removing it left the button stuck disabled with nothing explaining why.
+ *  external-booking case, and it ran AFTER the order-lookup notice had disabled
+ *  the button - so it re-enabled it a moment later and the lookup sat there with
+ *  Next perfectly clickable straight past it. The add-on path had the mirror of
+ *  the same fault: picking an extensions add-on and then removing it left the
+ *  button stuck disabled with nothing explaining why.
  *
- *  Both call this now, so the two cannot drift apart again. */
+ *  Every path that changes the answer calls this now, so they cannot drift
+ *  apart again. */
 function updateNext1(svc) {
   const btn = document.getElementById('next1');
   if (!btn || !svc) return;
@@ -873,161 +872,37 @@ function escHtml(v) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-// ── EXTENSIONS: FIND YOUR ORDER BEFORE PICKING A DAY ──
-//
-// A fitting can only happen once the hair has been ordered for her and has had
-// time to arrive. book_appointment enforces that regardless - but on its own it
-// enforces it at the very last step, so she chooses a stylist, a day and a time
-// and is refused after all of it. That is the worst possible moment to be told.
-//
-// So it is asked here, before the calendar: her mobile number and email, and
-// the answer decides whether the calendar opens at all and from which date.
-//
-// Phone AND email, because this is a public lookup. With the number alone it
-// would tell anyone who typed one whether that person has extensions on order
-// and when the hair is due - which, tried in bulk, maps out the salon's
-// extensions clients.
-//
-// Deliberately NOT a "have you already ordered?" question. Clients genuinely do
-// not remember whether a deposit was paid, and a wrong answer either sends a
-// paying client back to a consultation she does not need, or walks her into a
-// dead end while telling the truth as she understands it. The search knows;
-// she does not have to.
-const EXT_GATE_COPY = {
-  en: {
-    lead: 'Extensions are fitted from hair we order for you.',
-    body: 'Enter the mobile number and email you gave us and we will find your order.',
-    phone: 'Mobile number', email: 'Email', find: 'Find my order',
-    searching: 'Looking...', consult: 'Book a consultation instead',
-  },
-  no: {
-    lead: 'Extensions settes i med hår vi bestiller til deg.',
-    body: 'Skriv inn mobilnummeret og e-posten du oppga, så finner vi bestillingen din.',
-    phone: 'Mobilnummer', email: 'E-post', find: 'Finn bestillingen min',
-    searching: 'Søker...', consult: 'Bestill konsultasjon i stedet',
-  },
-};
-
-/** True when this booking is a fitting - the service itself, or an extensions
- *  add-on on a colour. Both need the hair to exist. */
-function isExtensionsBooking(svc) {
-  if (svc && svc.category === 'Hair Extensions') return true;
-  return (state.addons || []).some((a) => a.exclusive_group === 'extensions');
-}
-
-function clearExtensionsGate() {
-  const el = document.getElementById('extGate');
-  if (el) el.remove();
-  const c = document.getElementById('extGateConsult');
-  if (c) c.remove();
-}
-
-function renderExtensionsGate(svc) {
-  clearExtensionsGate();
-  if (!isExtensionsBooking(svc)) {
-    state.extensionsEarliest = null;
-    return;
-  }
-  const card = document.querySelector('#serviceGroups .option-card-wrap[data-service-id="' + svc.id + '"]');
-  if (!card) return;
-  const c = EXT_GATE_COPY[lang() === 'no' ? 'no' : 'en'];
-
-  const el = document.createElement('div');
-  el.id = 'extGate';
-  el.className = 'extensions-notice ext-gate';
-  el.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>'
-    + '<span><strong>' + escHtml(c.lead) + '</strong> ' + escHtml(c.body)
-    + '<span class="ext-gate-fields">'
-    + '<input type="tel" id="extGatePhone" inputmode="tel" autocomplete="tel" placeholder="' + escHtml(c.phone) + '">'
-    + '<input type="email" id="extGateEmail" inputmode="email" autocomplete="email" placeholder="' + escHtml(c.email) + '">'
-    + '<button type="button" id="extGateFind">' + escHtml(c.find) + '</button>'
-    + '</span>'
-    + '<span id="extGateResult" class="ext-gate-result" hidden></span>'
-    + '</span>';
-  card.appendChild(el);
-
-  // Until the order is found there is nothing to book, so the way forward is
-  // closed. The server would refuse anyway; this stops her walking into it.
-  const next1 = document.getElementById('next1');
-  if (next1) next1.disabled = true;
-
-  const run = async () => {
-    const phone = document.getElementById('extGatePhone').value.trim();
-    const email = document.getElementById('extGateEmail').value.trim();
-    const out = document.getElementById('extGateResult');
-    const btn = document.getElementById('extGateFind');
-    const oldConsult = document.getElementById('extGateConsult');
-    if (oldConsult) oldConsult.remove();
-    out.hidden = false;
-    out.className = 'ext-gate-result';
-    out.textContent = c.searching;
-    btn.disabled = true;
-    try {
-      const { data, error } = await fetchExtensionsStatus(phone, email);
-      if (error) throw error;
-      const row = Array.isArray(data) ? data[0] : data;
-      out.textContent = row ? row.message : '';
-      if (row && row.allowed) {
-        out.classList.add('ok');
-        // Carried into the details step so she never types them twice.
-        state.phone = phone;
-        state.email = email;
-        state.extensionsEarliest = row.earliest_date || null;
-        updateNext1(svc);
-      } else {
-        out.classList.add('bad');
-        state.extensionsEarliest = null;
-        updateNext1(svc);
-        // A dead end needs a door out of it. Most people who see this simply
-        // have not been in yet, and the thing they actually need is the
-        // consultation - so offer it rather than leaving them stuck.
-        const consult = (state.services || []).find(
-          (x) => x.consultationRule || x.category === 'Consultation');
-        if (consult) {
-          const a = document.createElement('button');
-          a.type = 'button';
-          a.id = 'extGateConsult';
-          a.className = 'ext-gate-consult';
-          a.textContent = c.consult;
-          a.addEventListener('click', () => { clearExtensionsGate(); selectService(consult); });
-          el.appendChild(a);
-        }
-      }
-    } catch (e) {
-      out.className = 'ext-gate-result bad';
-      out.textContent = (e && e.message) || 'Could not check that just now.';
-      state.extensionsEarliest = null;
-      updateNext1(svc);
-    } finally {
-      btn.disabled = false;
-    }
-  };
-  document.getElementById('extGateFind').addEventListener('click', run);
-  el.querySelectorAll('input').forEach((inp) => {
-    inp.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter') { ev.preventDefault(); run(); }
-    });
-  });
-}
-
-// Extensions can't be confirmed on the spot: the salon has to check the
-// client came in for a consultation, paid the deposit, and had their
-// extensions ordered. Said in the same words wherever it appears.
+// Extensions can't be confirmed on the spot - the salon reviews every
+// request. Said in the same words wherever it appears.
 const PENDING_COPY = {
   en: {
     lead: 'This is a request, not a confirmed booking.',
-    body: "We'll message you to confirm once we've checked you've had your consultation, paid your deposit, and that your extensions have been ordered. Your time isn't held until then.",
+    body: "We'll message you to confirm. Your time isn't held until then.",
   },
   no: {
     lead: 'Dette er en foresp\u00f8rsel, ikke en bekreftet time.',
-    body: 'Vi sender deg en melding for \u00e5 bekrefte n\u00e5r vi har sjekket at du har v\u00e6rt p\u00e5 konsultasjon, betalt depositum, og at extensions er bestilt. Tiden er ikke reservert f\u00f8r da.',
+    body: 'Vi sender deg en melding for \u00e5 bekrefte. Tiden er ikke reservert f\u00f8r da.',
   },
 };
 function pendingCopy() { return PENDING_COPY[lang() === 'no' ? 'no' : 'en']; }
-function pendingNoticeHtml() {
-  const c = pendingCopy();
-  return `<i class="fa-solid fa-circle-exclamation"></i><span><strong>${c.lead}</strong> ${c.body}</span>`;
-}
+
+// ── ORDER LOOKUP, INLINE IN THE SAME NOTICE ──
+// Phone AND email, because this is a public lookup: with the number alone it
+// would tell anyone who typed one whether that person has extensions on order
+// and when the hair is due - which, tried in bulk, maps out the salon's
+// extensions clients.
+const EXT_LOOKUP_COPY = {
+  en: {
+    intro: 'Already ordered your extensions? Enter your details to unlock the calendar.',
+    phone: 'Mobile number', email: 'Email', find: 'Find my order',
+    searching: 'Looking...', consult: "Haven't had your consultation yet? Book one",
+  },
+  no: {
+    intro: 'Har du allerede bestilt extensions? Skriv inn detaljene dine for \u00e5 l\u00e5se opp kalenderen.',
+    phone: 'Mobilnummer', email: 'E-post', find: 'Finn bestillingen min',
+    searching: 'S\u00f8ker...', consult: 'Ikke v\u00e6rt p\u00e5 konsultasjon enn\u00e5? Bestill en',
+  },
+};
 
 // Extensions need confirming whether they're the service or an add-on on a
 // colour, so both paths ask the same question.
@@ -1045,6 +920,16 @@ function needsConfirmation(svc) {
   // because that path is decided by the add-on instead.
   if (svc && (svc.requiresConsultation || svc.requires_confirmation)) return true;
   return (state.addons || []).some((a) => a.requires_confirmation || a.exclusive_group === 'extensions');
+}
+
+/** True when this booking is a fitting - the service itself, or an
+ *  extensions add-on on a colour. Both need the hair to exist. In practice
+ *  this and needsConfirmation agree on every real service row; kept as a
+ *  separate question because "needs owner review" and "needs an order on
+ *  file" are different facts that happen to coincide today. */
+function isExtensionsBooking(svc) {
+  if (svc && svc.category === 'Hair Extensions') return true;
+  return (state.addons || []).some((a) => a.exclusive_group === 'extensions');
 }
 
 // What the hair actually is. Clients comparing prices between salons have no
@@ -1066,15 +951,10 @@ const EXTENSIONS_QUALITY = {
     + 'riktig pleie.',
 };
 
-function isExtensionsService(svc) {
-  return !!svc && (svc.category === 'Hair Extensions'
-    || (state.addons || []).some((a) => a.exclusive_group === 'extensions'));
-}
-
 function renderExtensionsQuality(svc) {
   const existing = document.getElementById('extensionsQuality');
   if (existing) existing.remove();
-  if (!isExtensionsService(svc)) return;
+  if (!isExtensionsBooking(svc)) return;
   const card = document.querySelector(`#serviceGroups .option-card-wrap[data-service-id="${svc.id}"]`);
   if (!card) return;
   const el = document.createElement('div');
@@ -1084,31 +964,96 @@ function renderExtensionsQuality(svc) {
   card.appendChild(el);
 }
 
+function switchToConsultation() {
+  const consultation = state.services.find((x) => x.consultationRule)
+    || state.services.find((x) => /consultation/i.test(x.name || ''));
+  if (!consultation) return;
+  selectService(consultation);
+  const card = document.querySelector(`#serviceGroups .option-card-wrap[data-service-id="${consultation.id}"]`);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── ONE NOTICE, NOT THREE ──
+// This used to be two stacked boxes: a red "this is only a request" panel,
+// and below it a separate gold-bordered search panel repeating a lot of the
+// same ground and each carrying its own "book a consultation" link. On a
+// phone that was most of a screen of scrolling before she ever reached the
+// calendar, and the two panels disagreed slightly - the first promised the
+// salon would check her order "once submitted"; the second checked it
+// immediately. One box now does both jobs.
 function renderConsultationNotice(svc) {
-  let notice = document.getElementById('extensionsNotice');
-  if (notice) notice.remove();
+  const existing = document.getElementById('extensionsNotice');
+  if (existing) existing.remove();
   renderExtensionsQuality(svc);
-  if (!needsConfirmation(svc)) return;
+  if (!needsConfirmation(svc)) { state.extensionsEarliest = null; return; }
   const card = document.querySelector(`#serviceGroups .option-card-wrap[data-service-id="${svc.id}"]`);
   if (!card) return;
-  const c = pendingCopy();
+
+  const p = pendingCopy();
+  const isExt = isExtensionsBooking(svc);
+  const lk = EXT_LOOKUP_COPY[lang() === 'no' ? 'no' : 'en'];
+
   const el = document.createElement('div');
   el.id = 'extensionsNotice';
   el.className = 'notice-pending';
   el.innerHTML = `
     <i class="fa-solid fa-circle-exclamation"></i>
-    <span><strong>${c.lead}</strong> ${c.body}
-      <button type="button" class="extensions-notice-link" id="switchToConsultation">${lang() === 'no' ? 'Ikke vært på konsultasjon ennå? Bestill en' : "Haven't had your consultation yet? Book one"}</button>
-    </span>
+    <div class="notice-pending-body">
+      <p class="notice-pending-lead"><strong>${p.lead}</strong> ${p.body}</p>
+      ${isExt ? `
+      <div class="ext-lookup">
+        <p class="ext-lookup-intro">${lk.intro}</p>
+        <div class="ext-lookup-fields">
+          <input type="tel" id="extGatePhone" inputmode="tel" autocomplete="tel" placeholder="${lk.phone}">
+          <input type="email" id="extGateEmail" inputmode="email" autocomplete="email" placeholder="${lk.email}">
+          <button type="button" id="extGateFind">${lk.find}</button>
+        </div>
+        <p id="extGateResult" class="ext-lookup-result" hidden></p>
+      </div>` : ''}
+      <button type="button" class="extensions-notice-link" id="switchToConsultation">${lk.consult}</button>
+    </div>
   `;
   card.appendChild(el);
-  document.getElementById('switchToConsultation').addEventListener('click', () => {
-    const consultation = state.services.find((x) => x.consultationRule)
-      || state.services.find((x) => /consultation/i.test(x.name || ''));
-    if (!consultation) return;
-    selectService(consultation);
-    const card = document.querySelector(`#serviceGroups .option-card-wrap[data-service-id="${consultation.id}"]`);
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('switchToConsultation').addEventListener('click', switchToConsultation);
+  if (!isExt) return;
+
+  const run = async () => {
+    const phone = document.getElementById('extGatePhone').value.trim();
+    const email = document.getElementById('extGateEmail').value.trim();
+    const out = document.getElementById('extGateResult');
+    const btn = document.getElementById('extGateFind');
+    out.hidden = false;
+    out.className = 'ext-lookup-result';
+    out.textContent = lk.searching;
+    btn.disabled = true;
+    try {
+      const { data, error } = await fetchExtensionsStatus(phone, email);
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      out.textContent = row ? row.message : '';
+      if (row && row.allowed) {
+        out.classList.add('ok');
+        state.phone = phone;
+        state.email = email;
+        state.extensionsEarliest = row.earliest_date || null;
+      } else {
+        out.classList.add('bad');
+        state.extensionsEarliest = null;
+      }
+    } catch (e) {
+      out.className = 'ext-lookup-result bad';
+      out.textContent = (e && e.message) || 'Could not check that just now.';
+      state.extensionsEarliest = null;
+    } finally {
+      btn.disabled = false;
+      updateNext1(svc);
+    }
+  };
+  document.getElementById('extGateFind').addEventListener('click', run);
+  el.querySelectorAll('.ext-lookup-fields input').forEach((inp) => {
+    inp.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); run(); }
+    });
   });
 }
 
