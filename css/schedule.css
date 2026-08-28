@@ -2409,3 +2409,24 @@ body.is-moving #gridWrap { padding-bottom: 5rem; }
 
 /* Turned down by the salon, as against cancelled by the client. */
 .sched-status.rejected { background: #fee2e2; color: #991b1b; }
+
+/* The time on the "now" line. Without it the line says something is happening
+   at this height but not what o'clock that is, and reading it means counting
+   quarter-hour ticks across in the gutter. */
+.sched-now-time {
+  position: absolute;
+  left: 4px;
+  top: 0;
+  transform: translateY(-50%);
+  padding: .08rem .38rem;
+  border-radius: 50px;
+  background: #e0526b;
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(10,10,20,.25);
+}

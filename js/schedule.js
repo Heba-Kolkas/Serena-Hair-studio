@@ -894,7 +894,12 @@ function nowLineHtml(gridStart, gridEnd) {
   const nowMin = nowMinutes();
   if (nowMin < gridStart || nowMin > gridEnd) return '';
   const top = (nowMin - gridStart) * PX_PER_MIN;
-  return `<div class="sched-now-line" style="top:${top}px;"></div>`;
+  // The line said "now" without saying when. Reading it meant tracing across
+  // to the gutter and counting quarter-hour ticks, which is exactly the moment
+  // someone misreads 16:30 as 16:15 and books over a client.
+  return `<div class="sched-now-line" style="top:${top}px;">`
+    + `<span class="sched-now-time">${minutesToTimeStr(nowMin)}</span>`
+    + `</div>`;
 }
 
 function columnHtml(staff, bookings, blocked, gridStart, gridEnd) {
@@ -3745,8 +3750,21 @@ async function refreshNow() {
   } catch (e) { /* a failed poll is not worth interrupting anyone over */ }
 }
 
+// The line is drawn at the minute the grid was built, so on a quiet afternoon
+// it would sit there being wrong. Redrawn on its own minute tick, without
+// touching the rest of the day.
+function tickNowLine() {
+  const line = gridWrap.querySelector('.sched-now-line');
+  if (!line || selectedDate !== todayStr()) return;
+  const label = line.querySelector('.sched-now-time');
+  if (label) label.textContent = minutesToTimeStr(nowMinutes());
+  const start = currentGridStart;
+  line.style.top = `${(nowMinutes() - start) * PX_PER_MIN}px`;
+}
+
 function startAutoRefresh() {
   if (autoRefreshTimer) return;
+  setInterval(tickNowLine, 30000);
   autoRefreshTimer = setInterval(refreshNow, AUTO_REFRESH_MS);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshNow(); });
 }
