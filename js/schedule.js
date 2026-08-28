@@ -836,8 +836,8 @@ function blockHtml(b, gridStart) {
   return `
     <div class="${blockClass(b)}" data-id="${b.id}" style="top:${top}px; height:${height}px; width:calc(${b.widthPct}% - 4px); left:calc(${b.leftPct}% + 2px); background:${bg}; border-left-color:${color};">
       ${statusBadgeHtml(b)}
-      <div class="sched-block-name">${noteDotHtml(b, height, narrow)}${b.customer_name}</div>
-      ${narrow ? '' : `<div class="sched-block-meta">${b.service_name}</div>`}
+      <div class="sched-block-name">${noteDotHtml(b, height, narrow)}${escHtml(b.customer_name)}</div>
+      ${narrow ? '' : `<div class="sched-block-meta">${escHtml(b.service_name)}</div>`}
       <div class="sched-block-meta">${fmtTime(b.start_time)}</div>
       ${isPaid(b) && !narrow ? `<div class="sched-block-paid">${escHtml(money(b.amount_charged))}</div>` : ''}
       ${noteChipHtml(b, height, narrow)}
@@ -1002,7 +1002,7 @@ function renderGrid() {
 // null for bookings made before that migration, so every use is guarded.
 function addonsLine(b) {
   if (!b.addons) return '';
-  return `<div class="popup-addons"><i class="fa-solid fa-plus"></i> ${b.addons}</div>`;
+  return `<div class="popup-addons"><i class="fa-solid fa-plus"></i> ${escHtml(b.addons)}</div>`;
 }
 function expectedLabel(b) {
   if (b.expected_total == null) return '';
@@ -1054,13 +1054,13 @@ function openPopup(id) {
   // possible to settle, or the money is simply lost.
   const awaitingPayment = b.status === 'arrived';
   popupBody.innerHTML = `
-    <div class="popup-name">${b.customer_name}</div>
-    <div class="popup-meta">${b.service_name}${b.staff_name ? ' · ' + b.staff_name : ''}</div>
+    <div class="popup-name">${escHtml(b.customer_name)}</div>
+    <div class="popup-meta">${escHtml(b.service_name)}${b.staff_name ? ' · ' + b.staff_name : ''}</div>
     <div class="popup-meta">${fmtTime(b.start_time)} – ${fmtTime(b.end_time)}</div>
     ${addonsLine(b)}
     ${expectedLabel(b) ? `<div class="popup-meta popup-expected">Expected ${expectedLabel(b)}</div>` : ''}
-    ${b.customer_phone ? `<a class="popup-phone" href="tel:${b.customer_phone}"><i class="fa-solid fa-phone"></i> ${b.customer_phone}</a>` : '<div style="margin-bottom:1.25rem;"></div>'}
-    ${b.notes ? `<div class="popup-notes"><i class="fa-solid fa-note-sticky"></i> ${b.notes}</div>` : ''}
+    ${b.customer_phone ? `<a class="popup-phone" href="tel:${escHtml(b.customer_phone)}"><i class="fa-solid fa-phone"></i> ${escHtml(b.customer_phone)}</a>` : '<div style="margin-bottom:1.25rem;"></div>'}
+    ${b.notes ? `<div class="popup-notes"><i class="fa-solid fa-note-sticky"></i> ${escHtml(b.notes)}</div>` : ''}
     ${canAct
       ? `<div class="popup-actions">
            <button class="sched-btn sched-btn-arrived" data-action="arrived" data-id="${b.id}"><i class="fa-solid fa-check"></i> Arrived</button>
@@ -1182,8 +1182,8 @@ function renderHistoryRows(list, emptyMessage) {
         <span class="history-row-dot" style="background:${color};"></span>
         <span class="history-row-time">${fmtTime(b.start_time)}</span>
         <div class="history-row-info">
-          <div class="history-row-name">${b.customer_name}</div>
-          <div class="history-row-meta">${b.service_name}${b.staff_name ? ' · ' + b.staff_name : ''}</div>
+          <div class="history-row-name">${escHtml(b.customer_name)}</div>
+          <div class="history-row-meta">${escHtml(b.service_name)}${b.staff_name ? ' · ' + b.staff_name : ''}</div>
         </div>
         <span class="sched-status ${b.rejected_at ? 'rejected' : b.status}">${statusLabel(b)}</span>
       </div>
@@ -1440,8 +1440,8 @@ async function reportBlockClashes({ date, dateTo, staffId, start, end }) {
   if (!clashes.length) return;
 
   const list = clashes.map((b) =>
-    `<div class="block-clash-row"><strong>${new Date(b.date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} ${fmtTime(b.start_time)}</strong> ${b.customer_name} · ${b.service_name}`
-    + (b.customer_phone ? ` · <a href="tel:${b.customer_phone}">${b.customer_phone}</a>` : '')
+    `<div class="block-clash-row"><strong>${new Date(b.date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} ${fmtTime(b.start_time)}</strong> ${escHtml(b.customer_name)} · ${escHtml(b.service_name)}`
+    + (b.customer_phone ? ` · <a href="tel:${escHtml(b.customer_phone)}">${escHtml(b.customer_phone)}</a>` : '')
     + `${staffId ? '' : ' · ' + b.staff_name}</div>`).join('');
 
   blockStatus.innerHTML = `✓ Blocked - but ${clashes.length} booking${clashes.length === 1 ? ' is' : 's are'} already inside that time:`
@@ -1464,10 +1464,10 @@ async function fetchBusyRangesFor(date, staffId, excludeBookingId) {
   return [
     ...bookings
       .filter((b) => b.staff_id === staffId && b.status !== 'cancelled' && b.id !== excludeBookingId)
-      .map((b) => ({ startMin: timeToMinutes(fmtTime(b.start_time)), endMin: timeToMinutes(fmtTime(b.end_time)), label: `${b.customer_name} - ${b.service_name}`, isBlock: false })),
+      .map((b) => ({ startMin: timeToMinutes(fmtTime(b.start_time)), endMin: timeToMinutes(fmtTime(b.end_time)), label: `${escHtml(b.customer_name)} - ${escHtml(b.service_name)}`, isBlock: false })),
     ...blocked
       .filter((b) => b.staff_id === staffId || b.staff_id === null)
-      .map((b) => ({ startMin: timeToMinutes(fmtTime(b.start_time)), endMin: timeToMinutes(fmtTime(b.end_time)), label: b.reason ? `Blocked - ${b.reason}` : 'Blocked', isBlock: true })),
+      .map((b) => ({ startMin: timeToMinutes(fmtTime(b.start_time)), endMin: timeToMinutes(fmtTime(b.end_time)), label: b.reason ? `Blocked - ${escHtml(b.reason)}` : 'Blocked', isBlock: true })),
   ].sort((a, b) => a.startMin - b.startMin);
 }
 function renderBusyRangesInto(el, busyRanges) {
@@ -2457,10 +2457,10 @@ async function renderOwnerRequestsTab() {
       <div class="owner-booking-top">
         <span class="owner-booking-time">${fmtTime(r.start_time)}</span>
         <div class="owner-booking-main">
-          <div class="owner-booking-name">${r.customer_name} - ${r.service_name}</div>
+          <div class="owner-booking-name">${escHtml(r.customer_name)} - ${escHtml(r.service_name)}</div>
           <div class="owner-booking-meta">
             ${new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long' })}
-            · ${r.staff_name} · ${r.customer_phone || 'No phone'}${r.customer_email ? ' · ' + r.customer_email : ''}
+            · ${escHtml(r.staff_name)} · ${r.customer_phone || 'No phone'}${r.customer_email ? ' · ' + r.customer_email : ''}
           </div>
           ${holdLabel(r)}
         </div>
@@ -2534,7 +2534,7 @@ async function renderOwnerRequestsTab() {
           + `<div class="req-mail-warn">${(mail && mail.reason) || 'Mail service unavailable'}</div>`
           + `<div class="req-mail-warn">Let them know yourself: `
           + `<a href="tel:${(row && row.customer_phone) || ''}">call</a>`
-          + `${row && row.customer_email ? ` or <a href="mailto:${row.customer_email}">email</a>` : ''}.</div>`;
+          + `${row && row.customer_email ? ` or <a href="mailto:${escHtml(row.customer_email)}">email</a>` : ''}.</div>`;
         msg.style.color = '#b45309';
       }
       setTimeout(() => renderOwnerRequestsTab(), 2200);
@@ -3067,7 +3067,7 @@ async function renderOwnerRevenueTab() {
           return `
           <div class="revenue-stylist-row${isOpen ? ' open' : ''}" data-staff="${r.staff_id}">
             <div class="revenue-stylist-main">
-              <div class="revenue-stylist-name"><i class="fa-solid fa-chevron-right revenue-expand-icon"></i> ${r.staff_name}</div>
+              <div class="revenue-stylist-name"><i class="fa-solid fa-chevron-right revenue-expand-icon"></i> ${escHtml(r.staff_name)}</div>
               <div class="revenue-stylist-meta">${r.booking_count} completed booking${Number(r.booking_count) === 1 ? '' : 's'}</div>
               <div class="revenue-bar-track"><div class="revenue-bar-fill" style="width:${(Number(r.total_revenue) / maxRevenue) * 100}%;"></div></div>
             </div>
@@ -3078,8 +3078,8 @@ async function renderOwnerRevenueTab() {
             ${mine.length ? mine.map((b) => `
               <div class="revenue-detail-row">
                 <div class="revenue-detail-main">
-                  <div class="revenue-detail-service">${b.service_name}</div>
-                  <div class="revenue-detail-meta">${b.customer_name} · ${new Date(b.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                  <div class="revenue-detail-service">${escHtml(b.service_name)}</div>
+                  <div class="revenue-detail-meta">${escHtml(b.customer_name)} · ${new Date(b.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                 </div>
                 <div class="revenue-detail-amount">${b.amount_charged != null ? Math.round(Number(b.amount_charged)).toLocaleString('en-US') + ' NOK' : '-'}</div>
               </div>
@@ -3217,10 +3217,10 @@ async function renderOwnerBookingsTab() {
           <div class="owner-booking-top">
             <span class="owner-booking-time">${fmtTime(b.start_time)}</span>
             <div class="owner-booking-main">
-              <div class="owner-booking-name">${b.customer_name} - ${b.service_name}</div>
-              <div class="owner-booking-meta">${b.staff_name} · ${b.customer_phone || 'No phone'}${b.customer_email ? ' · ' + b.customer_email : ''}</div>
-              ${b.addons ? `<div class="owner-booking-notes"><i class="fa-solid fa-plus"></i> ${b.addons}</div>` : ''}
-              ${b.notes ? `<div class="owner-booking-notes"><i class="fa-solid fa-note-sticky"></i> ${b.notes}</div>` : ''}
+              <div class="owner-booking-name">${escHtml(b.customer_name)} - ${escHtml(b.service_name)}</div>
+              <div class="owner-booking-meta">${escHtml(b.staff_name)} · ${b.customer_phone || 'No phone'}${b.customer_email ? ' · ' + b.customer_email : ''}</div>
+              ${b.addons ? `<div class="owner-booking-notes"><i class="fa-solid fa-plus"></i> ${escHtml(b.addons)}</div>` : ''}
+              ${b.notes ? `<div class="owner-booking-notes"><i class="fa-solid fa-note-sticky"></i> ${escHtml(b.notes)}</div>` : ''}
             </div>
             <span class="sched-status ${b.rejected_at ? 'rejected' : b.status}">${statusLabel(b)}</span>
           </div>
@@ -3339,7 +3339,7 @@ async function renderOwnerHoursTab() {
     list.innerHTML = data.map((o) => `
       <div class="owner-list-row">
         <div class="owner-list-row-main">
-          <div class="owner-list-row-title">${o.staff_name}</div>
+          <div class="owner-list-row-title">${escHtml(o.staff_name)}</div>
           <div class="owner-list-row-meta">${OWNER_WEEKDAY_NAMES[o.weekday]} - closes at ${fmtTime(o.close_time)}</div>
         </div>
         <div class="owner-list-row-actions"><button type="button" class="owner-icon-btn delete" data-id="${o.id}"><i class="fa-solid fa-trash"></i></button></div>
