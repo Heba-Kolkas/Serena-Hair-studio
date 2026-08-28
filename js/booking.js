@@ -1274,16 +1274,64 @@ function freeIntervals(windowStart, windowEnd, ranges) {
 // open: a two-hour colour finishing at 15:00 has to start at 13:00, and
 // refusing it because the window nominally opens at 13:30 would mean that
 // service simply can't be booked.
-function windowSlots(windowStart, windowEnd, duration, earliestAllowed, ranges) {
+// ── SHORT SERVICES PACK AGAINST THE COLOUR ──
+//
+// Kani's day is built around one four-hour colour. The short services either
+// side of it are not laid on a grid from the top of the window; they are
+// stacked against the colour, so the last one before it finishes exactly as
+// it begins and the first one after it starts exactly as it ends. Anything
+// else strands an hour that is too short to sell and too long to ignore.
+//
+// `packAgainst` carries the minutes where a colour edge sits - the split that
+// protects a colour start, and the start of any four-hour booking already on
+// the day. A free interval that ENDS on one of those chains backwards from
+// that edge; every other interval chains forwards from its own start.
+//
+// The old "flush" slot is gone. It appended one extra start at z - duration
+// on top of the forward chain, which is precisely a gap-maker: a 15:00 and a
+// 16:30 haircut in a window closing at 17:30 leaves 16:00-16:30 dead. Chains
+// now run clean from one edge, in one direction, with no crumbs.
+function windowSlots(windowStart, windowEnd, duration, earliestAllowed, ranges, packAgainst) {
   const out = [];
   freeIntervals(windowStart, windowEnd, ranges).forEach(([a, z]) => {
-    for (let t = a; t + duration <= z; t += duration) out.push(t);
-    const flush = z - duration;
-    if (flush >= a && !out.includes(flush)) out.push(flush);
+    if (packAgainst && packAgainst.has(z)) {
+      for (let t = z - duration; t >= a; t -= duration) out.push(t);
+    } else {
+      for (let t = a; t + duration <= z; t += duration) out.push(t);
+    }
   });
+  // A window narrower than the service itself still offers the one start that
+  // fits, so an odd short gap is not silently unbookable.
   const wide = windowEnd - duration;
   if (wide < windowStart && wide >= earliestAllowed && !out.includes(wide)) out.push(wide);
   return out.sort((a, b) => a - b);
+}
+
+// ── DON'T CALL HER IN FOR ONE APPOINTMENT ──
+//
+// While a stylist has nothing booked on a day, the slot furthest from the
+// colour is withheld: it is the one that would have her open the salon at
+// 11:00, or still be there at 17:00, for a single haircut. Once she has one
+// booking that day she is in the building anyway, and the withheld slot opens
+// - which is why booking the 14:00 makes the 11:00 appear.
+//
+// Only withheld at an edge of her own working day. Where the policy already
+// pushes short work an hour past opening (Mon/Wed/Fri start at 12:00, not
+// 11:00), that protection is already in place and doing it twice would just
+// lose an hour. And never withheld down to a single choice: one time on offer
+// for a whole day is not an offer.
+function withholdLoneCallIn(starts, opts) {
+  const { hasBookings, duration, dayOpen, dayClose, boundaries } = opts;
+  if (hasBookings || !boundaries || boundaries.size === 0) return starts;
+  let out = starts.slice();
+  // Both ends of the day, independently: the very first start of her shift,
+  // and the one that runs right up to closing. Either alone would have her
+  // there for a single appointment at the edge of the day.
+  const first = out[0];
+  const last = out[out.length - 1];
+  if (out.length > 2 && first === dayOpen) out = out.filter((t) => t !== first);
+  if (out.length > 2 && last + duration === dayClose) out = out.filter((t) => t !== last);
+  return out;
 }
 
 function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
@@ -1482,10 +1530,28 @@ function computeSlotsFor(dateIso, hours, blocked, busy, staffOverride) {
   let policyWindows = null;
   if (policy && !isFourHourBooking(svc) && !svc.consultationRule) {
     const dayOpen = parseTime(dayHours.open_time);
+    // Where the colour edges are: the split that protects an as-yet-unbooked
+    // colour start, and the start of every four-hour booking already on the
+    // day. Short services stack backwards onto these.
+    const packAgainst = new Set();
+    if (splitAt != null) packAgainst.add(splitAt);
+    limitedToday.forEach((b) => packAgainst.add(parseTime(b.start_time)));
+
     policyWindows = splitAt != null
-      ? (sideLock === 'late' ? [] : windowSlots(open, splitAt, duration, dayOpen, allRanges))
-        .concat(sideLock === 'early' ? [] : windowSlots(splitAt, close, duration, dayOpen, allRanges))
-      : windowSlots(open, close, duration, dayOpen, allRanges);
+      ? (sideLock === 'late' ? [] : windowSlots(open, splitAt, duration, dayOpen, allRanges, packAgainst))
+        .concat(sideLock === 'early' ? [] : windowSlots(splitAt, close, duration, dayOpen, allRanges, packAgainst))
+      : windowSlots(open, close, duration, dayOpen, allRanges, packAgainst);
+
+    // Consultations nest inside other bookings rather than occupying the day,
+    // so they don't count as "she is in the building anyway".
+    const hasShortBookings = otherToday.some((b) => !consultationIds.has(String(b.service_id)));
+    policyWindows = withholdLoneCallIn(policyWindows, {
+      hasBookings: hasShortBookings,
+      duration,
+      dayOpen,
+      dayClose: close,
+      boundaries: packAgainst,
+    });
   }
 
   // A service with its own rows in staff_service_schedule uses those times,
