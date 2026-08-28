@@ -623,6 +623,9 @@ body { background: var(--sched-bg); }
 }
 
 .sched-columns {
+  /* The single "now" pill is positioned against this, so it must be the
+     containing block - otherwise left:50% centres on the page, not the grid. */
+  position: relative;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -2415,9 +2418,12 @@ body.is-moving #gridWrap { padding-bottom: 5rem; }
    quarter-hour ticks across in the gutter. */
 .sched-now-time {
   position: absolute;
-  left: 4px;
-  top: 0;
-  transform: translateY(-50%);
+  /* Centred across the whole grid and drawn once. It sat at the left edge of
+     each column before, which on a two-stylist day put the clock on screen
+     twice - reading as two moments rather than one. */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 7;
   padding: .08rem .38rem;
   border-radius: 50px;
   background: #e0526b;

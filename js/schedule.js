@@ -897,9 +897,20 @@ function nowLineHtml(gridStart, gridEnd) {
   // The line said "now" without saying when. Reading it meant tracing across
   // to the gutter and counting quarter-hour ticks, which is exactly the moment
   // someone misreads 16:30 as 16:15 and books over a client.
-  return `<div class="sched-now-line" style="top:${top}px;">`
-    + `<span class="sched-now-time">${minutesToTimeStr(nowMin)}</span>`
-    + `</div>`;
+  return `<div class="sched-now-line" style="top:${top}px;"></div>`;
+}
+
+/** The time itself, drawn once and centred across the whole grid.
+ *
+ *  It used to live inside the line, and the line is rendered per stylist
+ *  column - so a two-stylist day showed the clock twice, side by side, which
+ *  reads as two different things rather than one moment. */
+function nowLabelHtml(gridStart, gridEnd) {
+  if (selectedDate !== todayStr()) return '';
+  const nowMin = nowMinutes();
+  if (nowMin < gridStart || nowMin > gridEnd) return '';
+  const top = HEADER_OFFSET_PX + (nowMin - gridStart) * PX_PER_MIN;
+  return `<div class="sched-now-time" style="top:${top}px;">${minutesToTimeStr(nowMin)}</div>`;
 }
 
 function columnHtml(staff, bookings, blocked, gridStart, gridEnd) {
@@ -959,6 +970,7 @@ function renderGrid() {
           dayBlocked.filter((sl) => sl.staff_id === s.id || sl.staff_id === null),
           start, end
         )).join('')}
+        ${nowLabelHtml(start, end)}
       </div>
     </div>
   `;
@@ -3754,12 +3766,19 @@ async function refreshNow() {
 // it would sit there being wrong. Redrawn on its own minute tick, without
 // touching the rest of the day.
 function tickNowLine() {
-  const line = gridWrap.querySelector('.sched-now-line');
-  if (!line || selectedDate !== todayStr()) return;
-  const label = line.querySelector('.sched-now-time');
-  if (label) label.textContent = minutesToTimeStr(nowMinutes());
+  if (selectedDate !== todayStr()) return;
   const start = currentGridStart;
-  line.style.top = `${(nowMinutes() - start) * PX_PER_MIN}px`;
+  const now = nowMinutes();
+  gridWrap.querySelectorAll('.sched-now-line').forEach((l) => {
+    l.style.top = `${(now - start) * PX_PER_MIN}px`;
+  });
+  const label = gridWrap.querySelector('.sched-now-time');
+  if (label) {
+    label.textContent = minutesToTimeStr(now);
+    label.style.top = `${HEADER_OFFSET_PX + (now - start) * PX_PER_MIN}px`;
+  }
+  const dot = gridWrap.querySelector('.sched-now-dot');
+  if (dot) dot.style.top = `${HEADER_OFFSET_PX + (now - start) * PX_PER_MIN}px`;
 }
 
 function startAutoRefresh() {
