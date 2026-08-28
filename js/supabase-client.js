@@ -517,6 +517,15 @@ export async function decideBookingAdmin({ pin, bookingId, decision, reason }) {
 // never reach the browser — see supabase/functions/send-booking-email.
 // Resolves { sent, reason } and never throws: a decision must not be lost
 // because mail is down.
+// Has this client already been in, ordered her hair and paid the deposit?
+// Asked before the calendar so she is never offered a date her hair cannot
+// make. Both phone AND email are required by the function itself - with the
+// phone alone this would answer "does this number have extensions on order"
+// for any number anyone typed.
+export async function fetchExtensionsStatus(phone, email) {
+  return supabase.rpc('extensions_status_for', { p_phone: phone, p_email: email });
+}
+
 export async function sendBookingEmail(payload) {
   try {
     const { data, error } = await supabase.functions.invoke('send-booking-email', { body: payload });

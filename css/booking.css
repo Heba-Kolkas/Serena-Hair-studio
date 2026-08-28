@@ -1584,3 +1584,63 @@ body.has-sticky-bar #back-top.visible {
   color:var(--greige,#9f948e); cursor:pointer;
 }
 .form-check input{width:auto; margin:.2rem 0 0; accent-color:var(--taupe,#9a8577); flex:none}
+
+/* ── EXTENSIONS ORDER LOOKUP ──
+   Sits inside the extensions notice on step 1. Two fields and a button, so a
+   client can be told her hair's due date before she picks a day rather than
+   after she has picked everything. */
+.ext-gate-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+.ext-gate-fields input {
+  flex: 1 1 9rem;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(212,175,55,0.45);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--espresso);
+}
+.ext-gate-fields input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+.ext-gate-fields button {
+  flex: 0 0 auto;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--taupe);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ext-gate-fields button:disabled { opacity: 0.6; cursor: default; }
+
+.ext-gate-result { display: block; margin-top: 0.6rem; font-weight: 500; }
+/* Green and red carry the answer, but never alone: the message says it in
+   words too, for anyone who cannot tell the two apart. */
+.ext-gate-result.ok  { color: #3B7355; }
+.ext-gate-result.bad { color: #A8503C; }
+
+.ext-gate-consult {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--taupe);
+  border-radius: 10px;
+  background: none;
+  color: var(--taupe);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ext-gate-consult:hover { background: var(--taupe); color: #fff; }

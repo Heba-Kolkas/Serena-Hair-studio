@@ -15,6 +15,7 @@ import {
   joinWaitlist,
   fetchBookingTerms,
   checkClientMustCall,
+  fetchExtensionsStatus,
 } from '/js/supabase-client.js';
 
 // Static fallbacks so the wizard is fully browsable for UI/UX review while
@@ -735,6 +736,7 @@ function renderServices() {
         document.querySelectorAll(`.combo-chip[data-service-id="${svc.id}"].active`)
       ).map((c) => offered.find((a) => String(a.id) === c.dataset.addonId)).filter(Boolean);
       renderConsultationNotice(svc); // an extensions add-on raises the notice too
+      renderExtensionsGate(svc);     // ...and an extensions add-on needs the hair too
       updateStickyBar(); // duration and total both move with the add-ons
     });
   });
@@ -812,6 +814,7 @@ function selectService(svc) {
   });
   renderExternalNotice(svc);
   renderConsultationNotice(svc);
+  renderExtensionsGate(svc);
   updateStickyBar();
   // An externally booked service has no stylist, date or slot to pick — the
   // only way forward is the hand-off link in its notice.
@@ -841,6 +844,152 @@ function renderExternalNotice(svc) {
     </span>
   `;
   card.appendChild(el);
+}
+
+/** Escapes text before it goes into innerHTML. The gate's own copy is static,
+ *  but this file did not have one at all, and the next person to interpolate
+ *  something a client typed will reach for it. */
+function escHtml(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ── EXTENSIONS: FIND YOUR ORDER BEFORE PICKING A DAY ──
+//
+// A fitting can only happen once the hair has been ordered for her and has had
+// time to arrive. book_appointment enforces that regardless - but on its own it
+// enforces it at the very last step, so she chooses a stylist, a day and a time
+// and is refused after all of it. That is the worst possible moment to be told.
+//
+// So it is asked here, before the calendar: her mobile number and email, and
+// the answer decides whether the calendar opens at all and from which date.
+//
+// Phone AND email, because this is a public lookup. With the number alone it
+// would tell anyone who typed one whether that person has extensions on order
+// and when the hair is due - which, tried in bulk, maps out the salon's
+// extensions clients.
+//
+// Deliberately NOT a "have you already ordered?" question. Clients genuinely do
+// not remember whether a deposit was paid, and a wrong answer either sends a
+// paying client back to a consultation she does not need, or walks her into a
+// dead end while telling the truth as she understands it. The search knows;
+// she does not have to.
+const EXT_GATE_COPY = {
+  en: {
+    lead: 'Extensions are fitted from hair we order for you.',
+    body: 'Enter the mobile number and email you gave us and we will find your order.',
+    phone: 'Mobile number', email: 'Email', find: 'Find my order',
+    searching: 'Looking...', consult: 'Book a consultation instead',
+  },
+  no: {
+    lead: 'Extensions settes i med hår vi bestiller til deg.',
+    body: 'Skriv inn mobilnummeret og e-posten du oppga, så finner vi bestillingen din.',
+    phone: 'Mobilnummer', email: 'E-post', find: 'Finn bestillingen min',
+    searching: 'Søker...', consult: 'Bestill konsultasjon i stedet',
+  },
+};
+
+/** True when this booking is a fitting - the service itself, or an extensions
+ *  add-on on a colour. Both need the hair to exist. */
+function isExtensionsBooking(svc) {
+  if (svc && svc.category === 'Hair Extensions') return true;
+  return (state.addons || []).some((a) => a.exclusive_group === 'extensions');
+}
+
+function clearExtensionsGate() {
+  const el = document.getElementById('extGate');
+  if (el) el.remove();
+  const c = document.getElementById('extGateConsult');
+  if (c) c.remove();
+}
+
+function renderExtensionsGate(svc) {
+  clearExtensionsGate();
+  if (!isExtensionsBooking(svc)) {
+    state.extensionsEarliest = null;
+    return;
+  }
+  const card = document.querySelector('#serviceGroups .option-card-wrap[data-service-id="' + svc.id + '"]');
+  if (!card) return;
+  const c = EXT_GATE_COPY[lang() === 'no' ? 'no' : 'en'];
+
+  const el = document.createElement('div');
+  el.id = 'extGate';
+  el.className = 'extensions-notice ext-gate';
+  el.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>'
+    + '<span><strong>' + escHtml(c.lead) + '</strong> ' + escHtml(c.body)
+    + '<span class="ext-gate-fields">'
+    + '<input type="tel" id="extGatePhone" inputmode="tel" autocomplete="tel" placeholder="' + escHtml(c.phone) + '">'
+    + '<input type="email" id="extGateEmail" inputmode="email" autocomplete="email" placeholder="' + escHtml(c.email) + '">'
+    + '<button type="button" id="extGateFind">' + escHtml(c.find) + '</button>'
+    + '</span>'
+    + '<span id="extGateResult" class="ext-gate-result" hidden></span>'
+    + '</span>';
+  card.appendChild(el);
+
+  // Until the order is found there is nothing to book, so the way forward is
+  // closed. The server would refuse anyway; this stops her walking into it.
+  const next1 = document.getElementById('next1');
+  if (next1) next1.disabled = true;
+
+  const run = async () => {
+    const phone = document.getElementById('extGatePhone').value.trim();
+    const email = document.getElementById('extGateEmail').value.trim();
+    const out = document.getElementById('extGateResult');
+    const btn = document.getElementById('extGateFind');
+    const oldConsult = document.getElementById('extGateConsult');
+    if (oldConsult) oldConsult.remove();
+    out.hidden = false;
+    out.className = 'ext-gate-result';
+    out.textContent = c.searching;
+    btn.disabled = true;
+    try {
+      const { data, error } = await fetchExtensionsStatus(phone, email);
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      out.textContent = row ? row.message : '';
+      if (row && row.allowed) {
+        out.classList.add('ok');
+        // Carried into the details step so she never types them twice.
+        state.phone = phone;
+        state.email = email;
+        state.extensionsEarliest = row.earliest_date || null;
+        if (next1) next1.disabled = false;
+      } else {
+        out.classList.add('bad');
+        state.extensionsEarliest = null;
+        if (next1) next1.disabled = true;
+        // A dead end needs a door out of it. Most people who see this simply
+        // have not been in yet, and the thing they actually need is the
+        // consultation - so offer it rather than leaving them stuck.
+        const consult = (state.services || []).find(
+          (x) => x.consultationRule || x.category === 'Consultation');
+        if (consult) {
+          const a = document.createElement('button');
+          a.type = 'button';
+          a.id = 'extGateConsult';
+          a.className = 'ext-gate-consult';
+          a.textContent = c.consult;
+          a.addEventListener('click', () => { clearExtensionsGate(); selectService(consult); });
+          el.appendChild(a);
+        }
+      }
+    } catch (e) {
+      out.className = 'ext-gate-result bad';
+      out.textContent = (e && e.message) || 'Could not check that just now.';
+      state.extensionsEarliest = null;
+      if (next1) next1.disabled = true;
+    } finally {
+      btn.disabled = false;
+    }
+  };
+  document.getElementById('extGateFind').addEventListener('click', run);
+  el.querySelectorAll('input').forEach((inp) => {
+    inp.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); run(); }
+    });
+  });
 }
 
 // Extensions can't be confirmed on the spot: the salon has to check the
@@ -1219,7 +1368,11 @@ function renderCalendar() {
     const iso = toLocalISO(cellDate);
     const dayHours = calendarBusinessHours.find((h) => h.weekday === cellDate.getDay());
     const closed = !dayHours || dayHours.closed;
-    const outOfRange = cellDate < today || cellDate > maxBookableDate || closed;
+    // A fitting cannot happen before the hair is due, so those days are shut
+    // the same way a Sunday is - not marked "fully booked", because the salon
+    // is not full, it simply cannot do this service yet.
+    const beforeHair = !!state.extensionsEarliest && iso < state.extensionsEarliest;
+    const outOfRange = cellDate < today || cellDate > maxBookableDate || closed || beforeHair;
     // Distinct from out-of-range on purpose: a closed Sunday is simply not a
     // working day, whereas a full day is one the salon works and has sold
     // out. Only the second gets the mark.
