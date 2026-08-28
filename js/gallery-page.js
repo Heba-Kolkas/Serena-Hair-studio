@@ -347,3 +347,20 @@ document.addEventListener('keydown', (e) => {
   }
 });
 document.querySelectorAll('.reveal').forEach((el) => window._observeReveal && window._observeReveal(el));
+
+// ── BEHAVIOUR THAT USED TO LIVE IN onclick ATTRIBUTES ──
+// Inline handlers cannot run under a Content-Security-Policy that forbids
+// inline script, and that policy is worth far more than the convenience: it is
+// the wall that stops injected script executing at all. Same behaviour, wired
+// where the policy allows it.
+document.addEventListener('click', (e) => {
+  // Tapping the Instagram badge on a gallery card opens Instagram; it must not
+  // also open the card's own lightbox behind it.
+  if (e.target.closest('.gallery-ig-link')) { e.stopPropagation(); return; }
+
+  const overlay = document.getElementById('lightboxOverlay');
+  if (!overlay || !overlay.classList.contains('active')) return;
+  // Clicking the backdrop closes; clicking the picture itself does not.
+  if (e.target.closest('.lightbox-box')) return;
+  if (overlay.contains(e.target) || e.target === overlay) closeLightbox();
+});

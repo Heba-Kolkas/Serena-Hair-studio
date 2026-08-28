@@ -64,8 +64,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" />
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" /></noscript>
+    <!-- Loaded as a plain stylesheet. The preload-and-swap trick relied on an
+         inline onload handler, which a strict CSP refuses to run - the icons
+         would simply never appear. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <link rel="stylesheet" href="/style.css?v=14">
     <link rel="stylesheet" href="/css/home.css?v=3">
@@ -250,7 +252,7 @@
                     <div class="gallery-cat-img-wrap"><img src="/html/Pics/Covers/keratin-and-treatments.jpeg" alt="Keratin Treatment" loading="lazy" decoding="async"></div>
                     <div class="gallery-cat-label" data-en="Keratin Treatment" data-no="Keratinbehandling">
                         Keratin Treatment
-                        <a href="https://www.instagram.com/lavellaprofessional?igsh=ZngyNHZkamFwa3J4" target="_blank" rel="noopener noreferrer" class="team-social-link gallery-ig-link" onclick="event.stopPropagation()"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.instagram.com/lavellaprofessional?igsh=ZngyNHZkamFwa3J4" target="_blank" rel="noopener noreferrer" class="team-social-link gallery-ig-link"><i class="fa-brands fa-instagram"></i></a>
                     </div>
                 </div>
                 <div class="gallery-cat-card" data-cat="Extensions">
@@ -273,14 +275,14 @@
                     <div class="gallery-cat-img-wrap"><img src="/html/Pics/Covers/nails.jpeg" alt="Nails" loading="lazy" decoding="async"></div>
                     <div class="gallery-cat-label" data-en="Nails" data-no="Negler">
                         Nails
-                        <a href="https://www.instagram.com/studio.serena.nailsbypati?igsh=amFoY2Y2bTAzbTZq" target="_blank" rel="noopener noreferrer" class="team-social-link gallery-ig-link" onclick="event.stopPropagation()"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.instagram.com/studio.serena.nailsbypati?igsh=amFoY2Y2bTAzbTZq" target="_blank" rel="noopener noreferrer" class="team-social-link gallery-ig-link"><i class="fa-brands fa-instagram"></i></a>
                     </div>
                 </div>
             </div>
 
             <!-- LIGHTBOX -->
-            <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
-                <div class="lightbox-box" onclick="event.stopPropagation()">
+            <div class="lightbox-overlay" id="lightboxOverlay">
+                <div class="lightbox-box">
                     <button class="lightbox-close" id="lightboxCloseBtn" aria-label="Close">✕</button>
                     <h3 class="lightbox-title" id="lightboxTitle"></h3>
                     <div class="lightbox-grid" id="lightboxGrid"></div>

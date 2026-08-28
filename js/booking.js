@@ -3,6 +3,7 @@ import {
   fetchServiceAddons,
   fetchAllStaffServices,
   fetchStaffServiceSchedule,
+  fetchStaffDayPolicies,
   fetchStaffForService,
   fetchBusinessHours,
   fetchBookingHorizonDays,
@@ -78,7 +79,47 @@ const STAFF_DAY_POLICY = {
   },
 };
 
+// The real staff_day_policy rows, keyed "staffId|weekday". Empty until the
+// fetch lands, and empty for good if the database is unreachable - which is
+// the only case the hardcoded table below was ever right for.
+const dayPolicies = new Map();
+
+function loadDayPolicyRows(rows) {
+  dayPolicies.clear();
+  const t = (v) => (v ? String(v).slice(0, 5) : null);
+  (rows || []).forEach((r) => {
+    dayPolicies.set(`${r.staff_id}|${r.weekday}`, {
+      maxLimited: r.max_limited_per_day,
+      allowOther: r.allow_other_services,
+      maxOther: r.max_other_per_day,
+      lateFillDays: r.late_fill_days,
+      colourHoldDays: r.colour_hold_days,
+      open: t(r.open_time),
+      close: t(r.close_time),
+      otherOpen: t(r.other_open_time),
+      otherSplitAt: t(r.other_split_at),
+      closeAfterEarly: t(r.close_after_early),
+      openBeforeLate: t(r.open_before_late),
+    });
+  });
+}
+
+/** The day rules for this stylist on this weekday.
+ *
+ *  Reads the real rows first. The table below is keyed by fallback ids like
+ *  'staff-2', which are never the ids the database returns - so with Supabase
+ *  live this returned null for everyone and Kani's day was not shaped at all.
+ *  Her short appointments fell through to a plain fifteen-minute grid, which
+ *  is why they were offered at 12:15 and 12:45 instead of chaining 12:00,
+ *  13:00, 14:00 from the start of her window. */
 function getDayPolicy(staffId, weekday) {
+  const real = dayPolicies.get(`${staffId}|${weekday}`);
+  if (real) return real;
+  // A stylist with rows on other weekdays but none today has no policy today,
+  // rather than inheriting one from the hardcoded table.
+  for (const key of dayPolicies.keys()) {
+    if (key.startsWith(`${staffId}|`)) return null;
+  }
   const forStaff = STAFF_DAY_POLICY[staffId];
   return (forStaff && forStaff[weekday]) || null;
 }
@@ -497,11 +538,16 @@ async function loadServices() {
   // the wizard its add-ons, never its real service list.
   if (data !== FALLBACK_SERVICES) {
     try {
-      const [addonRes, ssRes, schedRes] = await Promise.all([
+      const [addonRes, ssRes, schedRes, polRes] = await Promise.all([
         fetchServiceAddons(),
         fetchAllStaffServices(),
         fetchStaffServiceSchedule(),
+        fetchStaffDayPolicies(),
       ]);
+
+      // Kani's day rules, so the wizard shapes her day the way the booking
+      // rules do rather than offering times they will refuse.
+      if (!polRes.error && polRes.data) loadDayPolicyRows(polRes.data);
 
       // The fixed start times the booking rules actually enforce.
       if (!schedRes.error && schedRes.data) loadStaffScheduleRows(schedRes.data);
