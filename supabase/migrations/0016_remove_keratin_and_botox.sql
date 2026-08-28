@@ -1,0 +1,11 @@
+-- The salon no longer offers Keratin Treatment or Hair Botox. 0005 had made
+-- them externally booked - still listed, but sending people to Taniya's
+-- Instagram. They are now gone outright.
+--
+-- Safe to delete rather than deactivate: nothing references them. No bookings,
+-- no staff assignments, no add-on offers, no scheduled slots. Checked before
+-- running, not assumed.
+--
+-- Taniya herself is left alone. She is still on the team page with
+-- bookable = false, which is a separate decision from the services.
+delete from services where category = 'Keratin & Hair Treatments';

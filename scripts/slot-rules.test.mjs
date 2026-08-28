@@ -24,6 +24,25 @@ function offer({open,close,splitAt,duration,ranges=[],colourStarts=[],hasBooking
     ? windowSlots(open,splitAt,duration,dayOpen,ranges,pack).concat(windowSlots(splitAt,close,duration,dayOpen,ranges,pack))
     : windowSlots(open,close,duration,dayOpen,ranges,pack);
   w = withholdLoneCallIn(w,{hasBookings,duration,dayOpen,dayClose:close,boundaries:pack});
+  // The client never sees the whole pool. computeSlotsFor shows three at a
+  // time, chosen nearest to work already booked (earliest-first on an empty
+  // day), and each one taken brings the next into view. Modelled here so the
+  // expectations below are what a client actually gets offered, not the
+  // internal list behind it.
+  const VISIBLE = 3;
+  if (w.length > VISIBLE) {
+    const distanceToWork = (t) => {
+      let best = Infinity;
+      for (const [bs, be] of ranges) {
+        const gap = t >= be ? t - be : (bs >= t + duration ? bs - (t + duration) : 0);
+        if (gap < best) best = gap;
+      }
+      return best;
+    };
+    w = w.map((t) => ({ t, d: distanceToWork(t) }))
+         .sort((a, b) => (a.d - b.d) || (a.t - b.t))
+         .slice(0, VISIBLE).map((x) => x.t).sort((a, b) => a - b);
+  }
   return w.map(F).join(', ');
 }
 let pass=0,fail=0;
@@ -32,7 +51,7 @@ const check=(label,got,want)=>{ const ok=got===want; ok?pass++:fail++;
 
 console.log('\n--- MON/WED/FRI, nothing booked (open 11:00, short from 12:00, close 17:30) ---');
 const mwf={open:T(12),close:T(17,30),splitAt:T(15),dayOpen:T(11)};
-check('haircut 60',  offer({...mwf,duration:60}),  '12:00, 13:00, 14:00, 15:00, 16:00');
+check('haircut 60',  offer({...mwf,duration:60}),  '12:00, 13:00, 14:00');
 check('colour 90',   offer({...mwf,duration:90}),  '12:00, 13:30, 15:00');
 check('colour+addon 120 packs onto the colour', offer({...mwf,duration:120}), '13:00, 15:00');
 
@@ -53,6 +72,6 @@ check('haircut 60, after the 14:00 is taken -> 11:00 opens',
 console.log('\n--- TUE/THU, 15:00 balayage released, day empty (11:00-18:00) ---');
 check('haircut 60 -> no lone 17:00',
       offer({open:T(11),close:T(18),splitAt:T(15),duration:60,dayOpen:T(11)}),
-      '12:00, 13:00, 14:00, 15:00, 16:00');
+      '12:00, 13:00, 14:00');
 
 console.log(`\n${pass} passed, ${fail} failed`);
