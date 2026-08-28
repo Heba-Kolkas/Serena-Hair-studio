@@ -2060,6 +2060,7 @@ async function confirmBooking() {
       firstName: state.firstName,
       lastName: state.lastName,
       instagram: state.instagram,
+      smsConsent: state.smsConsent,
     });
     if (error) throw error;
     state.lastBooking = data;
@@ -2209,6 +2210,7 @@ document.getElementById('next4').addEventListener('click', () => {
   // Optional, and stored bare: @ and a pasted profile URL are both stripped
   // server-side, so she can type it however she has it to hand.
   const instagram = (document.getElementById('custInstagram') || {}).value?.trim() || '';
+  const smsConsent = !!(document.getElementById('custSmsConsent') || {}).checked;
 
   if (!firstName || !lastName) { showError('Please give both your first and last name.'); return; }
   if (!email || !phone) { showError('Please fill in your email and phone.'); return; }
@@ -2221,6 +2223,7 @@ document.getElementById('next4').addEventListener('click', () => {
 
   state.name = name; state.email = email; state.phone = phone; state.notes = notes;
   state.firstName = firstName; state.lastName = lastName; state.instagram = instagram;
+  state.smsConsent = smsConsent;
 
   // A gated client is told here, not at the last step. She has given her phone
   // number, which is the first moment we can know — and being turned away after

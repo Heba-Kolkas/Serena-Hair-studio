@@ -93,6 +93,12 @@
                 <input type="hidden" id="custName">
                 <div class="form-row"><label for="custEmail" data-en="Email" data-no="E-post">Email</label><input type="email" id="custEmail" autocomplete="email"></div>
                 <div class="form-row"><label for="custPhone" data-en="Phone" data-no="Telefon">Phone</label><input type="tel" id="custPhone" autocomplete="tel"></div>
+                <!-- Unticked by default and it stays that way. A pre-ticked box is
+                     not consent, and in a dispute it is worth nothing. Confirmations
+                     and reminders are service messages and go regardless; this is
+                     only for anything the salon might send beyond them. -->
+                <label class="form-check"><input type="checkbox" id="custSmsConsent">
+                  <span data-en="Text me about offers and openings (optional)" data-no="Send meg SMS om tilbud og ledige timer (valgfritt)">Text me about offers and openings (optional)</span></label>
                 <div class="form-row"><label for="custInstagram" data-en="Instagram (optional)" data-no="Instagram (valgfritt)">Instagram (optional)</label><input type="text" id="custInstagram" autocomplete="off" placeholder="@yourname" inputmode="text"></div>
                 <div class="form-row"><label for="custNotes" data-en="Notes (optional)" data-no="Notater (valgfritt)">Notes (optional)</label><textarea id="custNotes" placeholder="Anything we should know before your visit?" data-placeholder-en="Anything we should know before your visit?" data-placeholder-no="Noe vi bør vite før besøket ditt?"></textarea></div>
                 <div class="wizard-nav">

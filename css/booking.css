@@ -1576,3 +1576,11 @@ body.has-sticky-bar #back-top.visible {
 .waitlist-status { font-size: 0.8rem; margin-top: 0.6rem; color: var(--greige, #9f948e); }
 .waitlist-status.bad { color: #C25E4B; }
 .waitlist-done { font-size: 0.9rem; color: #059669; display: flex; gap: 0.5rem; align-items: flex-start; }
+
+/* Consent, asked plainly and never pre-ticked. */
+.form-check{
+  display:flex; align-items:flex-start; gap:.55rem;
+  margin:.2rem 0 .9rem; font-size:.86rem; line-height:1.45;
+  color:var(--greige,#9f948e); cursor:pointer;
+}
+.form-check input{width:auto; margin:.2rem 0 0; accent-color:var(--taupe,#9a8577); flex:none}

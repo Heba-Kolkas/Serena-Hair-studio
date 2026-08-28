@@ -95,7 +95,7 @@ export async function fetchBusySlotsRange(staffId, dateFrom, dateTo) {
   return supabase.rpc('get_busy_slots_range', { p_staff_id: staffId, p_date_from: dateFrom, p_date_to: dateTo });
 }
 
-export async function bookAppointment({ serviceId, staffId, date, startTime, name, email, phone, notes, addonIds, termsVersion, firstName, lastName, instagram }) {
+export async function bookAppointment({ serviceId, staffId, date, startTime, name, email, phone, notes, addonIds, termsVersion, firstName, lastName, instagram, smsConsent }) {
   return supabase.rpc('book_appointment', {
     p_service_id: serviceId,
     p_staff_id: staffId,
@@ -112,6 +112,7 @@ export async function bookAppointment({ serviceId, staffId, date, startTime, nam
     p_first_name: firstName || null,
     p_last_name: lastName || null,
     p_instagram: instagram || null,
+    p_sms_consent: !!smsConsent,
   });
 }
 
