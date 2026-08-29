@@ -4012,12 +4012,10 @@ pinForm.addEventListener('submit', async (e) => {
   btnPinSubmit.disabled = false;
   const ok = error ? (pin === FALLBACK_PIN || pin === FALLBACK_OWNER_PIN) : data === true;
   if (!ok) { pinError.textContent = 'Incorrect PIN. Please try again.'; pinError.classList.add('visible'); return; }
-  localStorage.setItem(PIN_KEY, pin);
   openSchedule(pin);
 });
 
 btnSwitchPin.addEventListener('click', () => {
-  localStorage.removeItem(PIN_KEY);
   localStorage.removeItem(IDENTITY_KEY);
   currentPin = null;
   currentActorStaffId = null;
@@ -4054,8 +4052,13 @@ window.addEventListener('resize', () => {
 // Keeps the "now" line actually moving while the page is left open.
 setInterval(() => { if (currentPin && viewMode === 'upcoming') renderGrid(); }, 60000);
 
-const cachedPin = localStorage.getItem(PIN_KEY);
-if (cachedPin) openSchedule(cachedPin);
+// The PIN used to be cached in localStorage and reused to skip this screen
+// on every reload - meaning anyone who picked up the device after a staff
+// member had ever logged in once got straight into the schedule, no PIN
+// asked. The gate is the point of a PIN; it has to be paid every time the
+// page loads, not just the first time. Clears any PIN a browser is still
+// holding from before this fix, so re-opening the tool doesn't skip it.
+localStorage.removeItem(PIN_KEY);
 
 // ── EXTENSIONS ORDER BOOK ──
 // Staff PIN, not owner: whoever takes the consultation writes the order, while
