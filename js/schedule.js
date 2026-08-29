@@ -261,6 +261,7 @@ const addBkStaff = document.getElementById('addBkStaff');
 const addBkTime = document.getElementById('addBkTime');
 const addBkAvailability = document.getElementById('addBkAvailability');
 const addBkNotes = document.getElementById('addBkNotes');
+const addBkNotify = document.getElementById('addBkNotify');
 const btnSaveAddBooking = document.getElementById('btnSaveAddBooking');
 const addBkPaid = document.getElementById('addBkPaid');
 const addBkPaidAmountField = document.getElementById('addBkPaidAmountField');
@@ -1963,6 +1964,7 @@ let addBkServicesSource = FALLBACK_SERVICES_ADMIN;
 function openAddBookingModal(prefill) {
   prefill = prefill || {};
   addBkName.value = ''; addBkPhone.value = ''; addBkEmail.value = ''; addBkNotes.value = '';
+  addBkNotify.checked = true;
   addBkTime.value = prefill.time || '';
   if (prefill.date) addBkDatePicker.setValue(prefill.date); else addBkDatePicker.clear();
   addBkAvailability.innerHTML = '';
@@ -1997,7 +1999,7 @@ btnSaveAddBooking.addEventListener('click', async () => {
   const { data, error } = await staffBookAppointment({
     pin: currentPin,
     serviceId: addBkService.value, staffId: addBkStaff.value, date, startTime: time,
-    name, email, phone, notes: addBkNotes.value.trim(),
+    name, email, phone, notes: addBkNotes.value.trim(), notify: addBkNotify.checked,
   });
   if (error) { addBkStatus.textContent = 'Error: ' + error.message; addBkStatus.style.color = '#dc2626'; return; }
 

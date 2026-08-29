@@ -138,12 +138,13 @@ export async function fetchCancellationQuote({ bookingId, email, phone }) {
 
 // The schedule tool's own booking entry. Same rules as the public one apart
 // from overlaps, which a stylist entering it by hand is allowed to create.
-export async function staffBookAppointment({ pin, serviceId, staffId, date, startTime, name, email, phone, notes, addonIds }) {
+export async function staffBookAppointment({ pin, serviceId, staffId, date, startTime, name, email, phone, notes, addonIds, notify }) {
   return supabase.rpc('staff_book_appointment', {
     p_pin: pin,
     p_service_id: serviceId, p_staff_id: staffId, p_date: date, p_start_time: startTime,
     p_customer_name: name, p_customer_email: email, p_customer_phone: phone,
     p_notes: notes || null, p_addon_ids: (addonIds && addonIds.length) ? addonIds : null,
+    p_notify: notify !== false,
   });
 }
 

@@ -411,6 +411,15 @@
 
                 <div id="addBkAvailability" class="reschedule-availability compact"></div>
 
+                <!-- On by default, same as every other booking path - unchecked
+                     for the case this exists for: a walk-in or phone booking
+                     where she already has the details from the conversation
+                     and a follow-up text reads as a mistake, not a courtesy. -->
+                <label class="block-allday-check">
+                    <input type="checkbox" id="addBkNotify" checked />
+                    Send her a confirmation by SMS/email
+                </label>
+
                 <!-- A walk-in is usually being written up after she has already
                      paid. Without this the booking goes in as upcoming and has
                      to be found and completed a second time, which is how
