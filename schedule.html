@@ -176,34 +176,55 @@
             <button type="button" class="appt-popup-close" id="extClose" aria-label="Close">&times;</button>
             <h3 class="block-modal-title">Extensions</h3>
 
-            <div class="ext-toolbar">
-                <button type="button" class="owner-action-btn" id="btnExtNew"><i class="fa-solid fa-plus"></i> New order</button>
-                <input type="search" id="extSearch" class="ext-search" placeholder="Search a name or phone number…" />
+            <!-- Orders: the hair itself, ordered through to fitted. Requests:
+                 one specific appointment she tried to book, waiting on a yes
+                 or no. Two different things that both happen to be about
+                 extensions clients, previously split across this screen and
+                 a separate Owner Panel tab - which is exactly why they read
+                 as the same thing when they are not. One panel now, with the
+                 distinction made by the tab itself rather than by which menu
+                 you had to already know to open. -->
+            <div class="view-toggle ext-top-toggle" id="extTopToggle">
+                <button type="button" class="view-toggle-btn active" data-ext-tab="orders">Orders</button>
+                <button type="button" class="view-toggle-btn" data-ext-tab="requests">Requests <span id="extReqBadge" class="topbar-menu-badge" hidden></span></button>
             </div>
 
-            <!-- The new-order form. Hidden until asked for: the list is what
-                 people open this screen to look at. -->
-            <div id="extForm" class="ext-form" hidden>
-                <div class="ext-form-grid">
-                    <div class="block-field"><label>Client name *</label><input type="text" id="extName" /></div>
-                    <div class="block-field"><label>Phone *</label><input type="tel" id="extPhone" placeholder="+47 …" /></div>
-                    <div class="block-field"><label>Email</label><input type="email" id="extEmail" /></div>
-                    <div class="block-field"><label>Consultation by</label><select id="extStaff"></select></div>
-                    <div class="block-field"><label>Colour</label><input type="text" id="extColour" placeholder="6/613 ombre" /></div>
-                    <div class="block-field"><label>Length</label><input type="text" id="extLength" placeholder="50 cm" /></div>
-                    <div class="block-field"><label>Quantity</label><input type="text" id="extQty" placeholder="100 g" /></div>
-                    <div class="block-field"><label>Supplier</label><input type="text" id="extSupplier" /></div>
-                    <div class="block-field"><label>Total agreed (NOK)</label><input type="number" id="extTotal" min="0" step="1" /></div>
-                    <div class="block-field"><label>Deposit (NOK)</label><input type="number" id="extDeposit" min="0" step="1" /></div>
+            <div id="extOrdersSection">
+                <div class="ext-toolbar">
+                    <button type="button" class="owner-action-btn" id="btnExtNew"><i class="fa-solid fa-plus"></i> New order</button>
+                    <input type="search" id="extSearch" class="ext-search" placeholder="Search a name or phone number…" />
                 </div>
-                <label class="block-allday-check"><input type="checkbox" id="extDepositPaid" checked /> Deposit paid</label>
-                <div class="block-field"><label>Notes</label><input type="text" id="extNotes" placeholder="Wants extra fine, allergic to…" /></div>
-                <button type="button" id="btnExtSave" class="block-save-btn"><i class="fa-solid fa-plus"></i> Add order</button>
-                <div id="extFormStatus" class="block-status"></div>
+
+                <!-- The new-order form. Hidden until asked for: the list is
+                     what people open this screen to look at. Every field is
+                     required except Supplier and Notes - a stylist recording
+                     an order after the consultation has all of this in front
+                     of her, and a gap here is a client the salon cannot
+                     confirm anything about later. -->
+                <div id="extForm" class="ext-form" hidden>
+                    <div class="ext-form-grid">
+                        <div class="block-field"><label>Client name *</label><input type="text" id="extName" /></div>
+                        <div class="block-field"><label>Phone *</label><input type="tel" id="extPhone" placeholder="+47 …" /></div>
+                        <div class="block-field"><label>Email *</label><input type="email" id="extEmail" /></div>
+                        <div class="block-field"><label>Consultation by *</label><select id="extStaff"></select></div>
+                        <div class="block-field"><label>Colour *</label><input type="text" id="extColour" placeholder="6/613 ombre" /></div>
+                        <div class="block-field"><label>Length *</label><input type="text" id="extLength" placeholder="50 cm" /></div>
+                        <div class="block-field"><label>Quantity *</label><input type="text" id="extQty" placeholder="100 g" /></div>
+                        <div class="block-field"><label>Supplier</label><input type="text" id="extSupplier" /></div>
+                        <div class="block-field"><label>Total agreed (NOK) *</label><input type="number" id="extTotal" min="0" step="1" /></div>
+                        <div class="block-field"><label>Deposit (NOK) *</label><input type="number" id="extDeposit" min="0" step="1" /></div>
+                    </div>
+                    <label class="block-allday-check"><input type="checkbox" id="extDepositPaid" checked /> Deposit paid</label>
+                    <div class="block-field"><label>Notes</label><input type="text" id="extNotes" placeholder="Wants extra fine, allergic to…" /></div>
+                    <button type="button" id="btnExtSave" class="block-save-btn"><i class="fa-solid fa-plus"></i> Add order</button>
+                    <div id="extFormStatus" class="block-status"></div>
+                </div>
+
+                <div id="extRisk" class="ext-risk"></div>
+                <div id="extList" class="ext-list"></div>
             </div>
 
-            <div id="extRisk" class="ext-risk"></div>
-            <div id="extList" class="ext-list"></div>
+            <div id="extRequestsSection" hidden></div>
         </div>
     </div>
 

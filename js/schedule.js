@@ -2054,7 +2054,6 @@ colorsModal.addEventListener('click', (e) => { if (e.target === colorsModal) clo
 
 // ── OWNER PANEL ── (replaces admin.html — same PIN field, owner_pin unlocks this)
 const OWNER_TAB_RENDERERS = {
-  requests: renderOwnerRequestsTab,
   export: renderOwnerExportTab,
   services: renderOwnerServicesTab,
   addons: renderOwnerAddonsTab,
@@ -2098,6 +2097,10 @@ function statusLabel(b) {
   return STATUS_LABELS[b.status] || b.status;
 }
 
+// Requests moved out of here into the Extensions panel - it is about one
+// specific appointment she tried to book, not about running the salon, and
+// living two menus away from the hair order it depends on (paid deposit,
+// arrived or not) was exactly what made the two hard to tell apart.
 function ensureRequestsTabButton() {
   if (!ownerTabs) return;
   const add = (tab, label, atStart) => {
@@ -2110,7 +2113,6 @@ function ensureRequestsTabButton() {
     if (atStart) ownerTabs.insertBefore(btn, ownerTabs.firstChild);
     else ownerTabs.appendChild(btn);
   };
-  add('requests', 'Requests', true);
   add('export', 'Export', false);
 }
 
@@ -2469,7 +2471,60 @@ const ADDON_EXCLUDED_CATEGORIES = ['Bridal', 'Special Occasions'];
 // every answered one, most recent first.
 let requestsView = 'new';
 
+// Shared by both the New and History cards - what "mark it paid" and "let
+// her book anyway" mean is one fact about the order, not two different
+// features depending on which list happens to be showing it. A phone with
+// no matching order says so plainly rather than showing nothing, since "no
+// order on file" is itself worth the owner noticing on a request that
+// somehow exists without one.
+function depositInfoHtml(r) {
+  if (!r.order_id) {
+    return '<div class="owner-booking-meta" style="margin-top:0.35rem;"><em>No extensions order on file for this phone number.</em></div>';
+  }
+  const badges = [];
+  if (r.deposit_paid) badges.push('<span class="ext-deposit paid">Deposit paid</span>');
+  else if (r.booking_allowed_before_deposit) badges.push('<span class="ext-before-deposit-badge"><i class="fa-solid fa-check"></i> Can book before deposit</span>');
+  else badges.push('<span class="ext-deposit unpaid">Deposit UNPAID</span>');
+  if (r.order_arrived_at) badges.push('<span class="ext-deposit paid"><i class="fa-solid fa-box-open"></i> Hair arrived</span>');
+
+  let buttons = '';
+  if (!r.deposit_paid) {
+    buttons = `<div class="owner-booking-actions" style="margin-top:0.4rem;">
+      <button type="button" class="owner-action-btn" data-req-mark-paid="${r.order_id}"><i class="fa-solid fa-sack-dollar"></i> Mark deposit paid</button>
+      ${r.booking_allowed_before_deposit
+        ? `<button type="button" class="owner-action-btn" data-req-before-deposit="${r.order_id}" data-allowed="false">Require deposit first</button>`
+        : `<button type="button" class="owner-action-btn" data-req-before-deposit="${r.order_id}" data-allowed="true"><i class="fa-solid fa-unlock"></i> Let her book before deposit</button>`}
+    </div>`;
+  }
+  return `<div class="owner-booking-meta" style="margin-top:0.35rem;">${badges.join(' ')}</div>${buttons}`;
+}
+
+// Same two RPCs the Orders tab's own buttons call - one source of truth for
+// what these actions do, just reachable from the Requests tab as well.
+// Re-renders the Requests tab afterward, not Orders, since that is the list
+// whichever card was clicked actually lives in.
+function wireDepositButtons(root) {
+  root.querySelectorAll('[data-req-mark-paid]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const { error } = await markDepositPaid({ pin: currentPin, id: btn.dataset.reqMarkPaid });
+      if (error) { btn.disabled = false; alert('Could not mark the deposit paid: ' + error.message); return; }
+      renderOwnerRequestsTab();
+    });
+  });
+  root.querySelectorAll('[data-req-before-deposit]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const allowed = btn.dataset.allowed !== 'false';
+      const { error } = await setBookingBeforeDeposit({ pin: currentPin, id: btn.dataset.reqBeforeDeposit, allowed });
+      if (error) { btn.disabled = false; alert('Could not update: ' + error.message); return; }
+      renderOwnerRequestsTab();
+    });
+  });
+}
+
 async function renderOwnerRequestsTab() {
+  const ownerTabContent = document.getElementById('extRequestsSection');
   ownerTabContent.innerHTML = `
     <div class="view-toggle" id="reqViewToggle" style="margin-bottom:1rem;">
       <button type="button" class="view-toggle-btn${requestsView === 'new' ? ' active' : ''}" data-req-view="new">New</button>
@@ -2527,6 +2582,7 @@ async function renderOwnerRequestsTab() {
             · ${escHtml(r.staff_name)} · ${r.customer_phone || 'No phone'}${r.customer_email ? ' · ' + r.customer_email : ''}
           </div>
           ${holdLabel(r)}
+          ${depositInfoHtml(r)}
         </div>
       </div>
       <div class="owner-booking-actions">
@@ -2536,6 +2592,8 @@ async function renderOwnerRequestsTab() {
       <div class="owner-status-msg" id="reqMsg-${r.id}"></div>
     </div>
   `).join('');
+
+  wireDepositButtons(list);
 
   list.querySelectorAll('[data-decide]').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -2606,9 +2664,12 @@ async function renderOwnerRequestsTab() {
   });
 }
 
-// Answered requests, most recent first. Read-only - the decision is already
-// made and emailed; this is a record of it, not a second chance to change
-// it. A rejection shows the reason it was given, if one was.
+// Answered requests, most recent first. The booking decision itself is
+// read-only - it is already made and emailed, and this is a record of it,
+// not a second chance to change it. The deposit is a different story: it
+// belongs to the order, not the decision, so it can still be marked paid or
+// have the before-deposit override flipped from here too. A rejection shows
+// the reason it was given, if one was.
 async function renderRequestsHistory() {
   const body = document.getElementById('reqTabBody');
   const { data, error } = await fetchRequestHistoryAdmin(currentPin);
@@ -2655,11 +2716,14 @@ async function renderRequestsHistory() {
             · ${escHtml(r.staff_name)} · ${r.customer_phone || 'No phone'}${r.customer_email ? ' · ' + r.customer_email : ''}
           </div>
           ${reason ? `<div class="owner-booking-meta" style="margin-top:0.3rem;"><em>${escHtml(reason)}</em></div>` : ''}
+          ${depositInfoHtml(r)}
         </div>
       </div>
     </div>
   `;
   }).join('');
+
+  wireDepositButtons(list);
 }
 
 // ── OWNER TAB: EXPORT ──
@@ -4005,14 +4069,46 @@ function extDayLabel(n) {
   return `${d} days`;
 }
 
-function openExtModal() {
+// Orders: the physical hair, ordered through to fitted, independent of any
+// one appointment. Requests: one specific date and time she tried to book,
+// waiting on a yes or no, independent of whether the hair has even arrived.
+// Both live in this one panel now rather than two menus apart.
+let extActiveTab = 'orders';
+
+function switchExtTab(tab) {
+  extActiveTab = tab;
+  document.getElementById('extTopToggle').querySelectorAll('[data-ext-tab]').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.extTab === tab);
+  });
+  document.getElementById('extOrdersSection').hidden = tab !== 'orders';
+  document.getElementById('extRequestsSection').hidden = tab !== 'requests';
+  if (tab === 'requests') renderOwnerRequestsTab();
+}
+document.getElementById('extTopToggle').querySelectorAll('[data-ext-tab]').forEach((btn) => {
+  btn.addEventListener('click', () => switchExtTab(btn.dataset.extTab));
+});
+
+function openExtModal(tab) {
   extModal.style.display = 'flex';
   extForm.hidden = true;
   extSearch.value = '';
   loadExtensionStaffOptions();
   refreshExtensions();
+  switchExtTab(tab || 'orders');
+  refreshExtRequestBadge();
 }
 function closeExtModal() { extModal.style.display = 'none'; }
+
+// The badge on the Requests tab itself, so a glance at the panel - not just
+// the banner over the schedule - says whether anything needs answering.
+async function refreshExtRequestBadge() {
+  const badge = document.getElementById('extReqBadge');
+  if (!badge || !currentPin) return;
+  const { data, error } = await fetchPendingCount(currentPin);
+  const n = (!error && Number(data)) || 0;
+  badge.hidden = n === 0;
+  if (n > 0) badge.textContent = n;
+}
 
 async function loadExtensionStaffOptions() {
   const sel = document.getElementById('extStaff');
@@ -4080,11 +4176,18 @@ function renderExtList(rows, isSearch, error) {
     return;
   }
 
-  // A search is a history lookup — one client, newest first — so grouping it
-  // by what needs doing would only get in the way.
+  // A search is a lookup by name or phone, not necessarily a look at the
+  // past - "Heba" might turn up an order that is still waiting on hair, with
+  // a deposit not yet marked paid and no fitting booked. Grouping it by what
+  // needs doing would only get in the way for one client's few orders, so it
+  // stays a flat newest-first list - but only orders that are genuinely done
+  // (fitted, or cancelled) are read-only. Anything still open gets the exact
+  // buttons it would have in the grouped view, because it needs them just as
+  // much there. Every action found here was rendering with none at all,
+  // which is why a live order search showed no way to mark it arrived.
   if (isSearch) {
     extList.innerHTML = `<div class="ext-group-title">Previous orders</div>`
-      + rows.map((o) => extCard(o, true)).join('');
+      + rows.map((o) => extCard(o, extGroupOf(o) === 'done')).join('');
     wireExtActions(extList);
     return;
   }
@@ -4285,9 +4388,26 @@ document.getElementById('btnExtSave').addEventListener('click', async () => {
     const v = document.getElementById(id).value;
     return v === '' ? null : Number(v);
   };
-  if (!val('extName') || !val('extPhone')) {
-    status.textContent = 'A name and a phone number are needed - that is how she gets told when it arrives.';
+  // Every field is required except Supplier and Notes - the stylist filling
+  // this in has just finished the consultation and has all of it in front of
+  // her; a gap here is a client the salon cannot confirm anything about
+  // later; missing colour or length, or nobody down as having consulted her.
+  const REQUIRED_FIELDS = [
+    ['extName', 'a client name'],
+    ['extPhone', 'a phone number'],
+    ['extEmail', 'an email address'],
+    ['extStaff', 'who did the consultation'],
+    ['extColour', 'the colour'],
+    ['extLength', 'the length'],
+    ['extQty', 'the quantity'],
+    ['extTotal', 'the total agreed'],
+    ['extDeposit', 'the deposit amount'],
+  ];
+  const missing = REQUIRED_FIELDS.find(([id]) => document.getElementById(id).value.trim() === '');
+  if (missing) {
+    status.textContent = `Please fill in ${missing[1]} before saving.`;
     status.style.color = '#dc2626';
+    document.getElementById(missing[0]).focus();
     return;
   }
   status.textContent = 'Saving…';
@@ -4323,8 +4443,8 @@ extSearch.addEventListener('input', () => {
 });
 
 document.getElementById('requestBannerOpen').addEventListener('click', () => {
-  openOwnerPanel();
-  switchOwnerTab('requests');
+  closeMoreMenu();
+  openExtModal('requests');
 });
 
 document.getElementById('btnExtensions').addEventListener('click', () => {
