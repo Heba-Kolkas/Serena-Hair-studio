@@ -576,6 +576,30 @@ dayStripEl.addEventListener('scroll', () => {
   }, 160);
 }, { passive: true });
 
+// ── SWIPE THE GRID TO CHANGE DAY ──
+// The strip's own cells and its arrow buttons were the only way to move a
+// day at a time - on a touch screen the natural gesture is to swipe the
+// calendar itself, the way any phone calendar app works, rather than
+// reaching for a small button every time. Horizontal-intent only: a
+// mostly-vertical drag is scrolling the grid's time slots, not asking to
+// change day, so it's left alone.
+let gridSwipeStartX = null;
+let gridSwipeStartY = null;
+gridWrap.addEventListener('touchstart', (e) => {
+  if (e.touches.length !== 1) return;
+  gridSwipeStartX = e.touches[0].clientX;
+  gridSwipeStartY = e.touches[0].clientY;
+}, { passive: true });
+gridWrap.addEventListener('touchend', (e) => {
+  if (gridSwipeStartX == null) return;
+  const dx = e.changedTouches[0].clientX - gridSwipeStartX;
+  const dy = e.changedTouches[0].clientY - gridSwipeStartY;
+  gridSwipeStartX = null;
+  gridSwipeStartY = null;
+  if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  selectDate(addDays(selectedDate, dx < 0 ? 1 : -1), null);
+}, { passive: true });
+
 // ── STAFF FILTER PILLS ──
 function applyStaffFilter(value) {
   staffFilter = value;
