@@ -159,12 +159,24 @@ const galleryData = {
 // Now nothing is fetched until a video actually enters the viewport - the
 // same observer does both jobs: load it the first time it appears, then
 // play/pause it as it scrolls in and out, same as before.
+// 'loaded' means "has actually finished loading", set only by the
+// loadeddata listener below - never here. Marking it the moment .load() is
+// CALLED, rather than the moment it actually succeeds, is what left videos
+// permanently black: if that load is ever interrupted (the grid torn down
+// mid-fetch by a second tap opening the same category again, a network
+// hiccup, anything that fires the browser's own ERR_ABORTED), the video is
+// left with no data and dataset.loaded already set - so this guard would
+// never let it try again, for as long as the page stayed open. 'loading'
+// tracks an attempt in flight, purely to stop two overlapping calls to
+// .load() on the same element; it is cleared on both success and failure,
+// so a failed attempt is always eligible to be retried the next time this
+// video comes back into view.
 const _videoPlayObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const v = entry.target;
     if (entry.isIntersecting) {
-      if (!v.dataset.loaded) {
-        v.dataset.loaded = '1';
+      if (!v.dataset.loaded && !v.dataset.loading) {
+        v.dataset.loading = '1';
         v.preload = 'auto';
         v.load();
       }
@@ -220,11 +232,19 @@ function _buildVideoWrapper(src) {
   video.appendChild(source);
 
   video.addEventListener('loadeddata', () => {
+    // The only place 'loaded' is ever set - see the observer above for why.
+    video.dataset.loaded = '1';
+    delete video.dataset.loading;
     shimmer.style.transition = 'opacity 0.3s';
     shimmer.style.opacity = '0';
     setTimeout(() => { if (shimmer.parentNode) shimmer.remove(); }, 320);
   }, { once: true });
   video.addEventListener('playing', () => wrapper.classList.add('playing'), { once: true });
+  // A load that fails or gets interrupted - net::ERR_ABORTED from the grid
+  // being torn down mid-fetch, a dropped connection, anything - clears the
+  // in-flight marker so the observer is free to try again next time this
+  // video is actually on screen, instead of leaving it black forever.
+  video.addEventListener('error', () => { delete video.dataset.loading; });
 
   wrapper.addEventListener('click', () => {
     video.muted = true;
@@ -254,6 +274,15 @@ function openLightbox(category) {
   const grid = document.getElementById('lightboxGrid');
   const title = document.getElementById('lightboxTitle');
   if (!overlay || !grid || !title) return;
+
+  // The likely trigger for the black-tile bug: the reveal-tap delay below
+  // means a real tap can be followed by an impatient second tap on the same
+  // tile - one arriving from the pending timeout, one from the tap itself -
+  // both calling this. The second run tore down the grid mid-fetch and
+  // aborted whatever the first run had just started loading. Re-opening the
+  // category that is already open is a no-op now; nothing to tear down.
+  if (overlay.classList.contains('active') && overlay.dataset.openCategory === category) return;
+  overlay.dataset.openCategory = category;
 
   const currentLang = (window._getLang && window._getLang()) || 'en';
   const titleObj = categoryTitles[category];
@@ -324,6 +353,7 @@ function closeLightbox() {
   overlay.style.pointerEvents = 'none';
   overlay.querySelectorAll('video').forEach((v) => { _videoPlayObserver.unobserve(v); v.pause(); });
   overlay.classList.remove('active');
+  delete overlay.dataset.openCategory; // clears the reopen guard above
   document.body.style.overflow = '';
   setTimeout(() => {
     const grid = document.getElementById('lightboxGrid');
