@@ -295,9 +295,19 @@
    third were invisible unless you thought to swipe, and nothing on the page
    said they were there. A grid shows every service at once - which is the
    whole point of a list of what the salon does. */
+/* auto-FIT, not auto-fill, and a track that does not stretch.
+   auto-fill lays down as many tracks as the width allows and keeps the empty
+   ones, so four services on a wide phone sat in the first four columns of
+   nine and the whole row hung to the left of a centred heading. auto-fit
+   collapses the empties, and capping the track instead of letting it be 1fr
+   stops four services spreading themselves thin across the full width -
+   together they leave a group that is simply as wide as its contents, which
+   justify-content then centres at any screen size and any number of
+   services. */
 .popular-services-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(88px, 120px));
+  justify-content: center;
   gap: 1.1rem 0.75rem;
   padding: 0.25rem 0.25rem 1rem;
 }
@@ -350,17 +360,18 @@
 }
 .service-thumb-book i { font-size: 0.6rem; transition: transform 0.2s ease; }
 .service-thumb:hover .service-thumb-book i { transform: translateX(3px); }
-@media (min-width: 700px) {
-  .popular-services-row {
-    justify-content: center;
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
-}
+/* The 700px block that used to sit here did nothing. flex-wrap and
+   overflow-x are flex properties left over from when this row was a sideways
+   scroller, and are ignored on a grid; its justify-content is now in the base
+   rule above, where it applies at every width rather than only above 700px. */
 @media (min-width: 900px) {
   .popular-services-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    /* Capped rather than 1fr for the same reason as the base rule: with 1fr,
+       four cards stretched to fill the full 1100px and two would have been
+       550px wide each. A card has a natural size; the row centres instead. */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 240px));
+    justify-content: center;
     gap: 1.25rem;
     max-width: 1100px;
     margin: 0 auto;

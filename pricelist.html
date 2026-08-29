@@ -72,7 +72,7 @@ body {
 /* ── THE SHEET ── */
 .sheet {
   display: grid;
-  grid-template-columns: 34% 1fr;
+  grid-template-columns: 38% 1fr;
   max-width: 1120px;
   margin: 0 auto;
   min-height: 100vh;
@@ -299,7 +299,7 @@ h2 {
    between rows and sections, not smaller type, which would only make it
    harder to read while still scrolling as far. */
 @media (max-width: 800px) {
-  .sheet { grid-template-columns: 76px 1fr; min-height: 100vh; }
+  .sheet { grid-template-columns: 104px 1fr; min-height: 100vh; }
   .panel img { object-position: 55% center; }
   .panel::after {
     background: linear-gradient(180deg, rgba(30,24,21,0.6) 0%, rgba(30,24,21,0.25) 30%, rgba(30,24,21,0.1) 100%);
@@ -340,8 +340,39 @@ h2 {
   .contact { margin-top: 1.3rem; padding-top: 1rem; gap: 0.4rem 1.1rem; font-size: 0.68rem; }
 }
 
+/* ── ON A TABLET ──
+   An iPad in portrait is 744-820px wide, so it was being caught by the phone
+   rule above and given a 76px spine - on a screen with more room for the
+   photo than a laptop devotes to it proportionally. A percentage rather than
+   a pixel width, because at this size the panel is a photo again rather than
+   a coloured edge, and it should grow with the screen the way it does on
+   desktop.
+
+   Sits after the phone block deliberately: same specificity, so the later
+   rule wins for the overlapping 601-800px range. */
+@media (min-width: 601px) and (max-width: 800px) {
+  .sheet { grid-template-columns: 32% 1fr; }
+  .panel img { object-position: 58% center; }
+  .panel::after {
+    background: linear-gradient(90deg, rgba(30,24,21,0.55) 0%, rgba(30,24,21,0.18) 45%, rgba(30,24,21,0.05) 100%);
+  }
+  /* Room for the title to go back down the side, as on desktop. The phone
+     rule moves it to the top because a 76px spine has nowhere else to put
+     it; a panel this wide does. */
+  .panel-title {
+    left: 0.75rem;
+    translate: none;
+    top: auto;
+    bottom: 2.5rem;
+    font-size: 2.4rem;
+    letter-spacing: 0.22em;
+  }
+  .list { padding: 2rem 1.75rem 2.25rem; }
+  .row .name small { display: inline; }
+}
+
 @media (max-width: 400px) {
-  .sheet { grid-template-columns: 60px 1fr; }
+  .sheet { grid-template-columns: 82px 1fr; }
   .panel-title { font-size: 1.2rem; letter-spacing: 0.16em; }
   .list { padding: 1.25rem 0.8rem 1.5rem; }
   .row { font-size: 0.82rem; }
