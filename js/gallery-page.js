@@ -175,7 +175,7 @@ const _videoPlayObserver = new IntersectionObserver((entries) => {
       v.pause();
     }
   });
-}, { threshold: 0.1, rootMargin: '200px 0px' });
+}, { threshold: 0.1, rootMargin: '100px 0px' });
 
 const _videoCache = {};
 
@@ -261,18 +261,26 @@ function openLightbox(category) {
     return;
   }
 
+  // Every video is appended WITHOUT being observed yet. Observing an
+  // element the instant it is appended - before the browser has laid the
+  // grid out - gets an unreliable first intersection report: with no real
+  // geometry computed yet, browsers can report most or all of a freshly
+  // built grid as "intersecting", which defeated the whole point of gating
+  // the fetch on visibility. Forty-odd items were all judged visible at
+  // once because none of them had been through a layout pass yet.
+  const videosToObserve = [];
   items.forEach((src) => {
     if (/\.(mp4|mov|webm)$/i.test(src)) {
       const cached = _videoCache[src];
       if (cached) {
         cached.video.muted = true;
         grid.appendChild(cached.wrapper);
-        _videoPlayObserver.observe(cached.video);
+        videosToObserve.push(cached.video);
       } else {
         const { wrapper, video } = _buildVideoWrapper(src);
         _videoCache[src] = { wrapper, video };
         grid.appendChild(wrapper);
-        _videoPlayObserver.observe(video);
+        videosToObserve.push(video);
       }
     } else {
       const wrap = document.createElement('div');
@@ -290,13 +298,15 @@ function openLightbox(category) {
   overlay.scrollTop = 0;
   document.body.style.overflow = 'hidden';
 
-  // Used to force-play every video in the grid here, two frames after
-  // opening - which for an unloaded video means "start fetching it right
-  // now" regardless of whether it was on screen. That undid the point of
-  // making preload lazy above: the observer already triggers load+play for
-  // whichever videos are actually visible the moment .observe() runs on
-  // them a few lines up, which covers exactly what this block was trying to
-  // do, only for videos someone can actually see.
+  // Two frames, not one: the first frame is where the browser applies the
+  // 'active' class's display:flex and actually builds the grid's layout;
+  // observing any earlier than that is the same premature-geometry problem
+  // this whole block exists to avoid, just moved one step later.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      videosToObserve.forEach((v) => _videoPlayObserver.observe(v));
+    });
+  });
 }
 
 function closeLightbox() {
