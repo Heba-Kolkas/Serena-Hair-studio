@@ -406,8 +406,14 @@ const FALLBACK_SERVICES = [
   // Bridal — quoted at consultation, with ~4,000 shown as a guideline.
   { id: 'svc-bridal', name: 'Bridal Hair', name_no: 'Brudehår', category: 'Bridal', price_from: 4000, price_on_consultation: true, duration_minutes: 240, fixed_times: ['11:00'], image_url: './html/Pics/Covers/bridal-and-updos.jpeg', staff: STAFF_GENERAL },
   // Not on the printed list, but still booked here.
-  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, duration_minutes: 180, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true, addons: [ADDON_HAIRCUT] },
-  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_on_consultation: true, duration_minutes: 240, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true, addons: [ADDON_HAIRCUT] },
+  // 90 and 120, not the 180 and 240 these carried until now. Migration 0026
+  // cut the real durations and these fallbacks were never brought along, so
+  // preview mode - every time Supabase is unreachable - offered extensions at
+  // twice their length, and the 240 figure additionally tripped
+  // isFourHourBooking into treating a fitting as one of the day's big colour
+  // jobs. Live bookings were always correct; only the offline copy was wrong.
+  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, duration_minutes: 90, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true, addons: [ADDON_HAIRCUT] },
+  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_on_consultation: true, duration_minutes: 120, image_url: './html/Pics/Covers/hair-extensions.jpeg', staff: STAFF_HASSAN, requiresConsultation: true, addons: [ADDON_HAIRCUT] },
   { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, duration_minutes: 10, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', staff: STAFF_GENERAL, consultationRule: true },
 ];
 const FALLBACK_STAFF = [
@@ -950,11 +956,16 @@ const EXT_LOOKUP_COPY = {
     // only then does the calendar unlock. Said before the search box, not
     // just on the fallback link below it, so it's the first thing read.
     intro: 'Extensions start with a consultation, where we order your hair and take a deposit. Already done that? Enter your details below to unlock the calendar.',
+    // Said with the reason attached. "Non-refundable" on its own reads as the
+    // salon keeping money because it can; the hair is ordered in her colour
+    // and cannot be sold to anyone else, which is the whole of why.
+    deposit: 'The deposit is non-refundable. It pays for hair ordered in your colour, which we cannot use for anyone else.',
     phone: 'Mobile number', email: 'Email', find: 'Find my order',
     searching: 'Looking...', consult: "Haven't had your consultation yet? Book one",
   },
   no: {
     intro: 'Extensions starter med en konsultasjon, der vi bestiller h\u00e5ret ditt og tar et depositum. Allerede gjort det? Skriv inn detaljene dine under for \u00e5 l\u00e5se opp kalenderen.',
+    deposit: 'Depositumet refunderes ikke. Det betaler for h\u00e5r bestilt i din farge, som vi ikke kan bruke til noen andre.',
     phone: 'Mobilnummer', email: 'E-post', find: 'Finn bestillingen min',
     searching: 'S\u00f8ker...', consult: 'Ikke v\u00e6rt p\u00e5 konsultasjon enn\u00e5? Bestill en',
   },
@@ -1067,6 +1078,7 @@ function renderExtensionsQuality(svc, opts) {
       <p class="extensions-panel-lead"><em>${p.lead}</em> ${p.body}</p>
       <div class="ext-lookup">
         <p class="ext-lookup-intro">${lk.intro}</p>
+        <p class="ext-lookup-deposit">${lk.deposit}</p>
         <div class="ext-lookup-fields">
           <input type="tel" id="extGatePhone" inputmode="tel" autocomplete="tel" placeholder="${lk.phone}">
           <input type="email" id="extGateEmail" inputmode="email" autocomplete="email" placeholder="${lk.email}">
@@ -2479,7 +2491,26 @@ document.getElementById('next2').addEventListener('click', () => {
   loadCalendarAvailability({ allowAutoAdvance: true });
   if (state.date) generateSlots();
 });
-document.getElementById('next3').addEventListener('click', () => showPanel('4'));
+// ── THE NUMBER THAT UNLOCKED THE CALENDAR IS THE NUMBER SHE BOOKS WITH ──
+//
+// The extensions lookup in step 1 takes a phone and an email and stores them
+// on state, but step 4 asked for both again from blank fields and overwrote
+// state with whatever was typed there. Give a second number - a work mobile,
+// a partner's, or the same one typed with a different country prefix that
+// changes the last eight digits - and extensions_booking_block finds no
+// order for it and refuses the booking at the final step. That is exactly
+// the last-step refusal migration 0034 built the lookup to prevent, arrived
+// at by a different road.
+//
+// Only fills what is empty, so it is a starting point and never a correction
+// of something she has deliberately typed.
+document.getElementById('next3').addEventListener('click', () => {
+  const phone = document.getElementById('custPhone');
+  const email = document.getElementById('custEmail');
+  if (phone && !phone.value.trim() && state.phone) phone.value = state.phone;
+  if (email && !email.value.trim() && state.email) email.value = state.email;
+  showPanel('4');
+});
 document.getElementById('next4').addEventListener('click', () => {
   // Two name fields rather than one. A single box collects "Ada", "ada n" and
   // "Ada Nordmann Hansen" from the same person on different visits, and the

@@ -1260,6 +1260,19 @@ body.has-sticky-bar #back-top.visible {
    background and one border for the whole thing, not a card inside a card. */
 .ext-lookup { margin-top: 0.75rem; }
 .ext-lookup-intro { margin: 0 0 0.6rem; font-size: 0.79rem; color: var(--espresso); }
+/* The deposit terms. Money she does not get back is the one line here she
+   must not skim past, so it carries a rule and a heavier weight - but it
+   stays in the panel's own gold rather than becoming a red warning box.
+   Nothing is going wrong; this is simply a term of the sale, and dressing
+   it as an alarm would misrepresent it in both directions. */
+.ext-lookup-deposit {
+  margin: 0 0 0.7rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid rgba(201, 169, 110, 0.55);
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: var(--espresso);
+}
 .ext-lookup-fields {
   display: flex;
   flex-wrap: wrap;
