@@ -148,10 +148,26 @@ const galleryData = {
 })();
 
 // ── LIGHTBOX ──
+// Every video in a category used to fetch and start playing the moment the
+// category opened - preload:auto plus an immediate .load() and three play
+// attempts, for all twenty-odd videos at once, whether or not a single one
+// of them was ever going to be seen. A phone on the gallery tab was pulling
+// 50-100MB before it had shown a single frame. The observer already existed
+// to pause a video once it scrolled away; it just never gated the loading
+// in the first place, only the playing.
+//
+// Now nothing is fetched until a video actually enters the viewport - the
+// same observer does both jobs: load it the first time it appears, then
+// play/pause it as it scrolls in and out, same as before.
 const _videoPlayObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const v = entry.target;
     if (entry.isIntersecting) {
+      if (!v.dataset.loaded) {
+        v.dataset.loaded = '1';
+        v.preload = 'auto';
+        v.load();
+      }
       v.muted = true;
       const p = v.play();
       if (p && p.catch) p.catch(() => {});
@@ -159,7 +175,7 @@ const _videoPlayObserver = new IntersectionObserver((entries) => {
       v.pause();
     }
   });
-}, { threshold: 0.1 });
+}, { threshold: 0.1, rootMargin: '200px 0px' });
 
 const _videoCache = {};
 
@@ -179,7 +195,11 @@ function _buildVideoWrapper(src) {
   video.loop = true;
   video.playsInline = true;
   video.autoplay = true;
-  video.preload = 'auto';
+  // Nothing until the intersection observer says this one is actually on
+  // screen - see the observer above. 'none' rather than 'metadata' because
+  // even a metadata-only fetch on every video in a category is still twenty
+  // network requests fired at once for nothing anyone can see yet.
+  video.preload = 'none';
   video.setAttribute('muted', '');
   video.setAttribute('disablepictureinpicture', '');
   video.setAttribute('playsinline', '');
@@ -202,11 +222,8 @@ function _buildVideoWrapper(src) {
     if (video.paused) { const p = video.play(); if (p && p.catch) p.catch(() => {}); }
   });
 
-  video.load();
-  const tryPlay = () => { video.muted = true; const p = video.play(); if (p && p.catch) p.catch(() => {}); };
-  tryPlay();
-  setTimeout(tryPlay, 100);
-  setTimeout(tryPlay, 400);
+  // Loading and the first play attempt happen once the observer below sees
+  // this video on screen, not here - this function only builds the element.
 
   wrapper.appendChild(video);
   return { wrapper, video };
@@ -273,15 +290,13 @@ function openLightbox(category) {
   overlay.scrollTop = 0;
   document.body.style.overflow = 'hidden';
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      grid.querySelectorAll('video').forEach((v) => {
-        v.muted = true;
-        const p = v.play();
-        if (p && p.catch) p.catch(() => {});
-      });
-    });
-  });
+  // Used to force-play every video in the grid here, two frames after
+  // opening - which for an unloaded video means "start fetching it right
+  // now" regardless of whether it was on screen. That undid the point of
+  // making preload lazy above: the observer already triggers load+play for
+  // whichever videos are actually visible the moment .observe() runs on
+  // them a few lines up, which covers exactly what this block was trying to
+  // do, only for videos someone can actually see.
 }
 
 function closeLightbox() {
