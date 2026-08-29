@@ -4056,7 +4056,7 @@ function extCard(o, historyView) {
     // turning up are two different facts, either can lag the other, and a
     // client cannot book until BOTH are true. Placed first so it is never
     // the thing the eye skips past to reach "It arrived".
-    actions = markPaidBtn + actions;
+    actions = markPaidBtn + beforeDepositToggle + actions;
   }
 
   const booked = o.booking_date
@@ -4089,6 +4089,15 @@ function wireExtActions(root) {
       btn.disabled = true;
       const { error } = await markDepositPaid({ pin: currentPin, id: btn.dataset.extMarkPaid });
       if (error) { btn.disabled = false; alert('Could not mark the deposit paid: ' + error.message); return; }
+      refreshExtensions();
+    });
+  });
+  root.querySelectorAll('[data-ext-before-deposit]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const allowed = btn.dataset.allowed !== 'false';
+      const { error } = await setBookingBeforeDeposit({ pin: currentPin, id: btn.dataset.extBeforeDeposit, allowed });
+      if (error) { btn.disabled = false; alert('Could not update: ' + error.message); return; }
       refreshExtensions();
     });
   });

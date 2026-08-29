@@ -1469,6 +1469,21 @@ body { background: var(--sched-bg); }
 }
 .ext-deposit.paid { color: #059669; border-color: rgba(5, 150, 105, 0.4); }
 .ext-deposit.unpaid { color: #C25E4B; border-color: rgba(194, 94, 75, 0.5); font-weight: 600; }
+/* The owner's override, shown as a badge once granted - same shape as the
+   deposit pill beside it, so the two read as one family of small facts about
+   the order rather than a badge and then a differently-styled button. */
+.ext-before-deposit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid rgba(5, 150, 105, 0.4);
+  color: #059669;
+  margin-right: 0.4rem;
+}
 .ext-card-notes { font-size: 0.76rem; color: var(--sched-text-muted); margin-top: 0.35rem; }
 .ext-card-actions { display: flex; flex-direction: column; gap: 0.35rem; align-items: stretch; }
 .ext-card-status { grid-column: 1 / -1; font-size: 0.76rem; }
