@@ -514,6 +514,10 @@ export async function fetchPendingBookingsAdmin(pin) {
   return supabase.rpc('admin_get_pending_bookings', { p_pin: pin });
 }
 
+export async function fetchRequestHistoryAdmin(pin) {
+  return supabase.rpc('admin_get_request_history', { p_pin: pin, p_limit: 100 });
+}
+
 // Confirm or reject, and get back what the email needs in the same round trip.
 export async function decideBookingAdmin({ pin, bookingId, decision, reason }) {
   return supabase.rpc('admin_decide_booking', {

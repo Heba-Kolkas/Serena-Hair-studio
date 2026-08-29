@@ -6,7 +6,7 @@ import {
   fetchAllStaffAdmin, upsertStaffAdmin,
   fetchBookingsAdmin, updateBookingStatusAdmin, rescheduleBookingAdmin, completeBookingAdmin,
   upsertBusinessHoursAdmin, addBlockedSlotAdmin, removeBlockedSlotAdmin,
-  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage, fetchSmsBalance, fetchPendingCount,
+  fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage, fetchSmsBalance, fetchPendingCount, fetchRequestHistoryAdmin,
   waiveCancellationFee, unwaiveCancellationFee, setCancellationFee,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
@@ -2461,11 +2461,37 @@ const ADDON_EXCLUDED_CATEGORIES = ['Bridal', 'Special Occasions'];
 // salon has to check the client came in for a consultation and paid a deposit
 // first. Each holds its slot for two days; after that the time goes back on
 // sale, though the request stays here so it can still be answered.
+//
+// New / History, the same toggle the schedule itself already uses for
+// Upcoming / History - confirming or rejecting a request used to make it
+// disappear outright, with no way back to see what had been decided or what
+// a rejection had said. New shows what still needs an answer; History keeps
+// every answered one, most recent first.
+let requestsView = 'new';
+
 async function renderOwnerRequestsTab() {
+  ownerTabContent.innerHTML = `
+    <div class="view-toggle" id="reqViewToggle" style="margin-bottom:1rem;">
+      <button type="button" class="view-toggle-btn${requestsView === 'new' ? ' active' : ''}" data-req-view="new">New</button>
+      <button type="button" class="view-toggle-btn${requestsView === 'history' ? ' active' : ''}" data-req-view="history">History</button>
+    </div>
+    <div id="reqTabBody"></div>
+  `;
+  document.getElementById('reqViewToggle').querySelectorAll('[data-req-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (requestsView === btn.dataset.reqView) return;
+      requestsView = btn.dataset.reqView;
+      renderOwnerRequestsTab();
+    });
+  });
+
+  if (requestsView === 'history') { await renderRequestsHistory(); return; }
+
   const { data, error } = await fetchPendingBookingsAdmin(currentPin);
   const rows = (!error && data) ? data : [];
 
-  ownerTabContent.innerHTML = `
+  const body = document.getElementById('reqTabBody');
+  body.innerHTML = `
     <h4 class="owner-section-title">Booking Requests</h4>
     <p style="font-size:0.78rem;color:var(--sched-text-muted);margin-bottom:1rem;">
       Extensions bookings wait here until you confirm them. Each one holds its time for two days -
@@ -2578,6 +2604,62 @@ async function renderOwnerRequestsTab() {
       setTimeout(() => renderOwnerRequestsTab(), 2200);
     });
   });
+}
+
+// Answered requests, most recent first. Read-only - the decision is already
+// made and emailed; this is a record of it, not a second chance to change
+// it. A rejection shows the reason it was given, if one was.
+async function renderRequestsHistory() {
+  const body = document.getElementById('reqTabBody');
+  const { data, error } = await fetchRequestHistoryAdmin(currentPin);
+  if (error) {
+    body.innerHTML = `<p class="owner-empty">Could not load history: ${escHtml(error.message)}</p>`;
+    return;
+  }
+  const rows = data || [];
+  body.innerHTML = `
+    <h4 class="owner-section-title">Request History</h4>
+    <p style="font-size:0.78rem;color:var(--sched-text-muted);margin-bottom:1rem;">
+      Every extensions request that has been answered, confirmed or rejected - most recent first.
+    </p>
+    <div class="owner-list" id="reqHistList"></div>
+  `;
+  const list = document.getElementById('reqHistList');
+  if (!rows.length) {
+    list.innerHTML = '<p class="owner-empty">Nothing answered yet.</p>';
+    return;
+  }
+
+  // A rejection stores its reason folded into notes ("Rejected: ...", set by
+  // admin_decide_booking) rather than its own column - pulled back out here
+  // so History shows the reason on its own line instead of raw notes text.
+  const rejectionReason = (r) => {
+    if (!r.rejected_at || !r.notes) return null;
+    const m = /Rejected:\s*(.+)$/s.exec(r.notes);
+    return m ? m[1].trim() : null;
+  };
+
+  list.innerHTML = rows.map((r) => {
+    const decided = r.rejected_at ? 'rejected' : 'confirmed';
+    const reason = rejectionReason(r);
+    return `
+    <div class="owner-booking-card ${decided}" data-id="${r.id}">
+      <div class="owner-booking-top">
+        <span class="owner-booking-time">${fmtTime(r.start_time)}</span>
+        <div class="owner-booking-main">
+          <div class="owner-booking-name">${escHtml(r.customer_name)} - ${escHtml(r.service_name)}
+            <span class="req-hist-badge ${decided}">${decided === 'rejected' ? 'Rejected' : 'Confirmed'}</span>
+          </div>
+          <div class="owner-booking-meta">
+            ${new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long' })}
+            · ${escHtml(r.staff_name)} · ${r.customer_phone || 'No phone'}${r.customer_email ? ' · ' + r.customer_email : ''}
+          </div>
+          ${reason ? `<div class="owner-booking-meta" style="margin-top:0.3rem;"><em>${escHtml(reason)}</em></div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+  }).join('');
 }
 
 // ── OWNER TAB: EXPORT ──
