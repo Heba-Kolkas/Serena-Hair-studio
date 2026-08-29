@@ -1547,6 +1547,26 @@ body { background: var(--sched-bg); }
 /* ── NO-SHOW NOTICE ── */
 .noshow-fee { font-size: 0.8rem; color: var(--sched-text-muted); margin: 0.2rem 0 0.9rem; }
 .noshow-warn { font-size: 0.8rem; color: #C25E4B; margin: 0.4rem 0; }
+
+/* The cancellation verdict. Two states, and the difference between them is
+   money, so they do not look alike: inside the notice period is a plain
+   statement, a late one is marked. Kept as a block of text rather than a
+   badge because the sentence is the point - how much notice, what the policy
+   asks, what it costs - and none of that fits in a chip. */
+.cancel-notice {
+  margin: 0.6rem 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  border-left: 3px solid var(--sched-text-muted, #8a8a92);
+  background: rgba(138, 138, 146, 0.08);
+  font-size: 0.83rem;
+  line-height: 1.55;
+}
+.cancel-notice.late {
+  border-left-color: #C25E4B;
+  background: rgba(194, 94, 75, 0.09);
+}
+.cancel-notice strong { font-weight: 700; }
 .noshow-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.9rem; }
 
 /* ── MODALS THAT FIT THE SCREEN ──
@@ -2132,6 +2152,29 @@ body.modal-open { overflow: hidden; }
   cursor: pointer;
 }
 .popup-move-btn:hover { background: var(--sched-bg); border-color: var(--sched-text); }
+
+/* Same shape as Move - it belongs to the same row of actions - but carried in
+   the red the panel already uses for rejecting a request, so the one button
+   here that ends an appointment does not look identical to the one that
+   merely moves it. It still opens a dialog, so this is not the destructive
+   press itself. */
+.popup-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.55rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(194, 94, 75, 0.5);
+  border-radius: 10px;
+  background: var(--sched-surface);
+  color: #C25E4B;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.popup-cancel-btn:hover { background: #C25E4B; border-color: #C25E4B; color: #fff; }
 
 @media (max-width: 560px) {
   .resched-grid { grid-template-columns: minmax(0, 1fr); }

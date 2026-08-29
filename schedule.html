@@ -287,6 +287,52 @@
         </div>
     </div>
 
+    <!-- CANCEL APPOINTMENT MODAL
+         The fee is worked out by the database and shown here BEFORE the button
+         that charges it, which is the rule 0009 set for the client-facing
+         wizard: a policy someone only learns about afterwards is an ambush.
+         Waiving is a tick rather than a separate screen, because the moment
+         someone is looking at the figure is the moment they know whether to
+         charge it. -->
+    <div id="cancelModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup">
+            <button type="button" class="appt-popup-close" id="cancelClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Cancel this appointment</h3>
+            <p class="block-modal-sub" id="cancelWho"></p>
+            <div class="cancel-notice" id="cancelNotice">Checking the cancellation policy…</div>
+            <div class="noshow-fee-box" id="cancelFeeBox" hidden>
+                <label class="block-allday-check">
+                    <input type="checkbox" id="cancelWaive" />
+                    Waive the fee - do not charge her
+                </label>
+                <span class="block-field-hint" id="cancelWaiveHint"></span>
+            </div>
+            <!-- Recorded on the booking, and it picks which message goes out:
+                 the salon cancelling and the client cancelling are different
+                 things to be told. Getting this wrong sends a client who rang
+                 up to cancel a message saying the salon called it off. It has
+                 nothing to do with the fee - that is the tick above. -->
+            <div class="block-field">
+                <label>Who cancelled?</label>
+                <select id="cancelWhoCancelled">
+                    <option value="salon">We cancelled</option>
+                    <option value="client">She cancelled</option>
+                </select>
+                <span class="block-field-hint">Only changes how it is recorded and worded. It does not change the fee.</span>
+            </div>
+            <label class="block-allday-check">
+                <input type="checkbox" id="cancelNotify" checked />
+                Let her know
+            </label>
+            <span class="block-field-hint" id="cancelNotifyHint">Untick if you have already spoken to her.</span>
+            <div class="noshow-actions">
+                <button type="button" id="cancelConfirm" class="owner-action-btn reject"><i class="fa-solid fa-ban"></i> <span id="cancelConfirmLabel">Cancel the appointment</span></button>
+                <button type="button" id="cancelKeep" class="owner-action-btn">Keep it</button>
+            </div>
+            <div id="cancelStatus" class="block-status"></div>
+        </div>
+    </div>
+
     <!-- SERVICE COLORS MODAL -->
     <div id="colorsModal" class="appt-popup-overlay" style="display:none;">
         <div class="appt-popup">

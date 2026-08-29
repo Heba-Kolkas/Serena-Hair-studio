@@ -8,6 +8,7 @@ import {
   upsertBusinessHoursAdmin, addBlockedSlotAdmin, removeBlockedSlotAdmin,
   fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage, fetchSmsBalance, fetchPendingCount, fetchRequestHistoryAdmin,
   waiveCancellationFee, unwaiveCancellationFee, setCancellationFee,
+  staffCancellationQuote, staffCancelBooking,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
   markExtensionsNotified, fetchExtensionHistory, markDepositPaid,
@@ -161,8 +162,8 @@ const FALLBACK_SERVICES_ADMIN = [
   { id: 'svc-half-updo', name: 'Half Updo', name_no: 'Halv Oppsett', category: 'Special Occasions', price_from: 1500, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/bridal-and-updos.jpeg', color: '#D98CA8', featured: false, active: true, sort_order: 15 },
   { id: 'svc-full-updo', name: 'Full Updo', name_no: 'Helt Oppsett', category: 'Special Occasions', price_from: 2500, price_to: null, price_on_consultation: false, price_is_from: true, duration_minutes: 90, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/bridal-and-updos.jpeg', color: '#C46E8C', featured: false, active: true, sort_order: 16 },
   { id: 'svc-bridal', name: 'Bridal Hair', name_no: 'Brudehår', category: 'Bridal', price_from: 4000, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/bridal-and-updos.jpeg', color: '#A8506E', featured: false, active: true, sort_order: 17 },
-  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 180, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/hair-extensions.jpeg', color: '#A97FC9', featured: true, active: true, sort_order: 18 },
-  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_from: null, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 240, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/hair-extensions.jpeg', color: '#8C5EAD', featured: false, active: true, sort_order: 19 },
+  { id: 'svc-ext-50', name: 'Hair Extensions (50g)', name_no: 'Extensions (50g)', category: 'Hair Extensions', price_from: 3000, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 90, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/hair-extensions.jpeg', color: '#A97FC9', featured: true, active: true, sort_order: 18 },
+  { id: 'svc-ext-100', name: 'Hair Extensions (100-150g)', name_no: 'Extensions (100-150g)', category: 'Hair Extensions', price_from: null, price_to: null, price_on_consultation: true, price_is_from: false, duration_minutes: 120, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/hair-extensions.jpeg', color: '#8C5EAD', featured: false, active: true, sort_order: 19 },
   { id: 'svc-consultation', name: 'Consultation', name_no: 'Konsultasjon', category: 'Consultation', price_from: 0, price_to: null, price_on_consultation: false, price_is_from: false, duration_minutes: 10, duration_with_addons_minutes: null, image_url: './html/Pics/Covers/haircuts-and-styling.jpeg', color: '#9a9aa2', featured: false, active: true, sort_order: 22 },
 ];
 const FALLBACK_STAFF_ADMIN = [
@@ -1153,8 +1154,13 @@ function openPopup(id) {
     ${b.status !== 'cancelled' && b.status !== 'completed'
       ? `<button type="button" class="popup-move-btn" id="popupMove"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move this appointment</button>`
       : ''}
+    ${b.status !== 'cancelled' && b.status !== 'completed'
+      ? `<button type="button" class="popup-cancel-btn" id="popupCancel"><i class="fa-solid fa-ban"></i> Cancel this appointment</button>`
+      : ''}
     ${b.customer_phone || b.customer_name ? `<button type="button" class="popup-history-btn" id="popupCheckHistory"><i class="fa-solid fa-clock-rotate-left"></i> Check history of this person</button>` : ''}
   `;
+  const cancelBtn = document.getElementById('popupCancel');
+  if (cancelBtn) cancelBtn.addEventListener('click', () => { closePopup(); openCancelModal(b); });
   popupBody.querySelectorAll('[data-action]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       popupBody.querySelectorAll('button').forEach((x) => (x.disabled = true));
@@ -1894,6 +1900,103 @@ function closeNoShowNotice() {
   const modal = document.getElementById('noShowModal');
   if (modal) modal.style.display = 'none';
   noShowTarget = null;
+}
+
+// ── CANCELLING FROM THE PANEL ──
+//
+// Until 0049 the only way to cancel was cancel_my_booking, which needs the
+// client's own email and phone as proof - fine for her cancelling on the
+// website, useless for the person at the desk with her on the phone. So a
+// cancellation meant editing the database by hand, or leaving a dead
+// appointment sitting on the calendar holding a slot that could be sold.
+//
+// The fee is fetched and shown before the button that charges it, rather
+// than being worked out here: the 48 hours and the 50% live in app_settings
+// and can be changed, and a second copy of that arithmetic in the panel
+// would be the copy that goes stale. It also means the figure on screen is
+// the figure the database will write.
+let cancelTarget = null;
+
+async function openCancelModal(booking) {
+  cancelTarget = booking;
+  const modal = document.getElementById('cancelModal');
+  if (!modal) return;
+  const notice = document.getElementById('cancelNotice');
+  const feeBox = document.getElementById('cancelFeeBox');
+  const waive = document.getElementById('cancelWaive');
+  const notify = document.getElementById('cancelNotify');
+  const confirm = document.getElementById('cancelConfirm');
+
+  document.getElementById('cancelWho').textContent =
+    `${booking.customer_name} · ${booking.service_name} · `
+    + `${new Date(booking.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} `
+    + fmtTime(booking.start_time);
+  document.getElementById('cancelStatus').textContent = '';
+  // Both always start from the safe answer: charging is a decision someone
+  // made, and telling her is the courtesy unless someone decides otherwise.
+  waive.checked = false;
+  notify.checked = true;
+  // "We cancelled" is the common case from this screen and matches what the
+  // function does with no answer at all, so an untouched dialog behaves the
+  // way it reads.
+  document.getElementById('cancelWhoCancelled').value = 'salon';
+  feeBox.hidden = true;
+  notice.className = 'cancel-notice';
+  notice.textContent = 'Checking the cancellation policy…';
+  confirm.disabled = true;
+  modal.style.display = 'flex';
+
+  const { data, error } = await staffCancellationQuote({ pin: currentPin, bookingId: booking.id });
+  if (modal.style.display === 'none' || cancelTarget !== booking) return; // closed while we waited
+  const q = Array.isArray(data) ? data[0] : data;
+  if (error || !q) {
+    // No quote means no honest figure to show, so the fee is not guessed at.
+    // Cancelling is still allowed - the database works the fee out itself and
+    // is the authority on it either way.
+    notice.textContent = error
+      ? `Could not check the cancellation policy (${error.message}). You can still cancel; the fee will be worked out and recorded automatically.`
+      : 'Could not check the cancellation policy. You can still cancel; the fee will be worked out and recorded automatically.';
+    confirm.disabled = false;
+    return;
+  }
+
+  if (q.already_closed) {
+    notice.textContent = 'This appointment is already cancelled or completed.';
+    confirm.disabled = true;
+    return;
+  }
+
+  const hours = Number(q.hours_notice);
+  const notMuch = Number(q.notice_hours);
+  const when = hours < 0
+    ? `That appointment was ${Math.abs(Math.round(hours))} hours ago.`
+    : `That is ${Math.round(hours)} hours' notice.`;
+
+  if (!q.is_late) {
+    notice.className = 'cancel-notice';
+    notice.textContent = `${when} The policy asks for ${notMuch}, so there is no cancellation fee.`;
+    feeBox.hidden = true;
+  } else {
+    notice.className = 'cancel-notice late';
+    const feeHint = document.getElementById('cancelWaiveHint');
+    if (q.fee == null) {
+      notice.innerHTML = `${escHtml(when)} The policy asks for <strong>${notMuch}</strong>, so this counts as a late cancellation.`
+        + ` This service has no fixed price, so there is no half to work from - it is recorded as late and you settle the amount with her.`;
+      feeHint.textContent = 'Nothing is invoiced automatically either way; this only records the decision.';
+    } else {
+      notice.innerHTML = `${escHtml(when)} The policy asks for <strong>${notMuch}</strong>, so a late-cancellation fee of `
+        + `<strong>${escHtml(money(q.fee))}</strong> applies${q.fee_is_estimate ? ' (approximate - this booking has a "from" price)' : ''}.`;
+      feeHint.textContent = 'The fee is still recorded either way, marked as waived, so it shows in the late-cancellation report.';
+    }
+    feeBox.hidden = false;
+  }
+  confirm.disabled = false;
+}
+
+function closeCancelModal() {
+  const modal = document.getElementById('cancelModal');
+  if (modal) modal.style.display = 'none';
+  cancelTarget = null;
 }
 
 // ── COMPLETE BOOKING MODAL ── (captures amount_charged — see 0001's comment on that column)
@@ -4399,11 +4502,34 @@ async function tellHer(id, btn) {
 
   // The message is best-effort; being told is what matters. Record it either
   // way, but say plainly when nothing went out so someone picks up the phone.
-  const { error: markErr } = await markExtensionsNotified({ pin: currentPin, id });
+  //
+  // data is now whether the order actually moved to 'notified'. It comes back
+  // false when the order was no longer waiting to be told - most often a
+  // second click a moment after the first, sometimes someone else in the
+  // panel at the same time. Until 0048 this said "✓ Told her" regardless,
+  // because the function returned void and there was nothing to check.
+  const { data: marked, error: markErr } = await markExtensionsNotified({ pin: currentPin, id });
   if (markErr) {
     msg.textContent = 'Error: ' + markErr.message;
     msg.style.color = '#dc2626';
     card.querySelectorAll('button').forEach((b) => (b.disabled = false));
+    return;
+  }
+
+  // Reaching here with marked === false means the order was still 'arrived'
+  // when this click began - the fetch above would have bailed otherwise - and
+  // stopped being 'arrived' before the mark landed. So somebody else marked
+  // it told in between, and the message this click sent is a second one she
+  // has already had. Worth saying, because two identical "your hair is here"
+  // messages look like a mistake from her side and someone may need to
+  // explain it. Not an error, though, and not dressed as one: the hair is
+  // here, she has been told, and there is nothing to redo.
+  if (marked === false) {
+    msg.textContent = (sent && sent.sent)
+      ? 'Someone marked this as told first — she may have had two messages.'
+      : 'Someone marked this as told first — nothing more to do.';
+    msg.style.color = '#b45309';
+    setTimeout(() => refreshExtensions(), 1800);
     return;
   }
 
@@ -4501,6 +4627,45 @@ extModal.addEventListener('click', (e) => { if (e.target === extModal) closeExtM
 // ── NO-SHOW NOTICE WIRING ──
 document.getElementById('noShowClose').addEventListener('click', closeNoShowNotice);
 document.getElementById('noShowSkip').addEventListener('click', closeNoShowNotice);
+
+document.getElementById('cancelClose').addEventListener('click', closeCancelModal);
+document.getElementById('cancelKeep').addEventListener('click', closeCancelModal);
+document.getElementById('cancelConfirm').addEventListener('click', async () => {
+  if (!cancelTarget) return;
+  const booking = cancelTarget;
+  const status = document.getElementById('cancelStatus');
+  const btn = document.getElementById('cancelConfirm');
+  const keep = document.getElementById('cancelKeep');
+  btn.disabled = true; keep.disabled = true;
+  status.textContent = 'Cancelling…';
+  status.style.color = 'var(--sched-text-muted)';
+
+  const { error } = await staffCancelBooking({
+    pin: currentPin,
+    bookingId: booking.id,
+    waiveFee: document.getElementById('cancelWaive').checked,
+    notify: document.getElementById('cancelNotify').checked,
+    cancelledByStaff: document.getElementById('cancelWhoCancelled').value !== 'client',
+  });
+  if (error) {
+    status.textContent = 'Error: ' + error.message;
+    status.style.color = '#dc2626';
+    btn.disabled = false; keep.disabled = false;
+    return;
+  }
+
+  status.textContent = '✓ Cancelled.';
+  status.style.color = '#059669';
+  setTimeout(async () => {
+    closeCancelModal();
+    // Same refresh the move flow uses: the grid is where it has to be seen to
+    // have happened, and the owner panel's lists only if it is actually open.
+    await loadWindow(currentPin, windowFrom, windowTo);
+    renderGrid();
+    renderDayStrip();
+    if (ownerPanelModal.style.display !== 'none') switchOwnerTab(ownerActiveTab);
+  }, 600);
+});
 document.getElementById('noShowModal').addEventListener('click', (e) => {
   if (e.target.id === 'noShowModal') closeNoShowNotice();
 });

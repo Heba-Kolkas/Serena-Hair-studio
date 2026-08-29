@@ -183,6 +183,29 @@ export async function fetchStaffSchedule({ pin, dateFrom, dateTo, staffId }) {
   });
 }
 
+// ── CANCELLING FROM THE PANEL ──
+// Two calls, deliberately: what it would cost is asked and shown before
+// anything is written, so the fee is on screen before the button that
+// charges it. See migration 0049.
+export async function staffCancellationQuote({ pin, bookingId }) {
+  return supabase.rpc('staff_cancellation_quote', {
+    p_pin: pin,
+    p_booking_id: bookingId,
+  });
+}
+
+export async function staffCancelBooking({ pin, bookingId, waiveFee, notify, cancelledByStaff }) {
+  return supabase.rpc('staff_cancel_booking', {
+    p_pin: pin,
+    p_booking_id: bookingId,
+    p_waive_fee: !!waiveFee,
+    p_notify: notify !== false,
+    // Picks 'cancelled_by_salon' or 'cancelled_by_client' for the message the
+    // update trigger queues, and is recorded on the booking either way.
+    p_cancelled_by_staff: cancelledByStaff !== false,
+  });
+}
+
 export async function updateBookingStatusStaff({ pin, bookingId, status, actorStaffId }) {
   return supabase.rpc('update_booking_status_staff', {
     p_pin: pin,
