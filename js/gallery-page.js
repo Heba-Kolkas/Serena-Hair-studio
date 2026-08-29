@@ -194,16 +194,25 @@ function _buildVideoWrapper(src) {
   video.defaultMuted = true;
   video.loop = true;
   video.playsInline = true;
-  video.autoplay = true;
   // Nothing until the intersection observer says this one is actually on
   // screen - see the observer above. 'none' rather than 'metadata' because
   // even a metadata-only fetch on every video in a category is still twenty
   // network requests fired at once for nothing anyone can see yet.
+  //
+  // NO autoplay attribute - this is the one that actually mattered. Per
+  // spec, a browser honours preload='none' only until autoplay is also
+  // present, at which point it is entitled to act as though preload were
+  // 'auto' regardless, since autoplaying requires having something to play.
+  // Every video here had autoplay set from the moment it was created, so
+  // every preload='none' above was silently overridden the instant Chrome
+  // saw both attributes together - which is why all 28 videos in a category
+  // were still fetched immediately even after the observer-gating fix.
+  // Playback now happens only through the explicit .play() calls already in
+  // the observer callback and the click handler below.
   video.preload = 'none';
   video.setAttribute('muted', '');
   video.setAttribute('disablepictureinpicture', '');
   video.setAttribute('playsinline', '');
-  video.setAttribute('autoplay', '');
 
   const source = document.createElement('source');
   source.src = src;
