@@ -456,6 +456,10 @@ export async function markExtensionsNotified({ pin, id }) {
   return supabase.rpc('staff_mark_extensions_notified', { p_pin: pin, p_order_id: id });
 }
 
+export async function markDepositPaid({ pin, id }) {
+  return supabase.rpc('staff_mark_deposit_paid', { p_pin: pin, p_order_id: id, p_paid: true });
+}
+
 export async function setExtensionOrderStatus({ pin, id, status }) {
   return supabase.rpc('staff_set_extension_order_status', { p_pin: pin, p_order_id: id, p_status: status });
 }

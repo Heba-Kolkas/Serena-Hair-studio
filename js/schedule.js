@@ -10,7 +10,7 @@ import {
   waiveCancellationFee, unwaiveCancellationFee, setCancellationFee,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
-  markExtensionsNotified, setExtensionOrderStatus, fetchExtensionHistory,
+  markExtensionsNotified, setExtensionOrderStatus, fetchExtensionHistory, markDepositPaid,
   fetchExtensionOrdersAtRisk, sendExtensionsArrived,
   fetchBusinessHours, fetchStaffHoursOverrides, uploadOwnerImage, bookAppointment,
   fetchRevenueAdmin, fetchStaffServicesAdmin, setStaffServicesAdmin,
@@ -4030,6 +4030,14 @@ function extCard(o, historyView) {
   const deposit = o.deposit_amount != null
     ? `<span class="ext-deposit ${o.deposit_paid ? 'paid' : 'unpaid'}">Deposit ${extNok(o.deposit_amount)}${o.deposit_paid ? ' paid' : ' UNPAID'}</span>`
     : '';
+  // Client-side, her booking page will not unlock without deposit_paid = true
+  // on this row - whatever the amount says or doesn't say. Shown whenever
+  // that is still false, not only when there is a deposit_amount to display
+  // beside it, because an order agreed for cash with no figure logged needs
+  // this exactly as much as one with a number on file.
+  const markPaidBtn = !o.deposit_paid
+    ? `<button type="button" class="owner-action-btn" data-ext-mark-paid="${extEsc(o.id)}"><i class="fa-solid fa-sack-dollar"></i> Mark deposit paid</button>`
+    : '';
 
   let actions = '';
   if (!historyView) {
@@ -4044,6 +4052,11 @@ function extCard(o, historyView) {
     } else if (group === 'ready' || group === 'notified') {
       actions = `<button type="button" class="owner-action-btn" data-ext-status="fitted" data-ext-id="${extEsc(o.id)}"><i class="fa-solid fa-check"></i> Fitted</button>`;
     }
+    // Independent of the group above: paying the deposit and the hair
+    // turning up are two different facts, either can lag the other, and a
+    // client cannot book until BOTH are true. Placed first so it is never
+    // the thing the eye skips past to reach "It arrived".
+    actions = markPaidBtn + actions;
   }
 
   const booked = o.booking_date
@@ -4071,6 +4084,14 @@ function extCard(o, historyView) {
 }
 
 function wireExtActions(root) {
+  root.querySelectorAll('[data-ext-mark-paid]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const { error } = await markDepositPaid({ pin: currentPin, id: btn.dataset.extMarkPaid });
+      if (error) { btn.disabled = false; alert('Could not mark the deposit paid: ' + error.message); return; }
+      refreshExtensions();
+    });
+  });
   root.querySelectorAll('[data-ext-arrived]').forEach((btn) => {
     btn.addEventListener('click', () => markArrived(btn.dataset.extArrived, btn));
   });
