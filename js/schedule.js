@@ -10,7 +10,7 @@ import {
   waiveCancellationFee, unwaiveCancellationFee, setCancellationFee,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
-  markExtensionsNotified, setExtensionOrderStatus, fetchExtensionHistory, markDepositPaid,
+  markExtensionsNotified, fetchExtensionHistory, markDepositPaid,
   fetchExtensionOrdersAtRisk, sendExtensionsArrived,
   fetchBusinessHours, fetchStaffHoursOverrides, uploadOwnerImage, bookAppointment,
   fetchRevenueAdmin, fetchStaffServicesAdmin, setStaffServicesAdmin,
@@ -4245,9 +4245,11 @@ function extCard(o, historyView) {
       actions = `
         <button type="button" class="owner-action-btn confirm" data-ext-tell="${extEsc(o.id)}"><i class="fa-solid fa-paper-plane"></i> Tell her</button>
         <a class="owner-action-btn" href="tel:${extEsc(o.customer_phone)}"><i class="fa-solid fa-phone"></i> Call</a>`;
-    } else if (group === 'ready' || group === 'notified') {
-      actions = `<button type="button" class="owner-action-btn" data-ext-status="fitted" data-ext-id="${extEsc(o.id)}"><i class="fa-solid fa-check"></i> Fitted</button>`;
     }
+    // 'ready' and 'notified' get no button of their own - the owner said
+    // this manual "Fitted" step isn't needed. Both groups already carry
+    // everything worth seeing (whether she's booked, the deposit state
+    // below); there is simply nothing left to click here.
     // Independent of the group above: paying the deposit and the hair
     // turning up are two different facts, either can lag the other, and a
     // client cannot book until BOTH are true. Placed first so it is never
@@ -4302,16 +4304,6 @@ function wireExtActions(root) {
   });
   root.querySelectorAll('[data-ext-tell]').forEach((btn) => {
     btn.addEventListener('click', () => tellHer(btn.dataset.extTell, btn));
-  });
-  root.querySelectorAll('[data-ext-status]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      const { error } = await setExtensionOrderStatus({
-        pin: currentPin, id: btn.dataset.extId, status: btn.dataset.extStatus,
-      });
-      if (error) { btn.disabled = false; alert('Could not update: ' + error.message); return; }
-      refreshExtensions();
-    });
   });
 }
 
