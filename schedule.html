@@ -184,9 +184,19 @@
                  as the same thing when they are not. One panel now, with the
                  distinction made by the tab itself rather than by which menu
                  you had to already know to open. -->
-            <div class="view-toggle ext-top-toggle" id="extTopToggle">
-                <button type="button" class="view-toggle-btn active" data-ext-tab="orders">Orders</button>
-                <button type="button" class="view-toggle-btn" data-ext-tab="requests">Requests <span id="extReqBadge" class="topbar-menu-badge" hidden></span></button>
+            <!-- Wrapped rather than styled directly: .appt-popup gives its
+                 first child generous breathing room from the popup edge
+                 (padding-top/left/right), which is invisible on an ordinary
+                 block but became empty space INSIDE the pill's own rounded
+                 background once the toggle itself was that first child - a
+                 bloated, oddly-tall pill instead of a compact one. The wrap
+                 absorbs the popup's outer spacing; the pill inside it keeps
+                 its own small padding, undisturbed. -->
+            <div class="ext-top-toggle">
+                <div class="view-toggle" id="extTopToggle">
+                    <button type="button" class="view-toggle-btn active" data-ext-tab="orders">Orders</button>
+                    <button type="button" class="view-toggle-btn" data-ext-tab="requests">Requests <span id="extReqBadge" class="topbar-menu-badge" hidden></span></button>
+                </div>
             </div>
 
             <div id="extOrdersSection">

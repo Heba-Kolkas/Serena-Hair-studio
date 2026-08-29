@@ -325,7 +325,10 @@ body { background: var(--sched-bg); }
   padding: 0.2rem;
   width: fit-content;
 }
-.ext-top-toggle { margin: 0.9rem 0 1.1rem; }
+/* .ext-top-toggle is now the WRAPPER (see schedule.html) - the popup's own
+   first-child rule already supplies the top/side breathing room, so this
+   only adds the gap below, before the toolbar row that follows it. */
+.ext-top-toggle { margin-bottom: 1.1rem; }
 .ext-top-toggle .topbar-menu-badge { margin-left: 0.3rem; }
 .view-toggle-btn {
   padding: 0.3rem 0.85rem;
