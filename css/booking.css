@@ -679,9 +679,23 @@
 .wizard-nav {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 1rem;
   margin-top: 2rem;
 }
+/* Empty on every other step; on the extensions gate it explains why Next
+   is disabled and, tapped, scrolls back up to the fields she needs - so a
+   button that can no longer even fire a click event still tells her
+   something when she reaches for it. */
+.wizard-nav-hint {
+  font-size: 0.78rem;
+  color: var(--taupe);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wizard-nav-hint:empty { display: none; }
 .wizard-btn {
   display: inline-flex;
   align-items: center;

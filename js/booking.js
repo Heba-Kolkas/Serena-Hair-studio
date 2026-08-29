@@ -859,8 +859,37 @@ function renderExternalNotice(svc) {
 function updateNext1(svc) {
   const btn = document.getElementById('next1');
   if (!btn || !svc) return;
-  btn.disabled = !!svc.external_booking_url
-    || (isExtensionsBooking(svc) && !state.extensionsEarliest);
+  const waitingOnExtensions = isExtensionsBooking(svc) && !state.extensionsEarliest;
+  btn.disabled = !!svc.external_booking_url || waitingOnExtensions;
+
+  // A disabled button says nothing on its own - native buttons do not even
+  // fire a click event while disabled, so a client who scrolled straight past
+  // the panel and tapped Next (in the panel or the sticky bar below it) gets
+  // no feedback at all, twice: once from the button doing nothing, and again
+  // because there is nothing telling her why. This is the text that answers
+  // that, and it is clickable so tapping it does what tapping Next could not.
+  const hint = document.getElementById('next1Hint');
+  if (hint) {
+    if (waitingOnExtensions) {
+      hint.textContent = lang() === 'no' ? 'Finn bestillingen din over for å fortsette' : 'Find your order above to continue';
+      hint.onclick = () => {
+        const notice = document.getElementById('extensionsNotice');
+        const phone = document.getElementById('extGatePhone');
+        if (notice) notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (phone) setTimeout(() => phone.focus({ preventScroll: true }), 350);
+      };
+    } else {
+      hint.textContent = '';
+      hint.onclick = null;
+    }
+  }
+
+  // The sticky "Continue" at the foot of the screen makes exactly the same
+  // promise as the real button, so it has to agree with it - called here
+  // rather than at each of updateNext1's own call sites, which is how the
+  // two drifted apart the first time: the in-panel button got disabled, the
+  // sticky one below it did not.
+  if (typeof updateStickyBar === 'function') updateStickyBar();
 }
 
 /** Escapes text before it goes into innerHTML. The gate's own copy is static,
@@ -984,7 +1013,8 @@ function switchToConsultation() {
 // rest of this wizard handles anything worth flagging but not worth
 // frightening anyone over. A hairline rule separates "what the hair is" from
 // "what happens next" instead of a second border.
-function renderExtensionsQuality(svc) {
+function renderExtensionsQuality(svc, opts) {
+  const wasAlreadyShowing = !!document.getElementById('extensionsNotice');
   const existing = document.getElementById('extensionsNotice');
   if (existing) existing.remove();
   if (!isExtensionsBooking(svc)) { state.extensionsEarliest = null; return; }
@@ -1017,6 +1047,11 @@ function renderExtensionsQuality(svc) {
     </div>` : ''}
   `;
   card.appendChild(el);
+  if (!wasAlreadyShowing && (opts || {}).autoScroll !== false) {
+    // A frame late so the browser has laid the new content out - scrolling to
+    // an element that was appended this tick can otherwise land short.
+    requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  }
   if (!needsConfirm) return;
   document.getElementById('switchToConsultation').addEventListener('click', switchToConsultation);
 
@@ -2355,14 +2390,28 @@ function updateStickyBar() {
     stickyExternalLink.href = svc.external_booking_url;
     stickyExternalLink.textContent = svc.external_booking_label || (lang() === 'no' ? 'Bestill direkte' : 'Book directly');
   } else {
-    const total = expectedTotal();
-    const parts = [`${effectiveDuration()} min`, totalLabel(total)];
-    if (state.addons.length) {
-      parts.push(state.addons.length === 1
-        ? (lang() === 'no' ? '1 tillegg' : '1 add-on')
-        : `${state.addons.length} ${lang() === 'no' ? 'tillegg' : 'add-ons'}`);
+    const waitingOnExtensions = isExtensionsBooking(svc) && !state.extensionsEarliest;
+    if (waitingOnExtensions) {
+      // stickyNextBtn calling a disabled next1.click() is a silent no-op -
+      // calling .click() on a disabled button does nothing, not even firing
+      // the listener - so tapping "Continue" here looked completely normal
+      // and did nothing at all, with no greyed-out state to suggest why.
+      // Disabled in step with the real button now, and the meta line says
+      // what next1Hint says beside the button she has not scrolled to yet.
+      document.getElementById('stickyMeta').textContent = lang() === 'no'
+        ? 'Finn bestillingen din over for å fortsette'
+        : 'Find your order above to continue';
+    } else {
+      const total = expectedTotal();
+      const parts = [`${effectiveDuration()} min`, totalLabel(total)];
+      if (state.addons.length) {
+        parts.push(state.addons.length === 1
+          ? (lang() === 'no' ? '1 tillegg' : '1 add-on')
+          : `${state.addons.length} ${lang() === 'no' ? 'tillegg' : 'add-ons'}`);
+      }
+      document.getElementById('stickyMeta').textContent = parts.join(' · ');
     }
-    document.getElementById('stickyMeta').textContent = parts.join(' · ');
+    stickyNextBtn.disabled = waitingOnExtensions;
     stickyNextBtn.hidden = false;
     stickyExternalLink.hidden = true;
   }
