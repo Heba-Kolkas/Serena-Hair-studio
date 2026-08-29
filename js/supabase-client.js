@@ -183,6 +183,31 @@ export async function fetchStaffSchedule({ pin, dateFrom, dateTo, staffId }) {
   });
 }
 
+// ── FEES WAITING FOR A DECISION ──
+// Late cancellations and no-shows that nobody has yet chosen to invoice or
+// forgive. See migration 0051.
+export async function fetchFeeDecisions({ pin, view }) {
+  return supabase.rpc('staff_fee_decisions', { p_pin: pin, p_view: view || 'pending' });
+}
+
+export async function fetchFeeDecisionsCount({ pin }) {
+  return supabase.rpc('staff_fee_decisions_count', { p_pin: pin });
+}
+
+// Creates the invoice, or hands back the one already there so a second press
+// resends rather than billing her twice. Marking it sent is deliberately a
+// separate call, made only once the mail has actually gone.
+export async function createFeeInvoice({ pin, bookingId, amount }) {
+  return supabase.rpc('staff_invoice_for_fee', {
+    p_pin: pin, p_booking_id: bookingId,
+    p_amount: amount == null ? null : amount,
+  });
+}
+
+export async function markInvoiceSent({ pin, id }) {
+  return supabase.rpc('staff_mark_invoice_sent', { p_pin: pin, p_id: id });
+}
+
 // ── CANCELLING FROM THE PANEL ──
 // Two calls, deliberately: what it would cost is asked and shown before
 // anything is written, so the fee is on screen before the button that

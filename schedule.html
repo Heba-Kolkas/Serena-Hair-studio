@@ -28,6 +28,7 @@
                 <button id="btnServiceColors" class="topbar-menu-item"><i class="fa-solid fa-palette"></i> Colors</button>
                 <button id="btnBlockTime" class="topbar-menu-item"><i class="fa-solid fa-ban"></i> Block Time</button>
                 <button id="btnExtensions" class="topbar-menu-item"><i class="fa-solid fa-boxes-stacked"></i> Extensions <span id="extBadge" class="topbar-menu-badge" hidden></span></button>
+                <button id="btnFees" class="topbar-menu-item"><i class="fa-solid fa-file-invoice"></i> Fees <span id="feesBadge" class="topbar-menu-badge" hidden></span></button>
                 <button id="btnOwnerPanel" class="topbar-menu-item" style="display:none;"><i class="fa-solid fa-user-shield"></i> Owner Panel</button>
                 <button id="btnSwitchPin" class="topbar-menu-item"><i class="fa-solid fa-arrow-right-from-bracket"></i> Switch PIN</button>
             </div>
@@ -284,6 +285,27 @@
                 <button type="button" id="noShowSkip" class="owner-action-btn">Don't send anything</button>
             </div>
             <div id="noShowStatus" class="block-status"></div>
+        </div>
+    </div>
+
+    <!-- FEES WAITING FOR A DECISION
+         Late cancellations and no-shows the salon COULD invoice. Nothing is
+         charged until someone here decides to charge it - the salon does not
+         want to bill everyone, and a regular whose child was ill and a
+         stranger on her third late cancellation are the same row in the
+         database and completely different situations. -->
+    <div id="feesModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup ext-panel">
+            <button type="button" class="appt-popup-close" id="feesClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Cancellation &amp; no-show fees</h3>
+            <div class="ext-top-toggle">
+                <div class="view-toggle" id="feesToggle">
+                    <button type="button" class="view-toggle-btn active" data-fees-tab="pending">Needs a decision <span id="feesTabBadge" class="topbar-menu-badge" hidden></span></button>
+                    <button type="button" class="view-toggle-btn" data-fees-tab="history">Decided</button>
+                </div>
+            </div>
+            <p class="block-modal-sub" id="feesIntro"></p>
+            <div id="feesList" class="fees-list"></div>
         </div>
     </div>
 

@@ -2176,6 +2176,31 @@ body.modal-open { overflow: hidden; }
 }
 .popup-cancel-btn:hover { background: #C25E4B; border-color: #C25E4B; color: #fff; }
 
+/* ── FEES WAITING FOR A DECISION ──
+   One card per person, not a table. Each row is a judgement about a named
+   client - how much notice she gave, what it would cost her - and a table
+   would line those up as though the answer were the same for all of them,
+   which is the opposite of the point. */
+.fees-list { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.5rem; }
+.fees-row {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 12px;
+  background: var(--sched-surface);
+}
+.fees-row .owner-booking-meta em { color: var(--sched-text-muted); }
+.fees-amount {
+  width: 9rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 8px;
+  background: var(--sched-bg);
+  color: var(--sched-text);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+}
+.fees-amount:focus-visible { outline: none; border-color: var(--sched-text); }
+
 @media (max-width: 560px) {
   .resched-grid { grid-template-columns: minmax(0, 1fr); }
 }

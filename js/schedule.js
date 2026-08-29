@@ -9,6 +9,7 @@ import {
   fetchActivityLogAdmin, setPinAdmin, staffBookAppointment, setBookingHorizonAdmin, fetchBookingHorizonDays, fetchBookingsInRangeAdmin, addBlockedRangeAdmin, fetchPendingBookingsAdmin, decideBookingAdmin, sendBookingEmail, sendMessage, fetchSmsBalance, fetchPendingCount, fetchRequestHistoryAdmin,
   waiveCancellationFee, unwaiveCancellationFee, setCancellationFee,
   staffCancellationQuote, staffCancelBooking,
+  fetchFeeDecisions, fetchFeeDecisionsCount, createFeeInvoice, markInvoiceSent,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
   markExtensionsNotified, fetchExtensionHistory, markDepositPaid,
@@ -1900,6 +1901,229 @@ function closeNoShowNotice() {
   const modal = document.getElementById('noShowModal');
   if (modal) modal.style.display = 'none';
   noShowTarget = null;
+}
+
+// ── FEES WAITING FOR A DECISION ──
+//
+// The fee was always manual, but only by omission: cancelling wrote a number
+// into cancellation_fee and stopped, and 0012's whole invoice system was
+// never connected to anything. So a late cancellation produced an amount
+// nobody saw and nothing acted on - neither charged nor forgiven, just lost.
+//
+// This is the screen where someone decides. Charging is a press, not a
+// default, because the salon does not want to bill everyone: a regular whose
+// child was ill and a stranger on her third late cancellation are the same
+// row in the database and completely different situations, and only a person
+// can tell them apart.
+let feesView = 'pending';
+
+function feeRowHtml(r, canWaive) {
+  const isNoShow = r.reason === 'no_show';
+  const when = new Date(r.appointment_date + 'T00:00:00')
+    .toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  // "No warning at all" rather than 0 hours: a no-show is an absence, not a
+  // measurement, and a 0.0 would read as though someone had timed it.
+  const notice = isNoShow
+    ? 'Did not turn up'
+    : `Cancelled ${Math.round(Number(r.hours_notice))}h before`;
+
+  const amount = r.invoice_amount != null ? r.invoice_amount : r.cancellation_fee;
+  const money_ = amount != null ? money(amount) : null;
+
+  let state = '';
+  if (r.fee_waived) state = '<span class="ext-deposit paid">Not charged</span>';
+  else if (r.invoice_id) {
+    state = r.invoice_status === 'paid'
+      ? '<span class="ext-deposit paid"><i class="fa-solid fa-circle-check"></i> Paid</span>'
+      : (r.invoice_sent_at
+        ? '<span class="ext-deposit unpaid">Invoiced, unpaid</span>'
+        : '<span class="ext-deposit unpaid">Invoice made, not sent</span>');
+  }
+
+  // No fixed price means no half to work from, so the amount is typed rather
+  // than assumed. The button stays disabled until it is.
+  const needsAmount = !r.invoice_id && (r.cancellation_fee == null || Number(r.cancellation_fee) <= 0);
+
+  let actions = '';
+  if (feesView === 'pending') {
+    actions = `<div class="owner-booking-actions" style="margin-top:0.5rem;">
+      ${needsAmount
+        ? `<input type="number" class="fees-amount" data-fee-amount="${escHtml(r.booking_id)}" min="1" step="1" inputmode="numeric" placeholder="Amount (NOK)" />`
+        : ''}
+      <button type="button" class="owner-action-btn confirm" data-fee-send="${escHtml(r.booking_id)}">
+        <i class="fa-solid fa-paper-plane"></i> Send invoice</button>
+      ${canWaive
+        ? `<button type="button" class="owner-action-btn" data-fee-waive="${escHtml(r.booking_id)}">Don't charge</button>`
+        : '<span class="block-field-hint">Only the owner can write a fee off.</span>'}
+    </div>`;
+  }
+
+  return `<div class="fees-row" data-fee-row="${escHtml(r.booking_id)}">
+    <div class="owner-booking-title">${escHtml(r.customer_name)}</div>
+    <div class="owner-booking-meta">${escHtml(r.service_name)} · ${escHtml(r.staff_name || '')} · ${when} ${fmtTime(r.start_time)}</div>
+    <div class="owner-booking-meta"><strong>${notice}</strong>${money_ ? ' · ' + escHtml(money_) : ''}${
+      r.fee_is_estimate && money_ ? ' <em>(from-price, so this is approximate)</em>' : ''}</div>
+    ${!money_ && feesView === 'pending'
+      ? '<div class="owner-booking-meta"><em>This service has no fixed price, so there is no half to work from - name the amount.</em></div>'
+      : ''}
+    ${state ? `<div class="owner-booking-meta" style="margin-top:0.3rem;">${state}</div>` : ''}
+    ${r.customer_email ? '' : '<div class="req-mail-warn">No email address on this booking - nothing can be sent. Ring her.</div>'}
+    ${actions}
+    <div class="block-status" data-fee-status="${escHtml(r.booking_id)}"></div>
+  </div>`;
+}
+
+async function refreshFees() {
+  const list = document.getElementById('feesList');
+  const intro = document.getElementById('feesIntro');
+  list.innerHTML = '<p class="owner-booking-meta">Loading…</p>';
+  intro.textContent = feesView === 'pending'
+    ? 'Nobody is charged automatically. Each of these is a decision.'
+    : 'Fees already invoiced or written off.';
+
+  const { data, error } = await fetchFeeDecisions({ pin: currentPin, view: feesView });
+  if (error) {
+    list.innerHTML = `<p class="req-mail-warn">Could not load these: ${escHtml(error.message)}</p>`;
+    return;
+  }
+  const rows = data || [];
+  if (!rows.length) {
+    list.innerHTML = feesView === 'pending'
+      ? '<p class="owner-booking-meta">Nothing waiting. Every late cancellation and no-show has been dealt with.</p>'
+      : '<p class="owner-booking-meta">Nothing decided yet.</p>';
+  } else {
+    list.innerHTML = rows.map((r) => feeRowHtml(r, isOwnerMode)).join('');
+  }
+  wireFeeButtons(list, rows);
+
+  const tabBadge = document.getElementById('feesTabBadge');
+  if (tabBadge && feesView === 'pending') {
+    tabBadge.hidden = rows.length === 0;
+    tabBadge.textContent = rows.length || '';
+  }
+}
+
+function wireFeeButtons(root, rows) {
+  const byId = (id) => rows.find((r) => r.booking_id === id);
+
+  root.querySelectorAll('[data-fee-send]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.feeSend;
+      const r = byId(id);
+      const status = root.querySelector(`[data-fee-status="${id}"]`);
+      if (!r) return;
+      if (!r.customer_email) {
+        status.textContent = 'No email address on this booking.';
+        status.style.color = '#dc2626';
+        return;
+      }
+      const amountEl = root.querySelector(`[data-fee-amount="${id}"]`);
+      let amount = r.cancellation_fee;
+      if (amountEl) {
+        amount = parseFloat(amountEl.value);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          status.textContent = 'Enter the amount to invoice first.';
+          status.style.color = '#dc2626';
+          amountEl.focus();
+          return;
+        }
+      }
+
+      root.querySelectorAll('button').forEach((b) => (b.disabled = true));
+      status.textContent = 'Creating the invoice…';
+      status.style.color = 'var(--sched-text-muted)';
+
+      // The record first, then the mail, then the stamp. A send that fails
+      // leaves a real invoice with sent_at still null, so the row goes on
+      // saying it needs sending and pressing again resends rather than
+      // billing her a second time.
+      const { data: inv, error: invErr } = await createFeeInvoice({
+        pin: currentPin, bookingId: id, amount: amountEl ? amount : null,
+      });
+      if (invErr) {
+        status.textContent = 'Could not create the invoice: ' + invErr.message;
+        status.style.color = '#dc2626';
+        root.querySelectorAll('button').forEach((b) => (b.disabled = false));
+        return;
+      }
+
+      status.textContent = 'Sending…';
+      const res = await sendMessage({
+        pin: currentPin,
+        bookingId: id,
+        key: 'invoice',
+        lang: 'no',
+        email: r.customer_email,
+        phone: r.customer_phone,
+        smsConsent: r.sms_consent !== false,
+        context: {
+          customerName: r.customer_name,
+          serviceName: r.service_name,
+          staffName: r.staff_name || '',
+          date: r.appointment_date,
+          startTime: fmtTime(r.start_time),
+          invoiceAmount: Number((inv && inv.amount) || amount),
+          invoiceReason: r.reason,
+        },
+      });
+
+      if (res && res.sent) {
+        await markInvoiceSent({ pin: currentPin, id: inv.id });
+        status.textContent = '✓ Invoice sent.';
+        status.style.color = '#059669';
+        setTimeout(() => { refreshFees(); refreshFeesBadge(); }, 1200);
+      } else {
+        // The invoice exists and is correct; only the mail failed. Said
+        // plainly, because the money is now owed whether or not she has been
+        // told, and somebody has to tell her.
+        status.innerHTML = `Invoice made, but nothing was sent: ${escHtml((res && res.reason) || 'unknown')}`
+          + `<div class="req-mail-warn">Press again to retry, or ring her: `
+          + `<a href="tel:${escHtml(r.customer_phone)}">${escHtml(r.customer_phone)}</a></div>`;
+        status.style.color = '#b45309';
+        root.querySelectorAll('button').forEach((b) => (b.disabled = false));
+      }
+    });
+  });
+
+  root.querySelectorAll('[data-fee-waive]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.feeWaive;
+      const status = root.querySelector(`[data-fee-status="${id}"]`);
+      root.querySelectorAll('button').forEach((b) => (b.disabled = true));
+      const { error } = await waiveCancellationFee({ pin: currentPin, bookingId: id });
+      if (error) {
+        status.textContent = 'Could not write it off: ' + error.message;
+        status.style.color = '#dc2626';
+        root.querySelectorAll('button').forEach((b) => (b.disabled = false));
+        return;
+      }
+      status.textContent = '✓ Not charged.';
+      status.style.color = '#059669';
+      setTimeout(() => { refreshFees(); refreshFeesBadge(); }, 900);
+    });
+  });
+}
+
+async function refreshFeesBadge() {
+  const badge = document.getElementById('feesBadge');
+  if (!badge || !currentPin) return;
+  const { data, error } = await fetchFeeDecisionsCount({ pin: currentPin });
+  const n = error ? 0 : Number(data || 0);
+  badge.hidden = !n;
+  badge.textContent = n || '';
+}
+
+function openFeesModal() {
+  document.getElementById('feesModal').style.display = 'flex';
+  switchFeesTab('pending');
+}
+function closeFeesModal() { document.getElementById('feesModal').style.display = 'none'; }
+function switchFeesTab(tab) {
+  feesView = tab;
+  document.getElementById('feesToggle').querySelectorAll('[data-fees-tab]').forEach((b) => {
+    b.classList.toggle('active', b.dataset.feesTab === tab);
+  });
+  refreshFees();
 }
 
 // ── CANCELLING FROM THE PANEL ──
@@ -4041,6 +4265,10 @@ function enterApp(pin) {
     updateDayLabel();
     renderGrid();
     refreshRequestBanner();
+    // The menu is closed by default, so a fee waiting for a decision would
+    // otherwise be invisible until someone happened to open it. The badge is
+    // the only thing that says it is there.
+    refreshFeesBadge();
     startAutoRefresh();
   });
 }
@@ -4620,6 +4848,18 @@ document.getElementById('requestBannerOpen').addEventListener('click', () => {
 document.getElementById('btnExtensions').addEventListener('click', () => {
   closeMoreMenu();
   openExtModal();
+});
+
+document.getElementById('btnFees').addEventListener('click', () => {
+  closeMoreMenu();
+  openFeesModal();
+});
+document.getElementById('feesClose').addEventListener('click', closeFeesModal);
+document.getElementById('feesModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('feesModal')) closeFeesModal();
+});
+document.getElementById('feesToggle').querySelectorAll('[data-fees-tab]').forEach((btn) => {
+  btn.addEventListener('click', () => switchFeesTab(btn.dataset.feesTab));
 });
 extClose.addEventListener('click', closeExtModal);
 extModal.addEventListener('click', (e) => { if (e.target === extModal) closeExtModal(); });
