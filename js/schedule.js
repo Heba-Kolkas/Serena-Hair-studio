@@ -4223,6 +4223,17 @@ function extCard(o, historyView) {
   const markPaidBtn = !o.deposit_paid
     ? `<button type="button" class="owner-action-btn" data-ext-mark-paid="${extEsc(o.id)}"><i class="fa-solid fa-sack-dollar"></i> Mark deposit paid</button>`
     : '';
+  // Owner-only, matching the cancellation-fee-waiver permission level - a
+  // financial-risk call about one client, not routine bookkeeping. Only
+  // shown while the deposit is unpaid; once paid the question no longer
+  // applies. isOwnerMode gates the button; the RPC refuses a non-owner PIN
+  // regardless, so this is a convenience, not the actual security boundary.
+  const beforeDepositToggle = (!o.deposit_paid && isOwnerMode)
+    ? (o.booking_allowed_before_deposit
+        ? `<span class="ext-before-deposit-badge"><i class="fa-solid fa-check"></i> Can book before deposit</span>
+           <button type="button" class="owner-action-btn" data-ext-before-deposit="${extEsc(o.id)}" data-allowed="false">Require deposit first</button>`
+        : `<button type="button" class="owner-action-btn" data-ext-before-deposit="${extEsc(o.id)}" data-allowed="true"><i class="fa-solid fa-unlock"></i> Let her book before deposit</button>`)
+    : '';
 
   let actions = '';
   if (!historyView) {
