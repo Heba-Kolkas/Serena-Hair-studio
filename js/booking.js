@@ -945,12 +945,16 @@ function pendingNoticeHtml() {
 // extensions clients.
 const EXT_LOOKUP_COPY = {
   en: {
-    intro: 'Already ordered your extensions? Enter your details to unlock the calendar.',
+    // States the sequence outright rather than assuming it's already known:
+    // consultation first, then the hair is ordered and a deposit taken, and
+    // only then does the calendar unlock. Said before the search box, not
+    // just on the fallback link below it, so it's the first thing read.
+    intro: 'Extensions start with a consultation, where we order your hair and take a deposit. Already done that? Enter your details below to unlock the calendar.',
     phone: 'Mobile number', email: 'Email', find: 'Find my order',
     searching: 'Looking...', consult: "Haven't had your consultation yet? Book one",
   },
   no: {
-    intro: 'Har du allerede bestilt extensions? Skriv inn detaljene dine for \u00e5 l\u00e5se opp kalenderen.',
+    intro: 'Extensions starter med en konsultasjon, der vi bestiller h\u00e5ret ditt og tar et depositum. Allerede gjort det? Skriv inn detaljene dine under for \u00e5 l\u00e5se opp kalenderen.',
     phone: 'Mobilnummer', email: 'E-post', find: 'Finn bestillingen min',
     searching: 'S\u00f8ker...', consult: 'Ikke v\u00e6rt p\u00e5 konsultasjon enn\u00e5? Bestill en',
   },
@@ -979,6 +983,20 @@ function needsConfirmation(svc) {
  *  this and needsConfirmation agree on every real service row; kept as a
  *  separate question because "needs owner review" and "needs an order on
  *  file" are different facts that happen to coincide today. */
+// The one message that mentions the Instagram handle turns it into a real
+// link - the message text itself is entirely server-controlled (nothing a
+// client typed ever ends up in it), so building it as HTML is safe, but it
+// still goes through escHtml first as a matter of never trusting a string
+// blindly just because it happens to be safe today.
+const INSTAGRAM_URL = 'https://www.instagram.com/studioserena.hair?igsh=YnZhMmU2ZDRhNDI2&utm_source=qr';
+function renderLookupMessage(el, message) {
+  const escaped = escHtml(message || '');
+  el.innerHTML = escaped.replace(
+    '@studioserena.hair',
+    `<a href="${INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer">@studioserena.hair</a>`,
+  );
+}
+
 function isExtensionsBooking(svc) {
   if (svc && svc.category === 'Hair Extensions') return true;
   return (state.addons || []).some((a) => a.exclusive_group === 'extensions');
@@ -1081,7 +1099,7 @@ function renderExtensionsQuality(svc, opts) {
       const { data, error } = await fetchExtensionsStatus(phone, email);
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
-      out.textContent = row ? row.message : '';
+      renderLookupMessage(out, row ? row.message : '');
       if (row && row.allowed) {
         out.classList.add('ok');
         state.phone = phone;
