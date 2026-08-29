@@ -678,12 +678,24 @@ const SECOND_LANE_STARTS = new Set([13 * 60, 17 * 60]);
  *  the one booking designed to sit alongside rather than instead of - so
  *  drawing it in the first lane pushes the real appointment aside and makes
  *  a ten-minute chat look like the substance of the afternoon. */
-function isSecondLane(b, startMin) {
+// Hassan's second slot lived at 16:30 before it moved to 17:00 (see
+// 0031_hassan_second_slot_moves_to_1700) so it would land in
+// SECOND_LANE_STARTS above. Bookings made before that migration are still on
+// disk at the old time and would otherwise fall back to lane 0 alongside his
+// 15:00 colour, since they don't overlap it in minutes - two sequential
+// appointments, each alone in its own cluster, both default to the first
+// lane. Scoped to Hassan specifically: 16:30 is an ordinary, unpaired time
+// for every other stylist and forcing it into the right lane there would
+// strand a solo booking beside a blank left column instead.
+const HASSAN_LEGACY_SECOND_SLOT = 16 * 60 + 30;
+
+function isSecondLane(b, startMin, staff) {
   if (SECOND_LANE_STARTS.has(startMin)) return true;
+  if (staff && staff.name === 'Hassan K.' && startMin === HASSAN_LEGACY_SECOND_SLOT) return true;
   return /consultation|konsultasjon/i.test(b.service_name || '');
 }
 
-function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
+function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes, staff) {
   const entries = bookings.map((b) => ({ b, startMin: timeToMinutes(b.start_time), endMin: timeToMinutes(b.end_time) }));
   if (allowOverlap) {
     bookings.forEach((b) => {
@@ -716,7 +728,7 @@ function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
     // its column always has two lanes even when nothing else is in the
     // cluster - otherwise it would sit full width in the first lane and read
     // as the day's only appointment.
-    const hasPaired = cluster.some((e) => e.b && isSecondLane(e.b, e.startMin));
+    const hasPaired = cluster.some((e) => e.b && isSecondLane(e.b, e.startMin, staff));
     const n = Math.max(packed, minLanes || 1, hasPaired ? 2 : 1);
 
     // Those two times are Hassan's second chair: they run alongside an 11:00
@@ -726,7 +738,7 @@ function layoutBlocks(bookings, allowOverlap, splitOverlaps, minLanes) {
     // which happened to be booked first.
     const taken = new Set();
     cluster.forEach((e) => {
-      if (!e.b || !isSecondLane(e.b, e.startMin)) return;
+      if (!e.b || !isSecondLane(e.b, e.startMin, staff)) return;
       const lane = n - 1;
       positioned.push({ ...e.b, widthPct: 100 / n, leftPct: (100 / n) * lane });
       e.placed = true;
@@ -940,7 +952,7 @@ function columnHtml(staff, bookings, blocked, gridStart, gridEnd) {
   // a second lane open. Anyone else gets full-width blocks.
   const minLanes = staff.allow_manual_overlap ? 2 : 1;
   const positioned = layoutBlocks(
-    bookings, !!staff.allow_overlap_booking, true, minLanes,
+    bookings, !!staff.allow_overlap_booking, true, minLanes, staff,
   );
   // How many appointments this column can hold side by side. A stylist who
   // takes overlapping work has two lanes whether or not both are used today,
