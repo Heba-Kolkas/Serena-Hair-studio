@@ -584,6 +584,19 @@ async function loadServices() {
       data.forEach((svc) => { svc.addons = []; });
     }
   }
+  // consultationRule exists on the hardcoded fallback Consultation row and
+  // nowhere else - live rows from Supabase never carried it, so every check
+  // that reads svc.consultationRule silently failed once real data replaced
+  // the fallback. The one that mattered most: the overlap filter's exemption
+  // for consultations (line ~1776) never fired, so a consultation was judged
+  // like an ordinary booking that cannot share a moment with anything else.
+  // On a fully-booked day that leaves zero candidate slots - not "some", zero
+  // - which is exactly "fully booked for consultations" with nothing else
+  // wrong on the day at all. Matched by category, the same test the rest of
+  // the file already falls back to (see switchToConsultation above).
+  data.forEach((svc) => {
+    if (svc.category === 'Consultation') svc.consultationRule = true;
+  });
   state.services = data;
   renderServices();
   if (preselect) {
