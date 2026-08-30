@@ -88,7 +88,24 @@ async function callRpc(name: string, args: Record<string, unknown>, key: string)
     body: JSON.stringify(args),
   });
   if (!res.ok) throw new Error(`${name}: ${res.status} ${(await res.text()).slice(0, 200)}`);
-  return res.json();
+
+  // A function returning void answers 204 with an empty body, and res.json()
+  // on nothing throws "Unexpected end of JSON input". That is most of the
+  // queue's bookkeeping - mark_message_sent, mark_message_failed,
+  // defer_message - so every SUCCESSFUL send threw immediately after being
+  // recorded as sent, and the row was then put back to pending by the
+  // catch-all below it. Two things followed, both bad:
+  //
+  //   - a client kept receiving the same confirmation every five minutes,
+  //     because the row was never allowed to reach 'sent';
+  //   - the real failure reason was overwritten by this parse error, so the
+  //     one field that says why a message did not go out said nothing useful.
+  //
+  // It could only ever appear once something actually sent, and until the
+  // real function was deployed nothing ever had - so it sat here unseen.
+  if (res.status === 204) return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 const rpc = (name: string, args: Record<string, unknown>) => callRpc(name, args, SUPABASE_ANON_KEY);
