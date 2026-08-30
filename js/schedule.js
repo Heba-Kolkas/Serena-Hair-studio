@@ -4791,10 +4791,21 @@ function extCard(o, historyView) {
     if (group === 'ordered') {
       actions = `<button type="button" class="owner-action-btn confirm" data-ext-arrived="${extEsc(o.id)}"><i class="fa-solid fa-box-open"></i> It arrived</button>`;
     } else if (group === 'tell') {
-      // The only group with a Tell her button. An order sitting in "ready" has
-      // her already booked, so there is nothing to tell her.
       actions = `
         <button type="button" class="owner-action-btn confirm" data-ext-tell="${extEsc(o.id)}"><i class="fa-solid fa-paper-plane"></i> Tell her</button>
+        <a class="owner-action-btn" href="tel:${extEsc(o.customer_phone)}"><i class="fa-solid fa-phone"></i> Call</a>`;
+    } else if (group === 'ready') {
+      // "Ready" means the hair is here and she is already booked. This used
+      // to get no button at all, on the reasoning that the news changes
+      // nothing she has to do. The owner overruled that, rightly: she has
+      // paid a deposit on hair she has never seen and is waiting on it, and
+      // "it is here, see you Thursday" is reassurance rather than admin.
+      //
+      // A different message from the one above - it names her existing
+      // appointment and carries no booking button, because telling somebody
+      // who is already booked to go and book would read as a mistake.
+      actions = `
+        <button type="button" class="owner-action-btn" data-ext-tell="${extEsc(o.id)}"><i class="fa-solid fa-paper-plane"></i> Tell her it is here</button>
         <a class="owner-action-btn" href="tel:${extEsc(o.customer_phone)}"><i class="fa-solid fa-phone"></i> Call</a>`;
     }
     // 'ready' and 'notified' get no button of their own - the owner said
@@ -4905,6 +4916,13 @@ async function tellHer(id, btn) {
     customer_phone: order.customer_phone,
     order_detail: [order.colour, order.length_cm, order.quantity].filter(Boolean).join(', '),
     balance_due: order.balance_due,
+    // When she already has a fitting booked, the message becomes "your hair
+    // is here, see you Thursday" with no button rather than "go and book" -
+    // which would be nonsense sent to somebody who already has. The list
+    // carries her booking on the row, so this costs no extra lookup.
+    booking_date: order.booking_date || null,
+    booking_time: order.booking_time || null,
+    booking_staff: order.booking_staff || null,
   });
 
   // The message is best-effort; being told is what matters. Record it either

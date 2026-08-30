@@ -400,6 +400,17 @@ const headline = (text: string) =>
 const microLabel = (text: string) =>
   `<div style="font-family:${SANS};font-size:9.5px;font-weight:500;letter-spacing:0.22em;text-transform:uppercase;color:${C.greige};margin:0 0 5px;">${text}</div>`;
 
+/** The Instagram handle, as a real link. It is the salon's fastest channel -
+ *  a DM reaches the phone in the stylist's pocket, where an email reply lands
+ *  in a mailbox nobody has open while they are cutting hair - so every
+ *  mention of it should be one tap, not something to copy out by hand.
+ *
+ *  Taupe and underlined rather than the mail client's blue: see the
+ *  x-apple-data-detectors rules in HEAD for why an unstyled mention does not
+ *  stay unstyled for long. */
+const igLink = () =>
+  `<a href="${SALON.instagramUrl}" style="color:${C.taupe};text-decoration:underline;text-underline-offset:2px;font-weight:500;">${SALON.instagram}</a>`;
+
 const p = (text: string) =>
   `<p style="font-family:${SANS};font-size:14.5px;font-weight:300;line-height:1.75;margin:0 0 16px;text-align:center;color:${C.espresso};">${text}</p>`;
 
@@ -524,8 +535,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang)
       + (ctx.manageUrl ? button(ctx.manageUrl, lang === 'no' ? 'Se eller endre timen' : 'View or change booking') : '')
       + smallPrint(lang === 'no'
-        ? 'Trenger du å endre eller avlyse? Bruk knappen over, eller meld fra på Instagram <strong>@studioserena.hair</strong> - så tidlig du kan, så vi rekker å tilby tiden til noen andre.'
-        : 'Need to change or cancel? Use the button above, or message us on Instagram <strong>@studioserena.hair</strong> - as much notice as you can manage, so we can offer the time to someone else.'),
+        ? 'Trenger du å endre eller avlyse? Bruk knappen over, eller meld fra på Instagram ${igLink()} - så tidlig du kan, så vi rekker å tilby tiden til noen andre.'
+        : 'Need to change or cancel? Use the button above, or message us on Instagram ${igLink()} - as much notice as you can manage, so we can offer the time to someone else.'),
       lang,
     ),
   }),
@@ -542,8 +553,8 @@ const EMAILS: Record<MessageKey, Builder> = {
         : 'Thank you for your request. Extensions need a consultation and a deposit before we can hold the time, so this is <strong>not confirmed yet</strong> - we will check and let you know.')
       + detailBox(ctx, lang)
       + p(lang === 'no'
-        ? 'Vi holder tiden for deg i <strong>to dager</strong> mens vi ser på det. Har du ikke hatt konsultasjon ennå, bruk knappen under - eller meld fra på Instagram <strong>@studioserena.hair</strong>.'
-        : 'We are holding the time for you for <strong>two days</strong> while we look at it. If you have not had your consultation yet, use the button below - or message us on Instagram <strong>@studioserena.hair</strong>.')
+        ? 'Vi holder tiden for deg i <strong>to dager</strong> mens vi ser på det. Har du ikke hatt konsultasjon ennå, bruk knappen under - eller meld fra på Instagram ${igLink()}.'
+        : 'We are holding the time for you for <strong>two days</strong> while we look at it. If you have not had your consultation yet, use the button below - or message us on Instagram ${igLink()}.')
       + smallPrint(lang === 'no'
         ? 'Du får en e-post og en SMS så snart vi har bekreftet.'
         : 'You will get an email and a text as soon as we confirm.'),
@@ -581,8 +592,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang, true)
       + (ctx.reason ? p(esc(ctx.reason)) : '')
       + p(lang === 'no'
-        ? 'Extensions krever konsultasjon og depositum før vi kan sette av tiden. Har du ikke hatt konsultasjon ennå, book en under - eller meld fra på Instagram <strong>@studioserena.hair</strong>, vi vil veldig gjerne få deg inn.'
-        : 'Extensions need a consultation and a deposit before we can book the fitting. If you have not had yours yet, book one below - or message us on Instagram <strong>@studioserena.hair</strong>. We would love to get you in.')
+        ? 'Extensions krever konsultasjon og depositum før vi kan sette av tiden. Har du ikke hatt konsultasjon ennå, book en under - eller meld fra på Instagram ${igLink()}, vi vil veldig gjerne få deg inn.'
+        : 'Extensions need a consultation and a deposit before we can book the fitting. If you have not had yours yet, book one below - or message us on Instagram ${igLink()}. We would love to get you in.')
       + smallPrint(lang === 'no'
         ? `Du kan også ringe oss på ${SALON.phone}.`
         : `You can also call us on ${SALON.phone}.`),
@@ -602,8 +613,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang)
       + (ctx.reason ? p(esc(ctx.reason)) : '')
       + p(lang === 'no'
-        ? 'Passer ikke den nye tiden? Bruk knappen over, eller meld fra på Instagram <strong>@studioserena.hair</strong>, så finner vi noe annet.'
-        : 'If the new time does not suit you, use the button above, or message us on Instagram <strong>@studioserena.hair</strong> and we will find another.')
+        ? 'Passer ikke den nye tiden? Bruk knappen over, eller meld fra på Instagram ${igLink()}, så finner vi noe annet.'
+        : 'If the new time does not suit you, use the button above, or message us on Instagram ${igLink()} and we will find another.')
       + (ctx.manageUrl ? button(ctx.manageUrl, lang === 'no' ? 'Se timen' : 'View booking') : '')
       + smallPrint(lang === 'no' ? 'Beklager bryet.' : 'Sorry for the inconvenience.'),
       lang,
@@ -792,8 +803,8 @@ const EMAILS: Record<MessageKey, Builder> = {
             : `Easiest with <strong>Vipps to ${esc(ctx.vippsNumber)}</strong> - put <strong>${esc(String(ctx.bookingRef || ctx.invoiceNumber || '').toUpperCase())}</strong> in the message so we know it is you.`)
           : ''))
       + smallPrint(lang === 'no'
-        ? `Betal gjerne innen ${ctx.dueDays ?? 14} dager. Var det noe som kom i veien? Meld fra på Instagram <strong>@studioserena.hair</strong> eller ring ${SALON.phone} - vi vil helst finne ut av det sammen.`
-        : `Please settle within ${ctx.dueDays ?? 14} days. Did something get in the way? Message us on Instagram <strong>@studioserena.hair</strong> or call ${SALON.phone} - we would much rather sort it out together.`),
+        ? `Betal gjerne innen ${ctx.dueDays ?? 14} dager. Var det noe som kom i veien? Meld fra på Instagram ${igLink()} eller ring ${SALON.phone} - vi vil helst finne ut av det sammen.`
+        : `Please settle within ${ctx.dueDays ?? 14} days. Did something get in the way? Message us on Instagram ${igLink()} or call ${SALON.phone} - we would much rather sort it out together.`),
       lang,
     ),
   }),
@@ -817,7 +828,7 @@ const EMAILS: Record<MessageKey, Builder> = {
         : 'To book your next visit, find us at ' + SALON.site + '.')
       + smallPrint(lang === 'no'
         ? 'Er det noe du ikke er fornøyd med, si fra til oss - svar på denne e-posten eller ring. Vi vil gjerne vite det, og vi ordner opp.'
-        : 'If there is anything you are not happy with, tell us - message us on Instagram <strong>@studioserena.hair</strong> or call. We would genuinely rather know, and we will put it right.'),
+        : 'If there is anything you are not happy with, tell us - message us on Instagram ${igLink()} or call. We would genuinely rather know, and we will put it right.'),
       lang,
     ),
   }),
@@ -948,8 +959,8 @@ export function renderExtensionsArrivedEmail(
           ? 'Vi gleder oss til å se deg da.'
           : 'We cannot wait to see you then.')
         + smallPrint(lang === 'no'
-          ? `Spørsmål? Meld fra på Instagram <strong>@studioserena.hair</strong> eller ring ${SALON.phone}.`
-          : `Any questions? Message us on Instagram <strong>@studioserena.hair</strong> or call ${SALON.phone}.`),
+          ? `Spørsmål? Meld fra på Instagram ${igLink()} eller ring ${SALON.phone}.`
+          : `Any questions? Message us on Instagram ${igLink()} or call ${SALON.phone}.`),
         lang,
       ),
     };
@@ -970,8 +981,8 @@ export function renderExtensionsArrivedEmail(
         : 'All that is left is to find a time that suits you for the fitting.')
       + (ctx.bookUrl ? button(ctx.bookUrl, lang === 'no' ? 'Book påsetting' : 'Book your fitting') : '')
       + smallPrint(lang === 'no'
-        ? `Spørsmål? Meld fra på Instagram <strong>@studioserena.hair</strong> eller ring ${SALON.phone}.`
-        : `Any questions? Message us on Instagram <strong>@studioserena.hair</strong> or call ${SALON.phone}.`),
+        ? `Spørsmål? Meld fra på Instagram ${igLink()} eller ring ${SALON.phone}.`
+        : `Any questions? Message us on Instagram ${igLink()} or call ${SALON.phone}.`),
       lang,
     ),
   };

@@ -578,7 +578,14 @@ export async function sendExtensionsArrived(payload) {
           balanceDue: payload.balance_due,
           // Without this the mail has no button at all, which rather defeats
           // a message whose whole purpose is to get her to book the fitting.
-          bookUrl: `${location.origin}/book.html`,
+          // Deliberately omitted when she is already booked - see below.
+          bookUrl: payload.booking_date ? undefined : `${location.origin}/book.html`,
+          // Set only when a fitting already exists. The template switches to
+          // "your hair is here, see you then" and drops the button entirely,
+          // because there is nothing for her to press.
+          bookingDate: payload.booking_date || undefined,
+          bookingTime: payload.booking_time ? String(payload.booking_time).slice(0, 5) : undefined,
+          bookingStaff: payload.booking_staff || undefined,
         },
       },
     });

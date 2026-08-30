@@ -2091,7 +2091,21 @@ async function renderDeadEndHelp(grid, dateIso, opts) {
   // Suppressed when the caller has already led with it — repeating the same
   // date twice on one screen reads as a bug.
   const nextOpen = (opts && opts.skipNextOpen) ? null : nextOpeningForCurrentStylist(dateIso);
-  if (!sameDay.length && !laterOnly.length && !nextOpen) return;
+
+  // ── THE WAITING LIST HAS TO SURVIVE THIS RETURN ──
+  //
+  // This used to bail out here, and renderWaitlistOffer sat below it - so the
+  // waiting list appeared only when there was ALSO another stylist or a later
+  // opening to suggest, and never on a day with nothing at all. Which is the
+  // one day it is for: no times, no alternatives, nothing to do but ask to be
+  // told when something frees up.
+  //
+  // The list is offered first now and the suggestions are extra, rather than
+  // the list being a footnote on the suggestions.
+  if (!sameDay.length && !laterOnly.length && !nextOpen) {
+    renderWaitlistOffer(grid);
+    return;
+  }
 
   const firstName = (st) => st.name.split(' ')[0];
   const no = lang() === 'no';
