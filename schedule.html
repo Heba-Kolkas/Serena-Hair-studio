@@ -309,6 +309,43 @@
         </div>
     </div>
 
+    <!-- EDIT APPOINTMENT MODAL
+         Two notes, deliberately kept apart. The visit note is about today -
+         "running late", "allergic to the usual toner". The client note is
+         about HER and outlives every booking: the colour formula, the
+         development time, what she wants next time. Writing the formula into
+         a booking note would lose it the moment that booking was purged. -->
+    <div id="editModal" class="appt-popup-overlay" style="display:none;">
+        <div class="appt-popup">
+            <button type="button" class="appt-popup-close" id="editClose" aria-label="Close">&times;</button>
+            <h3 class="block-modal-title">Edit appointment</h3>
+            <p class="block-modal-sub" id="editWho"></p>
+
+            <div class="block-field">
+                <label for="editService">Service</label>
+                <select id="editService"></select>
+                <span class="block-field-hint" id="editServiceHint">Changing this updates the length and the expected price.</span>
+            </div>
+
+            <div class="block-field">
+                <label for="editNotes">Note for this appointment</label>
+                <textarea id="editNotes" rows="2" placeholder="Anything about today - running late, allergies, what she asked for."></textarea>
+            </div>
+
+            <div class="block-field">
+                <label for="editClientNote">Note for next time <span class="edit-note-badge">stays on her file</span></label>
+                <textarea id="editClientNote" rows="3" placeholder="Colour formula, development time, what she wants next visit..."></textarea>
+                <span class="block-field-hint" id="editClientNoteMeta">Shown on every future booking she makes, until someone changes it.</span>
+            </div>
+
+            <div class="noshow-actions">
+                <button type="button" id="editSave" class="owner-action-btn confirm"><i class="fa-solid fa-check"></i> Save</button>
+                <button type="button" id="editCancelBtn" class="owner-action-btn">Cancel</button>
+            </div>
+            <div id="editStatus" class="block-status"></div>
+        </div>
+    </div>
+
     <!-- CANCEL APPOINTMENT MODAL
          The fee is worked out by the database and shown here BEFORE the button
          that charges it, which is the rule 0009 set for the client-facing

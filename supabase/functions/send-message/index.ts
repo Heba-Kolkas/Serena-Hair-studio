@@ -165,13 +165,46 @@ function normalisePhone(raw: string): string | null {
 // Each returns a result rather than throwing, so one channel failing never
 // takes the other down with it.
 
+/** A readable plain-text version of the HTML mail.
+ *
+ *  Sending HTML with no text alternative is one of the oldest spam signals
+ *  there is: real correspondence is multipart, and bulk senders who cannot be
+ *  bothered are not. It costs nothing to include and every filter looks for
+ *  it.
+ *
+ *  Derived from the HTML rather than written twice, so the two can never
+ *  drift and no template has to be touched. Block-level tags become line
+ *  breaks first, so the result reads as sentences rather than one long run. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<head[\s\S]*?<\/head>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|tr|h[1-6]|li|table)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '- ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .split('\n').map((l) => l.trim()).join('\n')
+    .trim();
+}
+
 async function sendEmail(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) return { ok: false, reason: 'RESEND_API_KEY is not set', id: null };
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: EMAIL_FROM, to: [to], reply_to: EMAIL_REPLY_TO, subject, html }),
+      body: JSON.stringify({
+        from: EMAIL_FROM, to: [to], reply_to: EMAIL_REPLY_TO, subject, html,
+        text: htmlToText(html),
+      }),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, reason: JSON.stringify(body).slice(0, 300), id: null };

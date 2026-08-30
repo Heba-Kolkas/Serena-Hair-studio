@@ -10,6 +10,7 @@ import {
   waiveCancellationFee, unwaiveCancellationFee, setCancellationFee,
   staffCancellationQuote, staffCancelBooking,
   fetchFeeDecisions, fetchFeeDecisionsCount, createFeeInvoice, markInvoiceSent,
+  staffUpdateBooking, fetchClientNote, setClientNote,
   exportAccounting, exportClients, fetchDailyTotals,
   addExtensionOrder, fetchExtensionOrders, markExtensionsArrived,
   markExtensionsNotified, fetchExtensionHistory, markDepositPaid,
@@ -1136,6 +1137,15 @@ function openPopup(id) {
     <div class="popup-meta">${fmtTime(b.start_time)} – ${fmtTime(b.end_time)}</div>
     ${addonsLine(b)}
     ${expectedLabel(b) ? `<div class="popup-meta popup-expected">Expected ${expectedLabel(b)}</div>` : ''}
+    ${b.booking_ref
+      // The reference the client is told to quote on a Vipps payment. It was
+      // printed on her invoice and nowhere in this panel, so a payment came in
+      // saying F3FB0D15 and nobody could tell whose it was. Tap to copy,
+      // because the next thing anyone does with it is paste it somewhere.
+      ? `<button type="button" class="popup-ref" id="popupRef" title="Tap to copy">
+           <i class="fa-solid fa-hashtag"></i> ${escHtml(String(b.booking_ref).toUpperCase())}
+         </button>`
+      : ''}
     ${b.customer_phone ? `<a class="popup-phone" href="tel:${escHtml(b.customer_phone)}"><i class="fa-solid fa-phone"></i> ${escHtml(b.customer_phone)}</a>` : '<div style="margin-bottom:1.25rem;"></div>'}
     ${b.notes ? `<div class="popup-notes"><i class="fa-solid fa-note-sticky"></i> ${escHtml(b.notes)}</div>` : ''}
     ${canAct
@@ -1155,6 +1165,10 @@ function openPopup(id) {
     ${b.status !== 'cancelled' && b.status !== 'completed'
       ? `<button type="button" class="popup-move-btn" id="popupMove"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move this appointment</button>`
       : ''}
+    <div id="popupClientNote"></div>
+    ${b.status !== 'cancelled' && b.status !== 'completed'
+      ? `<button type="button" class="popup-move-btn" id="popupEdit"><i class="fa-solid fa-pen"></i> Edit service or notes</button>`
+      : ''}
     ${b.status !== 'cancelled' && b.status !== 'completed'
       ? `<button type="button" class="popup-cancel-btn" id="popupCancel"><i class="fa-solid fa-ban"></i> Cancel this appointment</button>`
       : ''}
@@ -1162,6 +1176,39 @@ function openPopup(id) {
   `;
   const cancelBtn = document.getElementById('popupCancel');
   if (cancelBtn) cancelBtn.addEventListener('click', () => { closePopup(); openCancelModal(b); });
+  const editBtn = document.getElementById('popupEdit');
+  if (editBtn) editBtn.addEventListener('click', () => { closePopup(); openEditModal(b); });
+
+  const refBtn = document.getElementById('popupRef');
+  if (refBtn) {
+    refBtn.addEventListener('click', async () => {
+      const ref = String(b.booking_ref).toUpperCase();
+      try {
+        await navigator.clipboard.writeText(ref);
+        refBtn.classList.add('copied');
+        refBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+      } catch {
+        // Clipboard needs a secure context and permission, and neither is
+        // guaranteed on a salon tablet. Select it instead so it can be copied
+        // by hand rather than leaving the button looking broken.
+        refBtn.innerHTML = `<i class="fa-solid fa-hashtag"></i> ${escHtml(ref)}`;
+        const r = document.createRange();
+        r.selectNodeContents(refBtn);
+        const s = window.getSelection();
+        s.removeAllRanges(); s.addRange(r);
+      }
+      setTimeout(() => {
+        refBtn.classList.remove('copied');
+        refBtn.innerHTML = `<i class="fa-solid fa-hashtag"></i> ${escHtml(ref)}`;
+      }, 1600);
+    });
+  }
+
+  // What the salon knows about her, fetched when the popup opens rather than
+  // carried on every booking in the schedule query - most bookings have no
+  // note, and pulling one for all of them would put personal notes over the
+  // wire for a screen that mostly does not show them.
+  showClientNoteOnPopup(b);
   popupBody.querySelectorAll('[data-action]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       popupBody.querySelectorAll('button').forEach((x) => (x.disabled = true));
@@ -1901,6 +1948,97 @@ function closeNoShowNotice() {
   const modal = document.getElementById('noShowModal');
   if (modal) modal.style.display = 'none';
   noShowTarget = null;
+}
+
+// ── WHAT THE SALON KNOWS ABOUT HER ──
+//
+// The client note follows the phone number, not the booking, so it is still
+// there in four months when she comes back - which is the whole point of
+// writing a colour formula down. Rendered into a slot the popup markup
+// already left for it, so a slow lookup never delays the rest of the card.
+async function showClientNoteOnPopup(b) {
+  const slot = document.getElementById('popupClientNote');
+  if (!slot || !b.customer_phone) return;
+  const { data, error } = await fetchClientNote({ pin: currentPin, phone: b.customer_phone });
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row || !row.note) return;
+  // The popup may have been closed or replaced while this was in flight.
+  if (!document.body.contains(slot)) return;
+  const when = row.updated_at
+    ? new Date(row.updated_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+    : '';
+  slot.innerHTML = `<div class="client-note">
+      <div class="client-note-head"><i class="fa-solid fa-note-sticky"></i> On file for this client</div>
+      <div class="client-note-body">${escHtml(row.note)}</div>
+      ${row.updated_by_name || when
+        ? `<div class="client-note-meta">${escHtml([row.updated_by_name, when].filter(Boolean).join(' · '))}</div>`
+        : ''}
+    </div>`;
+}
+
+// ── EDITING AN APPOINTMENT ──
+//
+// The service was previously changeable only inside Move, which needs a date
+// and a time and the owner's PIN - so a stylist who simply had the service
+// wrong had to "move" the booking to the time it already had, and could not
+// do it without fetching the owner. Notes could not be edited at all: the
+// panel has always shown them and never been able to write them.
+let editTarget = null;
+
+async function openEditModal(booking) {
+  editTarget = booking;
+  const modal = document.getElementById('editModal');
+  if (!modal) return;
+  const sel = document.getElementById('editService');
+  const status = document.getElementById('editStatus');
+
+  document.getElementById('editWho').textContent =
+    `${booking.customer_name} · ${new Date(booking.date + 'T00:00:00')
+      .toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} `
+    + `${fmtTime(booking.start_time)}`;
+  status.textContent = '';
+  document.getElementById('editNotes').value = booking.notes || '';
+  document.getElementById('editClientNote').value = '';
+  document.getElementById('editClientNoteMeta').textContent =
+    'Shown on every future booking she makes, until someone changes it.';
+  modal.style.display = 'flex';
+
+  // Every active service, not just this stylist's. The obvious alternative -
+  // admin_get_staff_services - is owner-only, and this screen is deliberately
+  // open to any stylist, so asking for it would either fail for the people
+  // who need it most or force an owner PIN onto a routine correction.
+  //
+  // staff_update_booking still refuses a service the stylist does not perform,
+  // so the rule is enforced where it belongs; the dropdown just does not
+  // pre-filter by it. Picking a wrong one is answered with a plain sentence
+  // rather than being silently impossible.
+  const list = (currentServices || []).filter((s) => s.active && !s.external_booking_url);
+  sel.innerHTML = list.map((s) =>
+    `<option value="${escHtml(s.id)}"${s.id === booking.service_id ? ' selected' : ''}>${escHtml(s.name)}</option>`
+  ).join('');
+
+  if (booking.customer_phone) {
+    const { data, error } = await fetchClientNote({ pin: currentPin, phone: booking.customer_phone });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!error && row && row.note && modal.style.display !== 'none') {
+      document.getElementById('editClientNote').value = row.note;
+      const when = row.updated_at
+        ? new Date(row.updated_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+        : '';
+      document.getElementById('editClientNoteMeta').textContent =
+        `Last written ${[row.updated_by_name, when].filter(Boolean).join(' · ')}. Clear the box to remove it.`;
+    }
+  } else {
+    document.getElementById('editClientNote').disabled = true;
+    document.getElementById('editClientNoteMeta').textContent =
+      'No phone number on this booking, so there is nothing to keep a note against.';
+  }
+}
+
+function closeEditModal() {
+  const modal = document.getElementById('editModal');
+  if (modal) modal.style.display = 'none';
+  editTarget = null;
 }
 
 // ── FEES WAITING FOR A DECISION ──
@@ -4867,6 +5005,63 @@ extModal.addEventListener('click', (e) => { if (e.target === extModal) closeExtM
 // ── NO-SHOW NOTICE WIRING ──
 document.getElementById('noShowClose').addEventListener('click', closeNoShowNotice);
 document.getElementById('noShowSkip').addEventListener('click', closeNoShowNotice);
+
+document.getElementById('editClose').addEventListener('click', closeEditModal);
+document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+document.getElementById('editModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+});
+document.getElementById('editSave').addEventListener('click', async () => {
+  if (!editTarget) return;
+  const booking = editTarget;
+  const status = document.getElementById('editStatus');
+  const btn = document.getElementById('editSave');
+  btn.disabled = true;
+  status.textContent = 'Saving…';
+  status.style.color = 'var(--sched-text-muted)';
+
+  const serviceId = document.getElementById('editService').value;
+  const notes = document.getElementById('editNotes').value.trim();
+  const clientNote = document.getElementById('editClientNote').value.trim();
+
+  const { error } = await staffUpdateBooking({
+    pin: currentPin, bookingId: booking.id,
+    // Sent only when it actually changed, so an edit that is purely a note
+    // never recomputes the length and price for no reason.
+    serviceId: serviceId && serviceId !== booking.service_id ? serviceId : null,
+    notes,
+  });
+  if (error) {
+    status.textContent = 'Error: ' + error.message;
+    status.style.color = '#dc2626';
+    btn.disabled = false;
+    return;
+  }
+
+  // The client note is a separate record with its own lifetime, so it is
+  // saved separately - and a failure here must not make the stylist think the
+  // service change did not land, because it did.
+  if (booking.customer_phone && !document.getElementById('editClientNote').disabled) {
+    const { error: noteErr } = await setClientNote({
+      pin: currentPin, phone: booking.customer_phone, note: clientNote,
+      staffId: currentActorStaffId, clientName: booking.customer_name,
+    });
+    if (noteErr) {
+      status.textContent = 'Appointment saved, but the note for next time did not: ' + noteErr.message;
+      status.style.color = '#b45309';
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  status.textContent = '✓ Saved.';
+  status.style.color = '#059669';
+  setTimeout(async () => {
+    closeEditModal();
+    await loadWindow(currentPin, windowFrom, windowTo);
+    renderGrid();
+  }, 600);
+});
 
 document.getElementById('cancelClose').addEventListener('click', closeCancelModal);
 document.getElementById('cancelKeep').addEventListener('click', closeCancelModal);

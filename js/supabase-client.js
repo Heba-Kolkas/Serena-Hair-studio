@@ -183,6 +183,29 @@ export async function fetchStaffSchedule({ pin, dateFrom, dateTo, staffId }) {
   });
 }
 
+// ── EDITING AN APPOINTMENT, AND WHAT THE SALON KNOWS ABOUT HER ──
+// Two different notes, deliberately: one about this visit, one about the
+// client, which outlives every booking she makes. See migration 0053.
+export async function staffUpdateBooking({ pin, bookingId, serviceId, notes }) {
+  return supabase.rpc('staff_update_booking', {
+    p_pin: pin,
+    p_booking_id: bookingId,
+    p_service_id: serviceId || null,
+    p_notes: notes === undefined ? null : notes,
+  });
+}
+
+export async function fetchClientNote({ pin, phone }) {
+  return supabase.rpc('staff_get_client_note', { p_pin: pin, p_phone: phone });
+}
+
+export async function setClientNote({ pin, phone, note, staffId, clientName }) {
+  return supabase.rpc('staff_set_client_note', {
+    p_pin: pin, p_phone: phone, p_note: note,
+    p_staff_id: staffId || null, p_client_name: clientName || null,
+  });
+}
+
 // ── FEES WAITING FOR A DECISION ──
 // Late cancellations and no-shows that nobody has yet chosen to invoice or
 // forgive. See migration 0051.

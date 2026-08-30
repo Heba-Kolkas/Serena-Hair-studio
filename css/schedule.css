@@ -2176,6 +2176,79 @@ body.modal-open { overflow: hidden; }
 }
 .popup-cancel-btn:hover { background: #C25E4B; border-color: #C25E4B; color: #fff; }
 
+/* ── THE BOOKING REFERENCE ──
+   Monospaced, because it is a code to be read character by character and
+   compared against one someone else typed into a Vipps message. A
+   proportional font makes 0/O and 1/l a guess. */
+.popup-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.1rem 0 0.75rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px dashed var(--sched-border);
+  border-radius: 8px;
+  background: var(--sched-bg);
+  color: var(--sched-text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.popup-ref:hover { border-style: solid; color: var(--sched-text); }
+.popup-ref.copied { color: #059669; border-color: #059669; border-style: solid; }
+
+/* ── WHAT THE SALON KNOWS ABOUT HER ──
+   Distinct from the booking's own note (the amber strip): this one is about
+   the client and survives every appointment, so it reads as a file card
+   rather than as a remark about today. */
+.client-note {
+  margin: 0.75rem 0 0.2rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  border-left: 3px solid var(--sched-accent, #8a7fa8);
+  background: rgba(138, 127, 168, 0.09);
+  text-align: left;
+}
+.client-note-head {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sched-text-muted);
+  margin-bottom: 0.3rem;
+}
+.client-note-body { font-size: 0.84rem; line-height: 1.5; white-space: pre-wrap; }
+.client-note-meta { margin-top: 0.35rem; font-size: 0.72rem; color: var(--sched-text-muted); }
+
+/* Says plainly that this box is not about today, so nobody writes "running
+   late" into the field that will still be showing it at Christmas. */
+.edit-note-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  background: rgba(138, 127, 168, 0.18);
+  color: var(--sched-text-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.block-field textarea {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--sched-border);
+  border-radius: 8px;
+  background: var(--sched-bg);
+  color: var(--sched-text);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+.block-field textarea:focus-visible { outline: none; border-color: var(--sched-text); }
+
 /* ── FEES WAITING FOR A DECISION ──
    One card per person, not a table. Each row is a judgement about a named
    client - how much notice she gave, what it would cost her - and a table
