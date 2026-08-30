@@ -400,6 +400,33 @@ serve(async (req) => {
     return json(await drainOutbox());
   }
 
+  // ── PREVIEW ──
+  // Renders any template with sample content and sends it to ONE address, so
+  // wording and design can be seen as a client will see them rather than
+  // guessed at from the source. Worth having permanently: these thirteen
+  // messages are the salon's voice, and the only way to judge them is to read
+  // them in a mail client.
+  //
+  // Behind the outbox secret rather than the staff PIN. The PIN is typed into
+  // a browser by five people; this can send mail to an arbitrary address with
+  // the salon's name on it, so it stays on the credential that only the
+  // database and the owner hold. Every subject is prefixed so a preview can
+  // never be mistaken for a real message to a real client.
+  if (action === 'preview') {
+    const given = req.headers.get('x-outbox-key') ?? '';
+    if (!OUTBOX_SECRET || !timingSafeEqual(given, OUTBOX_SECRET)) {
+      return json({ error: 'Not authorised' }, 403);
+    }
+    if (!email) return json({ error: 'email is required' }, 400);
+    const language: Lang = lang === 'en' ? 'en' : 'no';
+    const ctx = (context ?? {}) as MessageContext;
+    const rendered = key === 'extensions_arrived'
+      ? renderExtensionsArrivedEmail(ctx as any, language)
+      : renderEmail(key as MessageKey, ctx, language);
+    const r = await sendEmail(email, `[PREVIEW] ${rendered.subject}`, rendered.html);
+    return json({ ok: r.ok, key, lang: language, reason: r.reason, id: r.id });
+  }
+
   if (!pin) return json({ error: 'pin is required' }, 400);
 
   // The PIN is checked by the database, which is the only thing that knows it.
