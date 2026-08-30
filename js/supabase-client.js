@@ -556,9 +556,32 @@ export async function fetchExtensionOrdersAtRisk({ pin, withinDays }) {
 // Tells a client her extensions have arrived. Only ever called for a client
 // with no fitting booked — one who is already coming in is told nothing,
 // because the news changes nothing she does.
+// Routed through send-message, not 'send-extensions-arrived'. That second
+// function does not exist and never has - send-message is the only one
+// deployed - so every "your hair has arrived" ended in a 404 that the panel
+// reported as "could not send". send-message has handled key
+// 'extensions_arrived' all along; it was simply never asked.
 export async function sendExtensionsArrived(payload) {
   try {
-    const { data, error } = await supabase.functions.invoke('send-extensions-arrived', { body: payload });
+    const { data, error } = await supabase.functions.invoke('send-message', {
+      body: {
+        pin: payload.pin,
+        key: 'extensions_arrived',
+        lang: 'no',
+        email: payload.customer_email || '',
+        phone: payload.customer_phone,
+        smsConsent: payload.sms_consent !== false,
+        extensionOrderId: payload.order_id,
+        context: {
+          customerName: payload.customer_name,
+          orderDetail: payload.order_detail || '',
+          balanceDue: payload.balance_due,
+          // Without this the mail has no button at all, which rather defeats
+          // a message whose whole purpose is to get her to book the fitting.
+          bookUrl: `${location.origin}/book.html`,
+        },
+      },
+    });
     if (error) return { sent: false, reason: error.message || 'Edge function error' };
     return data || { sent: false, reason: 'No response' };
   } catch (e) {

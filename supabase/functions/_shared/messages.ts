@@ -49,8 +49,12 @@ export interface MessageContext {
   bookingRef?: string;
   /** Free text from the owner — shown on a rejection or a salon cancellation. */
   reason?: string;
-  /** Where the client manages the booking. Kept short: it goes in an SMS. */
+  /** Where the client manages the booking she already has. */
   manageUrl?: string;
+  /** Where she makes a NEW one. The waitlist messages need this rather than
+   *  manageUrl: "see available times" belongs on the booking page, not on a
+   *  list of appointments she has not made yet. */
+  bookUrl?: string;
   /** Waitlist: the window they asked to be told about. */
   waitlistWindow?: string;
   /** What was actually rung up. Shown on the thank-you note. */
@@ -243,8 +247,46 @@ const C = {
 // design intact rather than dropping it to Arial.
 const SERIF = `'Cormorant Garamond', Georgia, 'Times New Roman', serif`;
 const SANS = `'Jost', 'Helvetica Neue', Helvetica, Arial, sans-serif`;
-const FONT_IMPORT =
-  `<style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap');</style>`;
+// ── STAYING LIGHT IN DARK MODE ──
+//
+// Phones do not ask permission before recolouring an email. iOS Mail, the
+// Gmail app and Outlook all have their own scheme, and left alone they turn a
+// cream salon email into grey-on-black with the taupe button gone muddy.
+//
+// Three defences, because no single one covers every client:
+//
+//   1. color-scheme / supported-color-schemes, declared in the head, on the
+//      html element AND in CSS. This is what Apple Mail and iOS honour, and
+//      "light only" is the part that actually refuses the switch rather than
+//      merely stating a preference.
+//   2. [data-ogsc] / [data-ogsb] - Outlook.com rewrites the mail and prefixes
+//      its dark rules with these, so re-stating the colours behind them puts
+//      them back.
+//   3. Off-white rather than pure #ffffff throughout. Several clients only
+//      invert what they recognise as pure white or pure black, so the site's
+//      own linen is already the safer choice - which is lucky, since it is
+//      also the right one.
+//
+// It cannot be guaranteed everywhere - Gmail on Android inverts regardless
+// for some accounts - but this is as far as email allows anyone to go.
+const HEAD = `<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<meta name="supported-color-schemes" content="light" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap');
+  :root { color-scheme: light only; supported-color-schemes: light only; }
+  html, body { color-scheme: light only; supported-color-schemes: light only; }
+  [data-ogsc] .ss-page  { background-color: ${C.page} !important; }
+  [data-ogsb] .ss-page  { background-color: ${C.page} !important; }
+  [data-ogsc] .ss-sheet { background-color: ${C.sheet} !important; }
+  [data-ogsb] .ss-sheet { background-color: ${C.sheet} !important; }
+  [data-ogsc] .ss-ink   { color: ${C.espresso} !important; }
+  [data-ogsc] .ss-muted { color: ${C.soft} !important; }
+  [data-ogsc] .ss-quiet { color: ${C.greige} !important; }
+  [data-ogsc] .ss-btn   { background-color: ${C.taupe} !important; }
+  [data-ogsc] .ss-btn a { color: ${C.onTaupe} !important; }
+</style>`;
 
 /** The wordmark, set in type.
  *
@@ -271,12 +313,17 @@ function shell(inner: string, lang: Lang): string {
   // No card border and no ornament. The sheet is white, it sits on a barely
   // tinted margin, and the only rule in the whole thing is the short one
   // under the wordmark and the one above the footer.
-  return `${FONT_IMPORT}
-<div style="margin:0;padding:32px 14px 40px;background:${C.page};font-family:${SANS};color:${C.espresso};-webkit-font-smoothing:antialiased;">
+  return `<!DOCTYPE html>
+<html lang="${lang}" style="color-scheme:light only;supported-color-schemes:light only;">
+<head>
+${HEAD}
+</head>
+<body class="ss-page" style="margin:0;padding:0;background:${C.page};color-scheme:light only;">
+<div class="ss-page ss-ink" style="margin:0;padding:32px 14px 40px;background:${C.page};font-family:${SANS};color:${C.espresso};-webkit-font-smoothing:antialiased;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
     <tr><td align="center">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:520px;border-collapse:separate;background:${C.sheet};border-radius:20px;">
-        <tr><td style="padding:44px 36px 38px;border-radius:20px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="ss-sheet" style="width:100%;max-width:520px;border-collapse:separate;background:${C.sheet};border-radius:20px;">
+        <tr><td class="ss-sheet" style="padding:44px 36px 38px;border-radius:20px;background:${C.sheet};">
           ${wordmark()}
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:24px auto 30px;">
             <tr><td style="width:44px;border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
@@ -285,16 +332,18 @@ function shell(inner: string, lang: Lang): string {
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:36px 0 0;">
             <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
           </table>
-          <div style="font-family:${SANS};font-size:11px;font-weight:300;line-height:1.95;color:${C.greige};text-align:center;letter-spacing:0.05em;margin-top:20px;">
+          <div class="ss-quiet" style="font-family:${SANS};font-size:11px;font-weight:300;line-height:1.95;color:${C.greige};text-align:center;letter-spacing:0.05em;margin-top:20px;">
             ${esc(SALON.address)}<br />
             ${esc(SALON.phone)}
           </div>
-          <div style="font-family:${SANS};font-size:10.5px;font-weight:300;line-height:1.7;color:${C.taupe};text-align:center;margin-top:14px;">${reply}</div>
+          <div class="ss-quiet" style="font-family:${SANS};font-size:10.5px;font-weight:300;line-height:1.7;color:${C.taupe};text-align:center;margin-top:14px;">${reply}</div>
         </td></tr>
       </table>
     </td></tr>
   </table>
-</div>`;
+</div>
+</body>
+</html>`;
 }
 
 /** The one big line. Serif, centred, generously spaced - this is what makes
@@ -400,8 +449,8 @@ function receiptBox(ctx: MessageContext, lang: Lang): string {
  *  that support it round the whole pill rather than just the text. */
 const button = (url: string, label: string) =>
   `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;margin:26px auto 8px;">
-    <tr><td style="background:${C.taupe};border-radius:40px;">
-      <a href="${esc(url)}" style="display:inline-block;padding:14px 32px;font-family:${SANS};font-size:11px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:${C.onTaupe};text-decoration:none;border-radius:40px;">${esc(label)}</a>
+    <tr><td class="ss-btn" style="background:${C.taupe};border-radius:40px;">
+      <a href="${esc(url)}" target="_blank" rel="noopener" style="display:inline-block;padding:14px 32px;font-family:${SANS};font-size:11px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:${C.onTaupe};text-decoration:none;border-radius:40px;">${esc(label)}</a>
     </td></tr>
   </table>`;
 
@@ -596,7 +645,7 @@ const EMAILS: Record<MessageKey, Builder> = {
             ? 'En plass på ventelisten er ikke en time. Det kan hende ingen avlyser, og da har vi dessverre ingenting å tilby deg. Vil du være sikker, book en time som er ledig nå - står du på ventelisten i tillegg, tilbyr vi deg å bytte hvis noe bedre dukker opp.'
             : 'A place on the waiting list is not an appointment. It is possible that nobody cancels, and then we will have nothing to offer you. If you want to be sure, book a time that is free now - stay on the list as well and we will offer you the swap if something better opens up.'}</div>
         </div>`
-      + (ctx.manageUrl ? button(ctx.manageUrl, lang === 'no' ? 'Se ledige tider' : 'See available times') : '')
+      + (ctx.bookUrl ? button(ctx.bookUrl, lang === 'no' ? 'Se ledige tider' : 'See available times') : '')
       + smallPrint(lang === 'no'
         ? 'Vil du av ventelisten, svar på denne e-posten.'
         : 'To come off the list, just reply to this email.'),
@@ -617,7 +666,7 @@ const EMAILS: Record<MessageKey, Builder> = {
       + p(lang === 'no'
         ? 'Vi tilbyr tiden til noen få om gangen. <strong>Du har to timer før vi sier fra til flere</strong> - men tiden er din like lenge den står ledig, så du mister den ikke etter to timer. Den går rett og slett til den som booker først.'
         : 'We offer the time to a few people at a time. <strong>You have two hours before we tell anyone else</strong> - but it stays yours to take for as long as it is free, so you do not lose it after two hours. It simply goes to whoever books first.')
-      + (ctx.manageUrl ? button(ctx.manageUrl, lang === 'no' ? 'Book denne tiden' : 'Book this time') : '')
+      + (ctx.bookUrl ? button(ctx.bookUrl, lang === 'no' ? 'Book denne tiden' : 'Book this time') : '')
       + smallPrint(lang === 'no'
         ? 'Har du allerede en time hos oss og vil bytte til denne, book den her - så frigjør vi den gamle tiden for deg.'
         : 'If you already have a booking with us and want to swap to this one, book it here and we will release your old time.'),
