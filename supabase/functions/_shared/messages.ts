@@ -57,6 +57,12 @@ export interface MessageContext {
   bookUrl?: string;
   /** Waitlist: the window they asked to be told about. */
   waitlistWindow?: string;
+  /** One-click removal from the waiting list. waitlist_entries has carried an
+   *  unsubscribe_token since it was built and leave_waitlist(token) has
+   *  existed just as long - nothing ever called either, so the email fell
+   *  back to "reply to this email", which means someone reads a mailbox and
+   *  does it by hand. */
+  leaveUrl?: string;
   /** What was actually rung up. Shown on the thank-you note. */
   amountCharged?: number;
   /** Add-ons as they were priced at the time of booking. */
@@ -95,6 +101,19 @@ export interface ExtensionsArrivedContext {
   bookUrl?: string;
   /** Outstanding balance after the deposit, if there is one. */
   balanceDue?: number;
+  /** Her fitting, when she has already booked one.
+   *
+   *  The salon's original position was to send nothing in this case - the
+   *  hair arriving changes nothing she has to do, and a message that asks for
+   *  no action is a message not worth sending. The owner disagreed, and is
+   *  right: she has paid a deposit on hair she has never seen and is waiting
+   *  on it. "It is here, see you Friday" is reassurance, not admin.
+   *
+   *  So when these are set the message becomes a short warm note naming her
+   *  date, with no button - because there genuinely is nothing to press. */
+  bookingDate?: string;
+  bookingTime?: string;
+  bookingStaff?: string;
 }
 
 // ── SALON DETAILS ──
@@ -113,6 +132,8 @@ export const SALON = {
   phoneHref: '+4745397631',
   email: 'info@studioserena.no',
   site: 'studioserena.no',
+  instagram: '@studioserena.hair',
+  instagramUrl: 'https://www.instagram.com/studioserena.hair',
 } as const;
 
 // ── FORMATTING ──
@@ -286,6 +307,25 @@ const HEAD = `<meta charset="utf-8" />
   [data-ogsc] .ss-quiet { color: ${C.greige} !important; }
   [data-ogsc] .ss-btn   { background-color: ${C.taupe} !important; }
   [data-ogsc] .ss-btn a { color: ${C.onTaupe} !important; }
+
+  /* ── THE BLUE LINKS NOBODY PUT THERE ──
+     There is exactly one <a> in these emails and it is the taupe button, yet
+     phone numbers, addresses and dates still came out blue and underlined:
+     iOS and Gmail detect them in the text and link them THEMSELVES, using
+     their own colour. These two rules are the only way to take that back -
+     the first for Apple's detectors, the second for the wrapper Gmail puts
+     around them. */
+  a[x-apple-data-detectors] {
+    color: inherit !important; text-decoration: none !important;
+    font-size: inherit !important; font-family: inherit !important;
+    font-weight: inherit !important; line-height: inherit !important;
+  }
+  .ss-quiet a[x-apple-data-detectors] { color: ${C.greige} !important; }
+  u + #body a, #MessageViewBody a {
+    color: inherit !important; text-decoration: none !important;
+    font-size: inherit !important; font-family: inherit !important;
+    font-weight: inherit !important; line-height: inherit !important;
+  }
 </style>`;
 
 /** The wordmark, set in type.
@@ -307,9 +347,13 @@ function wordmark(): string {
 }
 
 function shell(inner: string, lang: Lang): string {
+  // Instagram rather than "reply to this email". A reply lands in a mailbox
+  // nobody has open while they are working; a DM reaches the phone in the
+  // stylist's pocket, which is where an urgent message needs to go.
+  const ig = `<a href="${SALON.instagramUrl}" style="color:${C.taupe};text-decoration:none;font-weight:500;">${SALON.instagram}</a>`;
   const reply = lang === 'no'
-    ? 'Svar på denne e-posten, så kommer den rett til oss.'
-    : 'Reply to this email and it comes straight to us.';
+    ? `Haster det? Send oss en DM på ${ig}`
+    : `Something urgent? Send us a DM on ${ig}`;
   // No card border and no ornament. The sheet is white, it sits on a barely
   // tinted margin, and the only rule in the whole thing is the short one
   // under the wordmark and the one above the footer.
@@ -334,7 +378,7 @@ ${HEAD}
           </table>
           <div class="ss-quiet" style="font-family:${SANS};font-size:11px;font-weight:300;line-height:1.95;color:${C.greige};text-align:center;letter-spacing:0.05em;margin-top:20px;">
             ${esc(SALON.address)}<br />
-            ${esc(SALON.phone)}
+            <a href="tel:${esc(SALON.phoneHref)}" style="color:${C.greige};text-decoration:none;">${esc(SALON.phone)}</a>
           </div>
           <div class="ss-quiet" style="font-family:${SANS};font-size:10.5px;font-weight:300;line-height:1.7;color:${C.taupe};text-align:center;margin-top:14px;">${reply}</div>
         </td></tr>
@@ -480,8 +524,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang)
       + (ctx.manageUrl ? button(ctx.manageUrl, lang === 'no' ? 'Se eller endre timen' : 'View or change booking') : '')
       + smallPrint(lang === 'no'
-        ? 'Trenger du å endre eller avlyse? Svar på denne e-posten eller ring oss - så tidlig du kan, så vi rekker å tilby tiden til noen andre.'
-        : 'Need to change or cancel? Reply to this email or call us - as much notice as you can manage, so we can offer the time to someone else.'),
+        ? 'Trenger du å endre eller avlyse? Bruk knappen over, eller meld fra på Instagram <strong>@studioserena.hair</strong> - så tidlig du kan, så vi rekker å tilby tiden til noen andre.'
+        : 'Need to change or cancel? Use the button above, or message us on Instagram <strong>@studioserena.hair</strong> - as much notice as you can manage, so we can offer the time to someone else.'),
       lang,
     ),
   }),
@@ -498,8 +542,8 @@ const EMAILS: Record<MessageKey, Builder> = {
         : 'Thank you for your request. Extensions need a consultation and a deposit before we can hold the time, so this is <strong>not confirmed yet</strong> - we will check and let you know.')
       + detailBox(ctx, lang)
       + p(lang === 'no'
-        ? 'Vi holder tiden for deg i <strong>to dager</strong> mens vi ser på det. Har du ikke hatt konsultasjon ennå, svar på denne e-posten, så avtaler vi en.'
-        : 'We are holding the time for you for <strong>two days</strong> while we look at it. If you have not had your consultation yet, reply to this email and we will arrange one.')
+        ? 'Vi holder tiden for deg i <strong>to dager</strong> mens vi ser på det. Har du ikke hatt konsultasjon ennå, bruk knappen under - eller meld fra på Instagram <strong>@studioserena.hair</strong>.'
+        : 'We are holding the time for you for <strong>two days</strong> while we look at it. If you have not had your consultation yet, use the button below - or message us on Instagram <strong>@studioserena.hair</strong>.')
       + smallPrint(lang === 'no'
         ? 'Du får en e-post og en SMS så snart vi har bekreftet.'
         : 'You will get an email and a text as soon as we confirm.'),
@@ -537,8 +581,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang, true)
       + (ctx.reason ? p(esc(ctx.reason)) : '')
       + p(lang === 'no'
-        ? 'Extensions krever konsultasjon og depositum før vi kan sette av tiden. Har du ikke hatt konsultasjon ennå, svar på denne e-posten - vi vil veldig gjerne få deg inn.'
-        : 'Extensions need a consultation and a deposit before we can book the fitting. If you have not had yours yet, reply to this email and we will arrange one - we would love to get you in.')
+        ? 'Extensions krever konsultasjon og depositum før vi kan sette av tiden. Har du ikke hatt konsultasjon ennå, book en under - eller meld fra på Instagram <strong>@studioserena.hair</strong>, vi vil veldig gjerne få deg inn.'
+        : 'Extensions need a consultation and a deposit before we can book the fitting. If you have not had yours yet, book one below - or message us on Instagram <strong>@studioserena.hair</strong>. We would love to get you in.')
       + smallPrint(lang === 'no'
         ? `Du kan også ringe oss på ${SALON.phone}.`
         : `You can also call us on ${SALON.phone}.`),
@@ -558,8 +602,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang)
       + (ctx.reason ? p(esc(ctx.reason)) : '')
       + p(lang === 'no'
-        ? 'Passer ikke den nye tiden? Svar på denne e-posten eller ring oss, så finner vi noe annet.'
-        : 'If the new time does not suit you, reply to this email or call us and we will find another.')
+        ? 'Passer ikke den nye tiden? Bruk knappen over, eller meld fra på Instagram <strong>@studioserena.hair</strong>, så finner vi noe annet.'
+        : 'If the new time does not suit you, use the button above, or message us on Instagram <strong>@studioserena.hair</strong> and we will find another.')
       + (ctx.manageUrl ? button(ctx.manageUrl, lang === 'no' ? 'Se timen' : 'View booking') : '')
       + smallPrint(lang === 'no' ? 'Beklager bryet.' : 'Sorry for the inconvenience.'),
       lang,
@@ -646,9 +690,12 @@ const EMAILS: Record<MessageKey, Builder> = {
             : 'A place on the waiting list is not an appointment. It is possible that nobody cancels, and then we will have nothing to offer you. If you want to be sure, book a time that is free now - stay on the list as well and we will offer you the swap if something better opens up.'}</div>
         </div>`
       + (ctx.bookUrl ? button(ctx.bookUrl, lang === 'no' ? 'Se ledige tider' : 'See available times') : '')
+      + (ctx.leaveUrl
+        ? `<div style="text-align:center;margin:14px 0 0;"><a href="${esc(ctx.leaveUrl)}" style="font-family:${SANS};font-size:11.5px;font-weight:400;letter-spacing:0.06em;color:${C.greige};text-decoration:underline;">${lang === 'no' ? 'Ta meg av ventelisten' : 'Take me off the waiting list'}</a></div>`
+        : '')
       + smallPrint(lang === 'no'
-        ? 'Vil du av ventelisten, svar på denne e-posten.'
-        : 'To come off the list, just reply to this email.'),
+        ? 'Du kan gå av ventelisten når som helst - ett klikk, ingen forklaring nødvendig.'
+        : 'You can leave the list at any time - one click, no explanation needed.'),
       lang,
     ),
   }),
@@ -745,8 +792,8 @@ const EMAILS: Record<MessageKey, Builder> = {
             : `Easiest with <strong>Vipps to ${esc(ctx.vippsNumber)}</strong> - put <strong>${esc(String(ctx.bookingRef || ctx.invoiceNumber || '').toUpperCase())}</strong> in the message so we know it is you.`)
           : ''))
       + smallPrint(lang === 'no'
-        ? `Betal gjerne innen ${ctx.dueDays ?? 14} dager. Var det noe som kom i veien? Svar på denne e-posten eller ring ${SALON.phone} - vi vil helst finne ut av det sammen.`
-        : `Please settle within ${ctx.dueDays ?? 14} days. Did something get in the way? Reply to this email or call ${SALON.phone} - we would much rather sort it out together.`),
+        ? `Betal gjerne innen ${ctx.dueDays ?? 14} dager. Var det noe som kom i veien? Meld fra på Instagram <strong>@studioserena.hair</strong> eller ring ${SALON.phone} - vi vil helst finne ut av det sammen.`
+        : `Please settle within ${ctx.dueDays ?? 14} days. Did something get in the way? Message us on Instagram <strong>@studioserena.hair</strong> or call ${SALON.phone} - we would much rather sort it out together.`),
       lang,
     ),
   }),
@@ -770,7 +817,7 @@ const EMAILS: Record<MessageKey, Builder> = {
         : 'To book your next visit, find us at ' + SALON.site + '.')
       + smallPrint(lang === 'no'
         ? 'Er det noe du ikke er fornøyd med, si fra til oss - svar på denne e-posten eller ring. Vi vil gjerne vite det, og vi ordner opp.'
-        : 'If there is anything you are not happy with, tell us - reply to this email or call. We would genuinely rather know, and we will put it right.'),
+        : 'If there is anything you are not happy with, tell us - message us on Instagram <strong>@studioserena.hair</strong> or call. We would genuinely rather know, and we will put it right.'),
       lang,
     ),
   }),
@@ -873,6 +920,41 @@ export function renderExtensionsArrivedEmail(
       </div>`
     : '';
 
+  // She is already booked. Nothing to arrange, nothing to press - so this
+  // says the one thing she actually wants to hear and then stops.
+  if (ctx.bookingDate) {
+    const d = new Date(`${ctx.bookingDate}T${ctx.bookingTime || '12:00'}`);
+    const day = d.getDate();
+    const when = lang === 'no'
+      ? `${DAYS_NO[d.getDay()]} ${day}. ${MONTHS_NO[d.getMonth()]}${ctx.bookingTime ? ` kl. ${ctx.bookingTime}` : ''}`
+      : `${DAYS_EN[d.getDay()]} ${day} ${MONTHS_EN[d.getMonth()]}${ctx.bookingTime ? ` at ${ctx.bookingTime}` : ''}`;
+    return {
+      subject: lang === 'no' ? 'Håret ditt er her' : 'Your hair is here',
+      html: shell(
+        greeting(ctx.customerName, lang)
+        + p(lang === 'no'
+          ? 'Gode nyheter - <strong>håret ditt er her</strong>, og alt er klart til deg.'
+          : 'Good news - <strong>your hair is here</strong>, and everything is ready for you.')
+        + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:4px 0 6px;">
+            <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+            <tr><td style="padding:22px 8px;text-align:center;">
+              <div style="font-family:${SERIF};font-size:22px;font-weight:400;line-height:1.35;color:${C.espresso};">${esc(when)}</div>
+              ${ctx.bookingStaff ? `<div style="font-family:${SANS};font-size:13px;font-weight:300;color:${C.soft};margin-top:6px;">${lang === 'no' ? 'hos' : 'with'} ${esc(ctx.bookingStaff)}</div>` : ''}
+            </td></tr>
+            <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+          </table>`
+        + detail
+        + p(lang === 'no'
+          ? 'Vi gleder oss til å se deg da.'
+          : 'We cannot wait to see you then.')
+        + smallPrint(lang === 'no'
+          ? `Spørsmål? Meld fra på Instagram <strong>@studioserena.hair</strong> eller ring ${SALON.phone}.`
+          : `Any questions? Message us on Instagram <strong>@studioserena.hair</strong> or call ${SALON.phone}.`),
+        lang,
+      ),
+    };
+  }
+
   return {
     subject: lang === 'no'
       ? 'Extensions-bestillingen din har kommet'
@@ -888,8 +970,8 @@ export function renderExtensionsArrivedEmail(
         : 'All that is left is to find a time that suits you for the fitting.')
       + (ctx.bookUrl ? button(ctx.bookUrl, lang === 'no' ? 'Book påsetting' : 'Book your fitting') : '')
       + smallPrint(lang === 'no'
-        ? `Spørsmål? Svar på denne e-posten eller ring ${SALON.phone}.`
-        : `Any questions? Reply to this email or call ${SALON.phone}.`),
+        ? `Spørsmål? Meld fra på Instagram <strong>@studioserena.hair</strong> eller ring ${SALON.phone}.`
+        : `Any questions? Message us on Instagram <strong>@studioserena.hair</strong> or call ${SALON.phone}.`),
       lang,
     ),
   };
