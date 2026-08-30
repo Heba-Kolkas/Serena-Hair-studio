@@ -197,45 +197,145 @@ export function smsLength(text: string): SmsCost {
   };
 }
 
-// ── EMAIL SHELL ──
-// Inline styles only: email clients strip <style> blocks and know nothing of
-// modern CSS. Single column, no tables, fonts that exist everywhere. The
-// palette matches the salon's own site.
+// ══════════════════════════════════════════════════════════════════
+//  EMAIL SHELL
+// ══════════════════════════════════════════════════════════════════
+//
+// Editorial rather than transactional: the salon's own typography, wide
+// letter-spacing, hairline rules and a great deal of white space, with the
+// type doing the work instead of boxes and fills. It should read like the
+// price list, not like a receipt from a booking system.
+//
+// INLINE STYLES ON EVERY ELEMENT, always. Gmail strips <style> blocks in
+// several contexts, so anything that must survive is inline; the <style>
+// below carries only the webfont, which is a progressive enhancement and
+// costs nothing where it is dropped.
+//
+// TABLES, not flex. The old receipt used display:flex to put a label and an
+// amount on one line, which Outlook ignores completely - the two simply
+// stacked. Anything that has to sit on one line is a table now.
+
+// The palette, once, so a colour is changed here rather than in thirty
+// string literals.
+//
+// LIGHT. The first version of this sat a bordered cream card on a darker
+// cream ground and put a gold lozenge in the middle of it, which made a
+// short message look like a certificate. The references it was meant to
+// follow are almost white with a great deal of air, and the only dark thing
+// in them is the type and one button. So: white sheet, the warm tones kept
+// for hairlines and secondary text where they read as warmth rather than as
+// a background, and no ornament at all.
+const C = {
+  page: '#f6f2ec',     // the thin margin around the sheet, barely there
+  sheet: '#ffffff',    // the sheet itself
+  rule: '#ece7df',     // hairlines - warm, and very light
+  taupe: '#B5A89A',
+  greige: '#9f948e',   // secondary text and micro-labels
+  espresso: '#3f3632', // body text and the one button
+  soft: '#6f665f',     // muted body
+};
+
+// Cormorant Garamond is the site's display face. Apple Mail, iOS Mail and
+// Outlook for Mac honour the import; Gmail and Outlook for Windows ignore it
+// and fall back to Georgia, which is a serif of similar colour and keeps the
+// design intact rather than dropping it to Arial.
+const SERIF = `'Cormorant Garamond', Georgia, 'Times New Roman', serif`;
+const SANS = `'Jost', 'Helvetica Neue', Helvetica, Arial, sans-serif`;
+const FONT_IMPORT =
+  `<style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap');</style>`;
+
+/** The wordmark, set in type.
+ *
+ *  A hosted image would be sharper, but it waits for the domain: the only
+ *  public URL today is the long .vercel.app address, and an <img> that 404s
+ *  the day that changes is worse than no image. Set LOGO_URL when
+ *  studioserena.no is serving and this swaps over on its own - everything
+ *  else here is already sized around it. */
+const LOGO_URL = '';
+
+function wordmark(): string {
+  if (LOGO_URL) {
+    return `<img src="${LOGO_URL}" alt="${esc(SALON.name)}" width="180"
+      style="display:block;margin:0 auto;width:180px;max-width:60%;height:auto;border:0;" />`;
+  }
+  return `<div style="font-family:${SERIF};font-size:27px;font-weight:400;letter-spacing:0.22em;text-align:center;color:${C.espresso};line-height:1.2;">STUDIO SERENA</div>
+    <div style="font-family:${SANS};font-size:9px;font-weight:400;letter-spacing:0.42em;text-align:center;color:${C.greige};margin-top:7px;">H A I R</div>`;
+}
 
 function shell(inner: string, lang: Lang): string {
-  const footer = lang === 'no'
-    ? `${SALON.name} &middot; ${SALON.orgNumber}<br />${SALON.address}<br />${SALON.phone}<br />Svar på denne e-posten, så kommer den rett til oss.`
-    : `${SALON.name} &middot; ${SALON.orgNumber}<br />${SALON.address}<br />${SALON.phone}<br />Reply to this email and it comes straight to us.`;
-  return `<div style="margin:0;padding:24px;background:#faf6ef;font-family:Helvetica,Arial,sans-serif;color:#3f3632;">
-  <div style="max-width:520px;margin:0 auto;background:#fdfaf5;border:1px solid #e9e3db;border-radius:14px;padding:28px;">
-    <div style="font-size:20px;letter-spacing:0.12em;text-align:center;color:#3f3632;">STUDIO SERENA</div>
-    <div style="font-size:11px;letter-spacing:0.3em;text-align:center;color:#9f948e;margin-top:4px;">HAIR</div>
-    <div style="height:1px;background:#e9e3db;margin:22px 0;"></div>
-    ${inner}
-    <div style="height:1px;background:#e9e3db;margin:24px 0 16px;"></div>
-    <div style="font-size:12px;color:#9f948e;line-height:1.6;">${footer}</div>
-  </div>
+  const reply = lang === 'no'
+    ? 'Svar på denne e-posten, så kommer den rett til oss.'
+    : 'Reply to this email and it comes straight to us.';
+  // No card border and no ornament. The sheet is white, it sits on a barely
+  // tinted margin, and the only rule in the whole thing is the short one
+  // under the wordmark and the one above the footer.
+  return `${FONT_IMPORT}
+<div style="margin:0;padding:32px 14px 40px;background:${C.page};font-family:${SANS};color:${C.espresso};-webkit-font-smoothing:antialiased;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+    <tr><td align="center">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:520px;border-collapse:collapse;background:${C.sheet};">
+        <tr><td style="padding:44px 36px 38px;">
+          ${wordmark()}
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:24px auto 30px;">
+            <tr><td style="width:44px;border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+          </table>
+          ${inner}
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:36px 0 0;">
+            <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+          </table>
+          <div style="font-family:${SANS};font-size:11px;font-weight:300;line-height:1.95;color:${C.greige};text-align:center;letter-spacing:0.05em;margin-top:20px;">
+            ${esc(SALON.address)}<br />
+            ${esc(SALON.phone)}
+          </div>
+          <div style="font-family:${SANS};font-size:10.5px;font-weight:300;line-height:1.7;color:${C.taupe};text-align:center;margin-top:14px;">${reply}</div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
 </div>`;
 }
 
+/** The one big line. Serif, centred, generously spaced - this is what makes
+ *  an email look like the salon rather than like software. */
+const headline = (text: string) =>
+  `<h1 style="font-family:${SERIF};font-size:30px;font-weight:400;line-height:1.25;text-align:center;color:${C.espresso};margin:0 0 20px;letter-spacing:0.01em;">${text}</h1>`;
+
+/** Uppercase, letter-spaced, small and grey. Used to label a value beneath
+ *  it, the way the price list labels a column. */
+const microLabel = (text: string) =>
+  `<div style="font-family:${SANS};font-size:9.5px;font-weight:500;letter-spacing:0.22em;text-transform:uppercase;color:${C.greige};margin:0 0 5px;">${text}</div>`;
+
 const p = (text: string) =>
-  `<p style="font-size:15px;line-height:1.65;margin:0 0 16px;">${text}</p>`;
+  `<p style="font-family:${SANS};font-size:14.5px;font-weight:300;line-height:1.75;margin:0 0 16px;text-align:center;color:${C.espresso};">${text}</p>`;
 
 const greeting = (name: string, lang: Lang) =>
-  `<p style="font-size:16px;margin:0 0 14px;">${lang === 'no' ? 'Hei' : 'Hi'} ${esc(firstName(name))},</p>`;
+  `<p style="font-family:${SERIF};font-size:19px;font-weight:400;margin:0 0 6px;text-align:center;color:${C.espresso};">${lang === 'no' ? 'Hei' : 'Hi'} ${esc(firstName(name))},</p>`;
 
-/** The appointment, boxed. Struck through when the booking no longer stands. */
+/** The appointment. No filled box any more - hairlines above and below, the
+ *  date set large in the serif, everything centred. A boxed grey panel is how
+ *  a system tells you a fact; this is how a salon does.
+ *
+ *  Struck through when the booking no longer stands: line-through on the
+ *  wrapper does not inherit reliably across clients, so it is applied to each
+ *  line that carries text. */
 function detailBox(ctx: MessageContext, lang: Lang, struck = false): string {
-  const s = struck ? 'text-decoration:line-through;opacity:0.65;' : '';
+  const s = struck ? 'text-decoration:line-through;color:' + C.greige + ';' : '';
   const ref = ctx.bookingRef
-    ? `<span style="color:#9f948e;font-size:13px;">${lang === 'no' ? 'Referanse' : 'Reference'} ${esc(String(ctx.bookingRef).toUpperCase())}</span>`
+    ? `<div style="margin-top:16px;">
+         ${microLabel(lang === 'no' ? 'Referanse' : 'Reference')}
+         <div style="font-family:${SANS};font-size:13px;letter-spacing:0.14em;color:${C.soft};">${esc(String(ctx.bookingRef).toUpperCase())}</div>
+       </div>`
     : '';
-  return `<div style="background:#f4efe7;border-radius:10px;padding:16px 18px;font-size:15px;line-height:1.8;${s}">
-    <strong>${esc(ctx.serviceName)}</strong><br />
-    ${esc(longDate(ctx, lang))}<br />
-    ${lang === 'no' ? 'hos' : 'with'} ${esc(ctx.staffName)}<br />
-    ${ref}
-  </div>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:4px 0 6px;">
+    <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+    <tr><td style="padding:22px 8px;text-align:center;">
+      <div style="font-family:${SERIF};font-size:22px;font-weight:400;line-height:1.35;color:${C.espresso};${s}">${esc(longDate(ctx, lang))}</div>
+      <div style="font-family:${SANS};font-size:14.5px;font-weight:400;line-height:1.6;color:${C.espresso};margin-top:10px;${s}">${esc(ctx.serviceName)}</div>
+      <div style="font-family:${SANS};font-size:13px;font-weight:300;color:${C.soft};margin-top:3px;${s}">${lang === 'no' ? 'hos' : 'with'} ${esc(ctx.staffName)}</div>
+      ${ref}
+    </td></tr>
+    <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+  </table>`;
 }
 
 /** What the visit consisted of, and what was paid. The service and its add-ons
@@ -246,7 +346,7 @@ function receiptBox(ctx: MessageContext, lang: Lang): string {
   const rows = [
     `<tr><td style="padding:2px 0;">${esc(ctx.serviceName)}</td><td></td></tr>`,
     ...(ctx.addons || []).map((a) =>
-      `<tr><td style="padding:2px 0;color:#6b615c;">+ ${esc(a.name)}</td><td></td></tr>`),
+      `<tr><td style="padding:2px 0;color:${C.soft};">+ ${esc(a.name)}</td><td></td></tr>`),
   ].join('');
   const paid = lang === 'no' ? 'Betalt' : 'Paid';
   const total = typeof ctx.amountCharged === 'number'
@@ -257,26 +357,53 @@ function receiptBox(ctx: MessageContext, lang: Lang): string {
   const vat = typeof ctx.amountCharged === 'number'
     ? Math.round(ctx.amountCharged * SALON.vatRate / (100 + SALON.vatRate) * 100) / 100
     : null;
-  return `<div style="background:#f4efe7;border-radius:10px;padding:16px 18px;font-size:15px;line-height:1.7;">
-    <table style="width:100%;border-collapse:collapse;font-size:15px;">${rows}</table>
-    <div style="height:1px;background:#e2d9cc;margin:12px 0;"></div>
-    <div style="display:flex;justify-content:space-between;font-size:16px;">
-      <strong>${paid}</strong> <strong>${esc(total)}</strong>
-    </div>
-    ${vat != null ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:#6b615c;margin-top:4px;">
-      <span>${lang === 'no' ? `Herav MVA ${SALON.vatRate}%` : `Including VAT ${SALON.vatRate}%`}</span>
-      <span>${vat.toLocaleString('nb-NO', { minimumFractionDigits: 2 })} NOK</span>
-    </div>` : ''}
-    ${ctx.bookingRef ? `<div style="color:#9f948e;font-size:13px;margin-top:8px;">${lang === 'no' ? 'Referanse' : 'Reference'} ${esc(String(ctx.bookingRef).toUpperCase())}</div>` : ''}
-    <div style="color:#9f948e;font-size:12px;margin-top:6px;">${esc(SALON.name)} &middot; ${esc(SALON.orgNumber)}</div>
-  </div>`;
+  // display:flex was the old way of putting a label and an amount on one
+  // line. Outlook ignores it entirely, so every one of these receipts had the
+  // word "Paid" and the figure stacked on separate lines. A two-cell row does
+  // it everywhere.
+  const money = (label: string, value: string, big: boolean) =>
+    `<tr>
+      <td style="padding:${big ? '2px' : '1px'} 0;font-family:${SANS};font-size:${big ? '15px' : '12.5px'};font-weight:${big ? '500' : '300'};color:${big ? C.espresso : C.soft};text-align:left;">${label}</td>
+      <td style="padding:${big ? '2px' : '1px'} 0;font-family:${SANS};font-size:${big ? '15px' : '12.5px'};font-weight:${big ? '500' : '300'};color:${big ? C.espresso : C.soft};text-align:right;white-space:nowrap;">${value}</td>
+    </tr>`;
+
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:4px 0 6px;">
+    <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+    <tr><td style="padding:20px 4px 18px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">${rows}</table>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:14px 0 10px;">
+        <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+      </table>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+        ${money(paid, esc(total), true)}
+        ${vat != null ? money(
+          lang === 'no' ? `Herav MVA ${SALON.vatRate}%` : `Including VAT ${SALON.vatRate}%`,
+          `${vat.toLocaleString('nb-NO', { minimumFractionDigits: 2 })} NOK`, false) : ''}
+      </table>
+      ${ctx.bookingRef
+        ? `<div style="margin-top:16px;text-align:center;">
+             ${microLabel(lang === 'no' ? 'Referanse' : 'Reference')}
+             <div style="font-family:${SANS};font-size:13px;letter-spacing:0.14em;color:${C.soft};">${esc(String(ctx.bookingRef).toUpperCase())}</div>
+           </div>`
+        : ''}
+      <div style="font-family:${SANS};font-size:10.5px;letter-spacing:0.08em;color:${C.taupe};margin-top:12px;text-align:center;">${esc(SALON.name)} &middot; ${esc(SALON.orgNumber)}</div>
+    </td></tr>
+    <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
+  </table>`;
 }
 
+/** Square, not rounded, and letter-spaced uppercase - the same button the
+ *  price list and the booking wizard use. Wrapped in a table so Outlook gives
+ *  it real padding; a bare <a> with padding collapses there. */
 const button = (url: string, label: string) =>
-  `<div style="margin:22px 0 6px;"><a href="${esc(url)}" style="display:inline-block;background:#3f3632;color:#fdfaf5;text-decoration:none;font-size:14px;letter-spacing:0.04em;padding:12px 22px;border-radius:8px;">${esc(label)}</a></div>`;
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:26px auto 8px;">
+    <tr><td style="background:${C.espresso};">
+      <a href="${esc(url)}" style="display:inline-block;padding:14px 34px;font-family:${SANS};font-size:11px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:${C.sheet};text-decoration:none;">${esc(label)}</a>
+    </td></tr>
+  </table>`;
 
 const smallPrint = (text: string) =>
-  `<p style="font-size:14px;line-height:1.65;color:#6b615c;margin:18px 0 0;">${text}</p>`;
+  `<p style="font-family:${SANS};font-size:12.5px;font-weight:300;line-height:1.8;color:${C.soft};margin:20px 0 0;text-align:center;">${text}</p>`;
 
 // ── THE MESSAGES ──
 
@@ -402,9 +529,9 @@ const EMAILS: Record<MessageKey, Builder> = {
       // telling-off: she was shown this figure before she confirmed, so the
       // email is a record, not a surprise.
       + (ctx.lateCancellation
-        ? `<div style="background:#f7efe9;border:1px solid #e4cfc4;border-radius:10px;padding:16px 18px;">
+        ? `<div style="background:${C.sheet};border:1px solid ${C.rule};padding:18px 20px;text-align:left;">
              <div style="font-size:14px;font-weight:bold;margin-bottom:6px;">${lang === 'no' ? 'Avbestilling på kort varsel' : 'Cancelled at short notice'}</div>
-             <div style="font-size:14px;line-height:1.6;color:#6b615c;">${lang === 'no'
+             <div style="font-size:14px;line-height:1.6;color:${C.soft};">${lang === 'no'
                ? `Denne timen ble avbestilt mindre enn ${ctx.noticeHours ?? 48} timer før. Da gjelder halv pris etter avbestillingsreglene våre${typeof ctx.cancellationFee === 'number' ? `, som er <strong>${ctx.cancellationFee.toLocaleString('nb-NO')} NOK</strong>${ctx.feeIsEstimate ? ' (omtrentlig - vi bekrefter beløpet)' : ''}` : ''}. Beløpet legges til ved neste besøk.`
                : `This appointment was cancelled less than ${ctx.noticeHours ?? 48} hours ahead, so our half-price cancellation policy applies${typeof ctx.cancellationFee === 'number' ? `, which comes to <strong>${ctx.cancellationFee.toLocaleString('nb-NO')} NOK</strong>${ctx.feeIsEstimate ? ' (approximate - we will confirm the amount)' : ''}` : ''}. It will be added to your next visit.`}</div>
            </div>`
@@ -460,9 +587,9 @@ const EMAILS: Record<MessageKey, Builder> = {
       + p(lang === 'no'
         ? `Vi har notert at du ønsker <strong>${esc(ctx.serviceName)}</strong>${ctx.waitlistWindow ? ` ${esc(ctx.waitlistWindow)}` : ''}. Blir en tid ledig, sier vi fra med en gang - på e-post og SMS.`
         : `We have noted that you would like <strong>${esc(ctx.serviceName)}</strong>${ctx.waitlistWindow ? ` ${esc(ctx.waitlistWindow)}` : ''}. If a time opens up we will tell you straight away, by email and text.`)
-      + `<div style="background:#f7efe9;border:1px solid #e4cfc4;border-radius:10px;padding:16px 18px;margin:4px 0 4px;">
+      + `<div style="background:${C.sheet};border:1px solid ${C.rule};padding:18px 20px;text-align:left;margin:4px 0 4px;">
           <div style="font-size:14px;font-weight:bold;margin-bottom:6px;">${lang === 'no' ? 'Men vent med å regne med det' : 'One thing worth knowing'}</div>
-          <div style="font-size:14px;line-height:1.6;color:#6b615c;">${lang === 'no'
+          <div style="font-size:14px;line-height:1.6;color:${C.soft};">${lang === 'no'
             ? 'En plass på ventelisten er ikke en time. Det kan hende ingen avlyser, og da har vi dessverre ingenting å tilby deg. Vil du være sikker, book en time som er ledig nå - står du på ventelisten i tillegg, tilbyr vi deg å bytte hvis noe bedre dukker opp.'
             : 'A place on the waiting list is not an appointment. It is possible that nobody cancels, and then we will have nothing to offer you. If you want to be sure, book a time that is free now - stay on the list as well and we will offer you the swap if something better opens up.'}</div>
         </div>`
@@ -514,8 +641,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang, true)
       + (ctx.ownerNote ? p(esc(ctx.ownerNote)) : '')
       + (typeof ctx.cancellationFee === 'number'
-        ? `<div style="background:#f7efe9;border:1px solid #e4cfc4;border-radius:10px;padding:16px 18px;">
-             <div style="font-size:14px;line-height:1.6;color:#6b615c;">${lang === 'no'
+        ? `<div style="background:${C.sheet};border:1px solid ${C.rule};padding:18px 20px;text-align:left;">
+             <div style="font-size:14px;line-height:1.6;color:${C.soft};">${lang === 'no'
                ? `Etter avbestillingsreglene du godtok da du booket, faktureres halve prisen ved uteblivelse - <strong>${ctx.cancellationFee.toLocaleString('nb-NO')} NOK</strong>. Ta kontakt med oss hvis det var noe som kom i veien, så finner vi ut av det sammen.`
                : `Under the cancellation policy you agreed to when booking, half the price applies when an appointment is missed - <strong>${ctx.cancellationFee.toLocaleString('nb-NO')} NOK</strong>. Do get in touch if something got in the way and we will sort it out together.`}</div>
            </div>`
@@ -546,16 +673,16 @@ const EMAILS: Record<MessageKey, Builder> = {
         : (lang === 'no'
           ? 'Timen din ble avbestilt mindre enn 48 timer før. Etter avbestillingsreglene du godtok da du booket, faktureres halve prisen.'
           : 'Your appointment was cancelled less than 48 hours ahead. Under the cancellation policy you agreed to when booking, half the price applies.'))
-      + `<div style="background:#f4efe7;border-radius:10px;padding:16px 18px;font-size:15px;line-height:1.8;">
+      + `<div style="background:${C.sheet};border:1px solid ${C.rule};padding:18px 20px;text-align:left;font-size:15px;line-height:1.8;">
           <strong>${esc(ctx.serviceName)}</strong><br />
           ${esc(longDate(ctx, lang))}<br />
-          <div style="height:1px;background:#e2d9cc;margin:12px 0;"></div>
+          <div style="height:1px;background:${C.rule};margin:12px 0;"></div>
           <div style="display:flex;justify-content:space-between;font-size:17px;">
             <strong>${lang === 'no' ? 'Å betale' : 'To pay'}</strong>
             <strong>${typeof ctx.invoiceAmount === 'number' ? ctx.invoiceAmount.toLocaleString('nb-NO') : ''} NOK</strong>
           </div>
           ${ctx.invoiceNumber != null
-            ? `<div style="color:#9f948e;font-size:13px;margin-top:8px;">${lang === 'no' ? 'Fakturanr.' : 'Invoice no.'} ${ctx.invoiceNumber}${ctx.bookingRef ? ` · ${lang === 'no' ? 'ref' : 'ref'} ${esc(String(ctx.bookingRef).toUpperCase())}` : ''}</div>`
+            ? `<div style="color:${C.greige};font-size:13px;margin-top:8px;">${lang === 'no' ? 'Fakturanr.' : 'Invoice no.'} ${ctx.invoiceNumber}${ctx.bookingRef ? ` · ${lang === 'no' ? 'ref' : 'ref'} ${esc(String(ctx.bookingRef).toUpperCase())}` : ''}</div>`
             : ''}
         </div>`
       + (ctx.payUrl
@@ -685,11 +812,11 @@ export function renderExtensionsArrivedEmail(
   ctx: ExtensionsArrivedContext, lang: Lang,
 ): Rendered {
   const detail = ctx.orderDetail
-    ? `<div style="background:#f4efe7;border-radius:10px;padding:16px 18px;font-size:15px;line-height:1.7;">
+    ? `<div style="background:${C.sheet};border:1px solid ${C.rule};padding:18px 20px;text-align:left;font-size:15px;line-height:1.7;">
         <strong>${lang === 'no' ? 'Bestillingen din' : 'Your order'}</strong><br />
         ${esc(ctx.orderDetail)}
         ${typeof ctx.balanceDue === 'number' && ctx.balanceDue > 0
-          ? `<div style="margin-top:10px;color:#6b615c;font-size:14px;">${lang === 'no' ? 'Rest å betale' : 'Balance to pay'}: <strong>${ctx.balanceDue.toLocaleString('nb-NO')} NOK</strong></div>`
+          ? `<div style="margin-top:10px;color:${C.soft};font-size:14px;">${lang === 'no' ? 'Rest å betale' : 'Balance to pay'}: <strong>${ctx.balanceDue.toLocaleString('nb-NO')} NOK</strong></div>`
           : ''}
       </div>`
     : '';

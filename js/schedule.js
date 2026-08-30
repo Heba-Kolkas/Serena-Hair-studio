@@ -4362,43 +4362,84 @@ async function loadWindow(pin, dateFrom, dateTo) {
   renderPills();
 }
 
+// ── OPENING THE PANEL ──
+//
+// Every RPC here is a 200-400ms round trip - measured, against a database
+// that executes the query itself in well under a millisecond - so what
+// governs how long this screen takes to appear is how many of those happen
+// one after another, not how fast anything is.
+//
+// It used to await isOwnerPin before starting ANYTHING else, then wait for
+// staff, then start the schedule: three round trips in a chain before the
+// first booking could be drawn, with the network idle for most of it.
+//
+// Nothing here actually depends on the owner check except whether one menu
+// button is visible, so it no longer gates the rest. The four requests go out
+// together and the chain collapses to roughly a single round trip.
 async function openSchedule(pin) {
   currentPin = pin;
   selectedDate = todayStr();
   pinScreen.style.display = 'none';
-  const { data, error } = await isOwnerPin(pin);
-  isOwnerMode = error ? pin === FALLBACK_OWNER_PIN : data === true;
-  btnOwnerPanel.style.display = isOwnerMode ? '' : 'none';
-  loadServices();
-  loadHours().then(renderDayStrip);
-  loadStaff().then(() => {
-    if (currentActorStaffId && currentStaff.some((s) => s.id === currentActorStaffId)) enterApp(pin);
-    else showIdentityPicker();
+
+  const ownerP = isOwnerPin(pin).catch(() => ({ error: true }));
+  const staffP = loadStaff();
+  const hoursP = loadHours();
+  const servicesP = loadServices();
+
+  // Started now rather than inside enterApp, so the day's bookings are already
+  // in flight while the identity picker is being shown or skipped. By the time
+  // enterApp runs this has usually resolved and the grid draws immediately.
+  const windowP = loadWindow(pin, todayStr(), addDays(todayStr(), computeDaysAhead()))
+    .catch(() => {});
+
+  ownerP.then(({ data, error }) => {
+    isOwnerMode = error ? pin === FALLBACK_OWNER_PIN : data === true;
+    btnOwnerPanel.style.display = isOwnerMode ? '' : 'none';
   });
+  hoursP.then(renderDayStrip);
+
+  await staffP;
+  if (currentActorStaffId && currentStaff.some((s) => s.id === currentActorStaffId)) {
+    enterApp(pin, windowP);
+  } else {
+    showIdentityPicker(windowP);
+  }
+  // Kept referenced so an early rejection cannot surface as an unhandled
+  // rejection while the identity picker is open.
+  await Promise.allSettled([servicesP, windowP]);
 }
 
 // Self-reported identity for attribution ("who marked this arrived?") — not
 // real auth, just picked once and remembered on this device (see the
 // activity_log comment in 0001_booking_schema.sql for why this is enough).
-function showIdentityPicker() {
+function showIdentityPicker(pendingWindow) {
   identityList.innerHTML = currentStaff.map((s) => `<button type="button" class="identity-option" data-id="${s.id}">${s.name}</button>`).join('');
   identityList.querySelectorAll('.identity-option').forEach((btn) => {
     btn.addEventListener('click', () => {
       currentActorStaffId = btn.dataset.id;
       localStorage.setItem(IDENTITY_KEY, currentActorStaffId);
-      enterApp(currentPin);
+      // The schedule has been loading the whole time this picker was on
+      // screen, so by the time someone taps their name it is almost always
+      // already here.
+      enterApp(currentPin, pendingWindow);
     });
   });
   identityScreen.style.display = 'flex';
 }
 
-function enterApp(pin) {
+// pendingWindow is the schedule request openSchedule already started. Waiting
+// on it rather than issuing a second identical one is the difference between
+// the grid appearing at once and it appearing a round trip later - the old
+// code fetched the same window twice, once here and once on the way in.
+function enterApp(pin, pendingWindow) {
   identityScreen.style.display = 'none';
   scheduleApp.style.display = '';
   topbarActions.style.display = 'flex';
   relocateStaffPills();
   DAYS_AHEAD = computeDaysAhead();
-  loadWindow(pin, todayStr(), addDays(todayStr(), DAYS_AHEAD)).then(() => {
+  const ready = pendingWindow
+    || loadWindow(pin, todayStr(), addDays(todayStr(), DAYS_AHEAD));
+  Promise.resolve(ready).then(() => {
     renderDayStrip();
     updateDayLabel();
     renderGrid();
