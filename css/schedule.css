@@ -975,11 +975,30 @@ body { background: var(--sched-bg); }
   margin-bottom: 0.85rem; cursor: pointer;
 }
 .block-allday-check input { width: auto; margin: 0; accent-color: var(--sched-accent-strong); }
+/* Sized to sit with the fields above it rather than tower over them. It was
+   a full-bleed 12px-radius slab at 0.75rem padding, which in a narrow modal
+   read as the heaviest thing on the screen - louder than the form it
+   submits. Flex centring so the icon and the label share a baseline instead
+   of the icon riding high on its own line box. */
 .block-save-btn {
-  width: 100%; padding: 0.75rem; border: none; border-radius: 12px;
-  background: var(--sched-accent-strong); color: #fff; font-family: var(--font-body);
-  font-size: 0.82rem; font-weight: 600; cursor: pointer; margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--sched-accent-strong);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  margin-top: 0.5rem;
 }
+.block-save-btn i { font-size: 0.85em; }
 .block-save-btn:hover { opacity: 0.9; }
 .block-status { font-size: 0.78rem; min-height: 1.2em; margin-top: 0.6rem; }
 .block-existing-list { margin-top: 1.25rem; border-top: 1px solid var(--sched-border); padding-top: 1rem; text-align: left; }

@@ -360,6 +360,24 @@
 }
 .service-thumb-book i { font-size: 0.6rem; transition: transform 0.2s ease; }
 .service-thumb:hover .service-thumb-book i { transform: translateX(3px); }
+/* ── ON A PHONE, ALL OF THEM ON ONE ROW ──
+   The circles are a fixed 96px, which is wider than a quarter of a 360px
+   screen - so four services could never fit across and the fourth dropped to
+   a line of its own, looking like an afterthought rather than part of the
+   set. The track minimum comes down and the circles come with it, because
+   the image is what actually sets the floor here, not the grid. */
+@media (max-width: 600px) {
+  .popular-services-row {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 0.9rem 0.4rem;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .service-thumb-img { width: 72px; height: 72px; border-width: 2px; }
+  .service-thumb-label { font-size: 0.72rem; line-height: 1.3; }
+  .service-thumb-price { font-size: 0.6rem; }
+}
+
 /* The 700px block that used to sit here did nothing. flex-wrap and
    overflow-x are flex properties left over from when this row was a sideways
    scroller, and are ignored on a grid; its justify-content is now in the base
