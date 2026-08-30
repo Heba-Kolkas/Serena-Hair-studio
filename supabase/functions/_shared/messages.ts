@@ -218,21 +218,23 @@ export function smsLength(text: string): SmsCost {
 // The palette, once, so a colour is changed here rather than in thirty
 // string literals.
 //
-// LIGHT. The first version of this sat a bordered cream card on a darker
-// cream ground and put a gold lozenge in the middle of it, which made a
-// short message look like a certificate. The references it was meant to
-// follow are almost white with a great deal of air, and the only dark thing
-// in them is the type and one button. So: white sheet, the warm tones kept
-// for hairlines and secondary text where they read as warmth rather than as
-// a background, and no ornament at all.
+// Straight off the site: --cream behind, --linen for the card, rounded
+// corners, and TAUPE for the button. The site's "Book Appointment" button is
+// taupe with white on it - there is no dark button anywhere on studioserena.no,
+// and an espresso one in the email was the single thing making these look
+// heavier than the pages they come from.
+//
+// The serif headings stay espresso because that is exactly what the site's
+// own headings are; it reads as warm brown on cream, not as black.
 const C = {
-  page: '#f6f2ec',     // the thin margin around the sheet, barely there
-  sheet: '#ffffff',    // the sheet itself
-  rule: '#ece7df',     // hairlines - warm, and very light
-  taupe: '#B5A89A',
-  greige: '#9f948e',   // secondary text and micro-labels
-  espresso: '#3f3632', // body text and the one button
+  page: '#faf6ef',     // --cream, the ground
+  sheet: '#fdfaf5',    // --linen, the card
+  rule: '#ece7df',     // hairlines, warm and very light
+  taupe: '#B5A89A',    // --taupe: the button, and the quiet lines under a heading
+  greige: '#9f948e',   // --greige: micro-labels
+  espresso: '#3f3632', // --espresso: headings and body, as on the site
   soft: '#6f665f',     // muted body
+  onTaupe: '#ffffff',  // label on the taupe button
 };
 
 // Cormorant Garamond is the site's display face. Apple Mail, iOS Mail and
@@ -273,8 +275,8 @@ function shell(inner: string, lang: Lang): string {
 <div style="margin:0;padding:32px 14px 40px;background:${C.page};font-family:${SANS};color:${C.espresso};-webkit-font-smoothing:antialiased;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
     <tr><td align="center">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:520px;border-collapse:collapse;background:${C.sheet};">
-        <tr><td style="padding:44px 36px 38px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:520px;border-collapse:separate;background:${C.sheet};border-radius:20px;">
+        <tr><td style="padding:44px 36px 38px;border-radius:20px;">
           ${wordmark()}
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:24px auto 30px;">
             <tr><td style="width:44px;border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
@@ -392,13 +394,14 @@ function receiptBox(ctx: MessageContext, lang: Lang): string {
   </table>`;
 }
 
-/** Square, not rounded, and letter-spaced uppercase - the same button the
- *  price list and the booking wizard use. Wrapped in a table so Outlook gives
- *  it real padding; a bare <a> with padding collapses there. */
+/** Taupe and fully rounded, exactly like "Book Appointment" on the site.
+ *  Wrapped in a table so Outlook gives it real padding - a bare <a> with
+ *  padding collapses there - and the radius is on the cell so the clients
+ *  that support it round the whole pill rather than just the text. */
 const button = (url: string, label: string) =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:26px auto 8px;">
-    <tr><td style="background:${C.espresso};">
-      <a href="${esc(url)}" style="display:inline-block;padding:14px 34px;font-family:${SANS};font-size:11px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:${C.sheet};text-decoration:none;">${esc(label)}</a>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;margin:26px auto 8px;">
+    <tr><td style="background:${C.taupe};border-radius:40px;">
+      <a href="${esc(url)}" style="display:inline-block;padding:14px 32px;font-family:${SANS};font-size:11px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:${C.onTaupe};text-decoration:none;border-radius:40px;">${esc(label)}</a>
     </td></tr>
   </table>`;
 
