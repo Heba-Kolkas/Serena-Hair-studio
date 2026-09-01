@@ -377,7 +377,15 @@ ${HEAD}
             <tr><td style="border-top:1px solid ${C.rule};font-size:0;line-height:0;">&nbsp;</td></tr>
           </table>
           <div class="ss-quiet" style="font-family:${SANS};font-size:11px;font-weight:300;line-height:1.95;color:${C.greige};text-align:center;letter-spacing:0.05em;margin-top:20px;">
-            ${esc(SALON.address)}<br />
+            <!-- Both of these are links WE made, on purpose. Left as plain
+                 text the mail client detects the address and the number and
+                 links them itself in its own blue and underline - which is
+                 exactly what happened, and what the CSS above cannot always
+                 undo, because Gmail's app detects them before our styles ever
+                 apply. Owning the link is the only reliable way to own the
+                 colour, and the address usefully opens a map. -->
+            <a href="https://maps.google.com/?q=${encodeURIComponent(SALON.address)}"
+               style="color:${C.greige};text-decoration:none;">${esc(SALON.address)}</a><br />
             <a href="tel:${esc(SALON.phoneHref)}" style="color:${C.greige};text-decoration:none;">${esc(SALON.phone)}</a>
           </div>
           <div class="ss-quiet" style="font-family:${SANS};font-size:10.5px;font-weight:300;line-height:1.7;color:${C.taupe};text-align:center;margin-top:14px;">${reply}</div>
@@ -512,6 +520,28 @@ const button = (url: string, label: string) =>
 const smallPrint = (text: string) =>
   `<p style="font-family:${SANS};font-size:12.5px;font-weight:300;line-height:1.8;color:${C.soft};margin:20px 0 0;text-align:center;">${text}</p>`;
 
+/** The cancellation terms, on the messages that confirm an appointment.
+ *
+ *  She ticked these before booking - 0009 records which version and when,
+ *  precisely so a fee can be defended later - but a tick-box read once at
+ *  the moment of booking is not the same as having it in front of her when
+ *  she is deciding whether to cancel. The confirmation is the email she
+ *  keeps, so it is the one that should carry the terms.
+ *
+ *  Stated plainly and without threat. The hours and the percentage come
+ *  from get_cancellation_policy through the context rather than being
+ *  written in, so changing the policy in app_settings changes the emails
+ *  too and the two can never contradict each other - which would be worse
+ *  than saying nothing. */
+const cancellationTerms = (ctx: MessageContext, lang: Lang) => {
+  const hours = ctx.noticeHours ?? 48;
+  return `<div style="font-family:${SANS};font-size:11.5px;font-weight:300;line-height:1.75;color:${C.greige};text-align:center;margin:18px 0 0;padding-top:16px;border-top:1px solid ${C.rule};">${
+    lang === 'no'
+      ? `Avbestilling må skje senest <strong style="font-weight:500;">${hours} timer</strong> før timen. Avbestiller du senere enn det, eller ikke møter opp, faktureres <strong style="font-weight:500;">halve prisen</strong> for behandlingen.`
+      : `Cancellations must be made at least <strong style="font-weight:500;">${hours} hours</strong> before your appointment. If you cancel later than that, or do not turn up, <strong style="font-weight:500;">half the price</strong> of the service is charged.`
+  }</div>`;
+};
+
 // ── THE MESSAGES ──
 
 export interface Rendered {
@@ -535,8 +565,9 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang)
       + (ctx.manageUrl ? button(ctx.manageUrl, lang === 'no' ? 'Se eller endre timen' : 'View or change booking') : '')
       + smallPrint(lang === 'no'
-        ? 'Trenger du å endre eller avlyse? Bruk knappen over, eller meld fra på Instagram ${igLink()} - så tidlig du kan, så vi rekker å tilby tiden til noen andre.'
-        : 'Need to change or cancel? Use the button above, or message us on Instagram ${igLink()} - as much notice as you can manage, so we can offer the time to someone else.'),
+        ? `Trenger du å endre eller avlyse? Bruk knappen over, eller meld fra på Instagram ${igLink()} - så tidlig du kan, så vi rekker å tilby tiden til noen andre.`
+        : `Need to change or cancel? Use the button above, or message us on Instagram ${igLink()} - as much notice as you can manage, so we can offer the time to someone else.`)
+      + cancellationTerms(ctx, lang),
       lang,
     ),
   }),
@@ -553,8 +584,8 @@ const EMAILS: Record<MessageKey, Builder> = {
         : 'Thank you for your request. Extensions need a consultation and a deposit before we can hold the time, so this is <strong>not confirmed yet</strong> - we will check and let you know.')
       + detailBox(ctx, lang)
       + p(lang === 'no'
-        ? 'Vi holder tiden for deg i <strong>to dager</strong> mens vi ser på det. Har du ikke hatt konsultasjon ennå, bruk knappen under - eller meld fra på Instagram ${igLink()}.'
-        : 'We are holding the time for you for <strong>two days</strong> while we look at it. If you have not had your consultation yet, use the button below - or message us on Instagram ${igLink()}.')
+        ? `Vi holder tiden for deg i <strong>to dager</strong> mens vi ser på det. Har du ikke hatt konsultasjon ennå, bruk knappen under - eller meld fra på Instagram ${igLink()}.`
+        : `We are holding the time for you for <strong>two days</strong> while we look at it. If you have not had your consultation yet, use the button below - or message us on Instagram ${igLink()}.`)
       + smallPrint(lang === 'no'
         ? 'Du får en e-post og en SMS så snart vi har bekreftet.'
         : 'You will get an email and a text as soon as we confirm.'),
@@ -592,8 +623,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang, true)
       + (ctx.reason ? p(esc(ctx.reason)) : '')
       + p(lang === 'no'
-        ? 'Extensions krever konsultasjon og depositum før vi kan sette av tiden. Har du ikke hatt konsultasjon ennå, book en under - eller meld fra på Instagram ${igLink()}, vi vil veldig gjerne få deg inn.'
-        : 'Extensions need a consultation and a deposit before we can book the fitting. If you have not had yours yet, book one below - or message us on Instagram ${igLink()}. We would love to get you in.')
+        ? `Extensions krever konsultasjon og depositum før vi kan sette av tiden. Har du ikke hatt konsultasjon ennå, book en under - eller meld fra på Instagram ${igLink()}, vi vil veldig gjerne få deg inn.`
+        : `Extensions need a consultation and a deposit before we can book the fitting. If you have not had yours yet, book one below - or message us on Instagram ${igLink()}. We would love to get you in.`)
       + smallPrint(lang === 'no'
         ? `Du kan også ringe oss på ${SALON.phone}.`
         : `You can also call us on ${SALON.phone}.`),
@@ -613,8 +644,8 @@ const EMAILS: Record<MessageKey, Builder> = {
       + detailBox(ctx, lang)
       + (ctx.reason ? p(esc(ctx.reason)) : '')
       + p(lang === 'no'
-        ? 'Passer ikke den nye tiden? Bruk knappen over, eller meld fra på Instagram ${igLink()}, så finner vi noe annet.'
-        : 'If the new time does not suit you, use the button above, or message us on Instagram ${igLink()} and we will find another.')
+        ? `Passer ikke den nye tiden? Bruk knappen over, eller meld fra på Instagram ${igLink()}, så finner vi noe annet.`
+        : `If the new time does not suit you, use the button above, or message us on Instagram ${igLink()} and we will find another.`)
       + (ctx.manageUrl ? button(ctx.manageUrl, lang === 'no' ? 'Se timen' : 'View booking') : '')
       + smallPrint(lang === 'no' ? 'Beklager bryet.' : 'Sorry for the inconvenience.'),
       lang,
@@ -828,7 +859,7 @@ const EMAILS: Record<MessageKey, Builder> = {
         : 'To book your next visit, find us at ' + SALON.site + '.')
       + smallPrint(lang === 'no'
         ? 'Er det noe du ikke er fornøyd med, si fra til oss - svar på denne e-posten eller ring. Vi vil gjerne vite det, og vi ordner opp.'
-        : 'If there is anything you are not happy with, tell us - message us on Instagram ${igLink()} or call. We would genuinely rather know, and we will put it right.'),
+        : `If there is anything you are not happy with, tell us - message us on Instagram ${igLink()} or call. We would genuinely rather know, and we will put it right.`),
       lang,
     ),
   }),
