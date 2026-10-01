@@ -2626,7 +2626,21 @@ document.addEventListener('lang:changed', () => {
 });
 applyNotesPlaceholder();
 
-initDateInput();
-loadBookingTerms();
-loadServices();
-showPanel('1');
+// Online booking paused (1 October 2026): clients are sent to Instagram or the
+// phone instead. This only hides the wizard - the database refuses the bookings
+// themselves (supabase/migrations/0058_pause_online_booking.sql). To reopen,
+// set this to false AND run the grant at the bottom of that file, or the page
+// comes back and every booking fails.
+const ONLINE_BOOKING_PAUSED = true;
+
+if (ONLINE_BOOKING_PAUSED) {
+  // Not showPanel(): that scrolls to the wizard, which on arrival just hides
+  // the page heading above it.
+  document.getElementById('wizardSteps').style.display = 'none';
+  document.querySelector('.wizard-panel[data-panel="paused"]').classList.add('active');
+} else {
+  initDateInput();
+  loadBookingTerms();
+  loadServices();
+  showPanel('1');
+}
