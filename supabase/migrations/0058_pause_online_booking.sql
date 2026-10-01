@@ -1,6 +1,6 @@
 -- ── ONLINE BOOKING PAUSED ──
--- WRITTEN 1 October 2026. NOT YET APPLIED - run it in the Supabase SQL editor
--- of the studio-serena project (drejwxijygwwhnfpgxvl), then change this line.
+-- APPLIED 1 October 2026 to the studio-serena project (run by hand in the SQL
+-- editor). Verified: both RPCs now answer the publishable key with 42501.
 --
 -- studioserena.no is off the Vercel project, but the site is still served at
 -- studio-serena.vercel.app and the code - publishable key included - is in a
